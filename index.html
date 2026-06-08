@@ -862,6 +862,131 @@
       }
     }
 
+    /* Think bubble */
+    .think-bubble {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 14px 16px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      margin: 4px 0;
+      max-width: 380px;
+    }
+
+    .think-bubble-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+    }
+
+    .think-bubble-row svg {
+      width: 12px;
+      height: 12px;
+      flex-shrink: 0;
+      color: var(--accent);
+    }
+
+    .think-phase {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 11.5px;
+      color: var(--text-dim);
+      font-family: var(--font-mono);
+      opacity: 0;
+      transform: translateY(4px);
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+
+    .think-phase.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .think-phase-dot {
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: var(--text-dim);
+      flex-shrink: 0;
+    }
+
+    .think-phase.active .think-phase-dot {
+      background: var(--accent);
+      box-shadow: 0 0 5px var(--accent);
+    }
+
+    .think-phase.active {
+      color: var(--text-muted);
+    }
+
+    /* Big Code writing indicator */
+    .bigcode-writing {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding: 14px 16px;
+      background: var(--surface2);
+      border: 1px solid rgba(255, 160, 50, 0.2);
+      border-radius: 10px;
+      margin: 4px 0;
+      max-width: 380px;
+    }
+
+    .bigcode-header {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      color: #ffab40;
+    }
+
+    .bigcode-flame {
+      font-size: 13px;
+    }
+
+    .bigcode-bar-wrap {
+      width: 100%;
+      height: 3px;
+      background: var(--border);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .bigcode-bar {
+      height: 100%;
+      width: 30%;
+      background: linear-gradient(90deg, #ffab40, #c8f060);
+      border-radius: 3px;
+      animation: barSweep 1.8s ease-in-out infinite;
+    }
+
+    @keyframes barSweep {
+      0% {
+        transform: translateX(-120%);
+      }
+
+      100% {
+        transform: translateX(450%);
+      }
+    }
+
+    .bigcode-lines {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--text-dim);
+    }
+
+    .bigcode-lines span {
+      color: var(--accent);
+    }
+
     /* Input area */
     .input-area {
       padding: 16px 24px 20px;
@@ -1727,6 +1852,8 @@ function updateLastAssistant(content) {
   scrollBottom();
 }
 
+let thinkPhaseTimer = null;
+
 function showThinking() {
   const wrap = document.getElementById('messagesWrap');
   let inner = document.getElementById('msgsInner');
@@ -1736,24 +1863,80 @@ function showThinking() {
   }
   const div = document.createElement('div');
   div.className = 'message assistant';
-  div.innerHTML = `<div class="msg-role">Ardel 0'1</div>
-    <div class="thinking">
-      <div class="thinking-dots">
-        <div class="thinking-dot"></div>
-        <div class="thinking-dot"></div>
-        <div class="thinking-dot"></div>
+
+  const phases = bigCodeOn
+    ? ['Reading request', 'Planning script structure', 'Mapping out all systems', 'Allocating token budget', 'Beginning generation…']
+    : ['Reading request', 'Forming response', 'Writing…'];
+
+  const phaseHTML = phases.map((p, i) =>
+    `<div class="think-phase" id="thinkPhase${i}"><div class="think-phase-dot"></div>${p}</div>`
+  ).join('');
+
+  div.innerHTML = `<div class="msg-role">Ardel</div>
+    <div class="think-bubble" id="thinkBubble">
+      <div class="think-bubble-row">
+        <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round">
+          <circle cx="6" cy="6" r="4.5"/><path d="M6 3.5v2.8l1.5 1.5"/>
+        </svg>
+        Thinking
+        <div class="thinking-dots" style="margin-left:2px">
+          <div class="thinking-dot"></div>
+          <div class="thinking-dot"></div>
+          <div class="thinking-dot"></div>
+        </div>
       </div>
-      <span>Thinking…</span>
+      ${phaseHTML}
     </div>`;
   inner.appendChild(div);
   scrollBottom();
+
+  // Animate phases in with staggered delays
+  clearTimeout(thinkPhaseTimer);
+  phases.forEach((_, i) => {
+    setTimeout(() => {
+      const el = document.getElementById('thinkPhase' + i);
+      if (!el) return;
+      // deactivate previous
+      if (i > 0) {
+        const prev = document.getElementById('thinkPhase' + (i - 1));
+        if (prev) prev.classList.remove('active');
+      }
+      el.classList.add('visible', 'active');
+      scrollBottom();
+    }, 320 + i * 480);
+  });
+}
+
+function showBigCodeWriting() {
+  const bubble = document.getElementById('thinkBubble');
+  if (!bubble) return;
+  bubble.outerHTML && bubble.closest('.message') && (() => {
+    const msg = bubble.closest('.message');
+    const existingBubble = msg.querySelector('.think-bubble');
+    if (existingBubble) {
+      existingBubble.outerHTML = `<div class="bigcode-writing" id="bigcodeWriting">
+        <div class="bigcode-header">
+          <span class="bigcode-flame">🔥</span>
+          Big Code generating…
+        </div>
+        <div class="bigcode-bar-wrap"><div class="bigcode-bar"></div></div>
+        <div class="bigcode-lines">Lines written: <span id="bigcodeLineCount">0</span></div>
+      </div>`;
+    }
+  })();
+}
+
+function updateBigCodeLines(text) {
+  const el = document.getElementById('bigcodeLineCount');
+  if (el) el.textContent = text.split('\n').length;
 }
 
 function removeThinking() {
+  clearTimeout(thinkPhaseTimer);
   const inner = document.getElementById('msgsInner');
   if (!inner) return;
-  const thinking = inner.querySelector('.thinking');
-  if (thinking) thinking.closest('.message')?.remove();
+  const bubble = inner.querySelector('.think-bubble, .bigcode-writing');
+  if (bubble) bubble.closest('.message')?.remove();
 }
 
 // ─── Formatting ───────────────────────────────────────────────────────────────
@@ -1946,14 +2129,17 @@ async function sendMessage() {
       throw new Error(err.error?.message || `HTTP ${res.status}`);
     }
 
-    removeThinking();
-
     // Stream
     let full = '';
     const reader = res.body.getReader();
     currentReader = reader;
     const decoder = new TextDecoder();
     let firstChunk = true;
+    let linesReceived = 0;
+
+    // Brief pause so think phases animate before content arrives
+    const minThinkMs = bigCodeOn ? 2200 : 900;
+    const fetchStart = Date.now();
 
     while (true) {
       const { done, value } = await reader.read();
@@ -1970,18 +2156,53 @@ async function sendMessage() {
           if (delta) {
             full += delta;
             if (firstChunk) {
-              // Insert assistant message placeholder
-              const inner = document.getElementById('msgsInner');
-              const div = document.createElement('div');
-              div.className = 'message assistant';
-              div.innerHTML = `<div class="msg-role">Ardel 0'1</div><div class="msg-bubble"></div>`;
-              inner?.appendChild(div);
+              // Wait for minimum think time before showing output
+              const elapsed = Date.now() - fetchStart;
+              const remaining = minThinkMs - elapsed;
+              if (remaining > 0) await new Promise(r => setTimeout(r, remaining));
+
+              if (bigCodeOn) {
+                // Switch think bubble to big code writing indicator
+                showBigCodeWriting();
+                // Insert the actual message node (hidden behind writing indicator)
+                const inner = document.getElementById('msgsInner');
+                const div = document.createElement('div');
+                div.className = 'message assistant';
+                div.id = 'streamingMsg';
+                div.innerHTML = `<div class="msg-role">Ardel</div><div class="msg-bubble"></div>`;
+                inner?.appendChild(div);
+              } else {
+                removeThinking();
+                const inner = document.getElementById('msgsInner');
+                const div = document.createElement('div');
+                div.className = 'message assistant';
+                div.innerHTML = `<div class="msg-role">Ardel</div><div class="msg-bubble"></div>`;
+                inner?.appendChild(div);
+              }
               firstChunk = false;
             }
-            updateLastAssistant(full);
+            if (bigCodeOn) {
+              updateBigCodeLines(full);
+            } else {
+              updateLastAssistant(full);
+            }
           }
         } catch(e) {}
       }
+    }
+
+    // Done — if big code, replace writing indicator with actual content
+    if (bigCodeOn) {
+      removeThinking();
+      const streamMsg = document.getElementById('streamingMsg');
+      if (streamMsg) streamMsg.remove();
+      const inner = document.getElementById('msgsInner');
+      const div = document.createElement('div');
+      div.className = 'message assistant';
+      div.innerHTML = `<div class="msg-role">Ardel</div>`;
+      div.innerHTML += formatAssistant(full);
+      inner?.appendChild(div);
+      scrollBottom();
     }
 
     // Save assistant message
