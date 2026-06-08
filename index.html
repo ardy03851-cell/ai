@@ -963,6 +963,174 @@
       color: var(--text-muted);
     }
 
+    /* Toolbar row */
+    .input-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+    }
+
+    .script-mode-btn {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 4px 9px;
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.13s ease;
+      white-space: nowrap;
+      position: relative;
+    }
+
+    .script-mode-btn:hover {
+      border-color: var(--border-hover);
+      color: var(--text);
+    }
+
+    .script-mode-btn.active-mode {
+      background: var(--accent-dim);
+      border-color: rgba(200, 240, 96, 0.25);
+      color: var(--accent);
+    }
+
+    .script-mode-btn svg {
+      width: 11px;
+      height: 11px;
+      flex-shrink: 0;
+    }
+
+    .script-mode-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--accent);
+      flex-shrink: 0;
+    }
+
+    .mode-dropdown {
+      position: absolute;
+      bottom: calc(100% + 6px);
+      left: 0;
+      background: var(--surface2);
+      border: 1px solid var(--border-hover);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      min-width: 230px;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(4px);
+      transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 200;
+    }
+
+    .mode-dropdown.open {
+      opacity: 1;
+      pointer-events: all;
+      transform: translateY(0);
+    }
+
+    .mode-option {
+      padding: 9px 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: flex-start;
+      gap: 9px;
+      border-bottom: 1px solid var(--border);
+      transition: background 0.1s ease;
+    }
+
+    .mode-option:last-child {
+      border-bottom: none;
+    }
+
+    .mode-option:hover {
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .mode-option.selected {
+      background: var(--accent-dim);
+    }
+
+    .mode-option-icon {
+      font-size: 13px;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .mode-option-body {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .mode-option-name {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    .mode-option-desc {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-top: 1px;
+      line-height: 1.4;
+    }
+
+    /* Deep think toggle */
+    .deep-think-btn {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 4px 9px;
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.13s ease;
+      white-space: nowrap;
+      margin-left: auto;
+    }
+
+    .deep-think-btn:hover {
+      border-color: var(--border-hover);
+      color: var(--text);
+    }
+
+    .deep-think-btn.on {
+      background: rgba(147, 112, 219, 0.12);
+      border-color: rgba(147, 112, 219, 0.35);
+      color: #b39ddb;
+    }
+
+    .deep-think-btn svg {
+      width: 11px;
+      height: 11px;
+    }
+
+    .think-glow {
+      display: none;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #b39ddb;
+      box-shadow: 0 0 6px #b39ddb;
+      flex-shrink: 0;
+    }
+
+    .deep-think-btn.on .think-glow {
+      display: block;
+    }
+
     /* Toast */
     .toast {
       position: fixed;
@@ -1113,6 +1281,71 @@
 
       <div class="input-area">
         <div class="input-inner">
+          <div class="input-toolbar">
+            <div class="script-mode-btn active-mode" id="scriptModeBtn" onclick="toggleModeDropdown(event)">
+              <div class="script-mode-dot"></div>
+              <span id="scriptModeLabel">Command Bar</span>
+              <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+                <path d="M3 4.5l3 3 3-3" />
+              </svg>
+              <div class="mode-dropdown" id="modeDropdown">
+                <div class="mode-option selected" onclick="selectMode(event,'command','Command Bar','⌨️')">
+                  <div class="mode-option-icon">⌨️</div>
+                  <div class="mode-option-body">
+                    <div class="mode-option-name">Command Bar</div>
+                    <div class="mode-option-desc">Runs in the output, mutates Workspace directly. No require, no module.
+                    </div>
+                  </div>
+                </div>
+                <div class="mode-option" onclick="selectMode(event,'server','Server Script','🖥️')">
+                  <div class="mode-option-icon">🖥️</div>
+                  <div class="mode-option-body">
+                    <div class="mode-option-name">Server Script</div>
+                    <div class="mode-option-desc">Runs on the server. Full game authority, DataStores, remote handling.
+                    </div>
+                  </div>
+                </div>
+                <div class="mode-option" onclick="selectMode(event,'local','LocalScript','📱')">
+                  <div class="mode-option-icon">📱</div>
+                  <div class="mode-option-body">
+                    <div class="mode-option-name">LocalScript</div>
+                    <div class="mode-option-desc">Runs on the client. UI, input, camera, and player-side logic.</div>
+                  </div>
+                </div>
+                <div class="mode-option" onclick="selectMode(event,'module','ModuleScript','📦')">
+                  <div class="mode-option-icon">📦</div>
+                  <div class="mode-option-body">
+                    <div class="mode-option-name">ModuleScript</div>
+                    <div class="mode-option-desc">Shared library. Returns a table. Used with require() from any script.
+                    </div>
+                  </div>
+                </div>
+                <div class="mode-option" onclick="selectMode(event,'plugin','Studio Plugin','🔧')">
+                  <div class="mode-option-icon">🔧</div>
+                  <div class="mode-option-body">
+                    <div class="mode-option-name">Studio Plugin</div>
+                    <div class="mode-option-desc">Extends Roblox Studio with custom tools, widgets, and build
+                      automation.</div>
+                  </div>
+                </div>
+                <div class="mode-option" onclick="selectMode(event,'general','General / Explain','💬')">
+                  <div class="mode-option-icon">💬</div>
+                  <div class="mode-option-body">
+                    <div class="mode-option-name">General / Explain</div>
+                    <div class="mode-option-desc">No script context. Ask concepts, debug, architecture questions.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <button class="deep-think-btn" id="deepThinkBtn" onclick="toggleDeepThink()">
+              <div class="think-glow"></div>
+              <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="6" cy="5" r="3.2"/>
+                <path d="M4.5 9.5h3M6 8.2v1.3"/>
+              </svg>
+              <span id="deepThinkLabel">Deep Think</span>
+            </button>
+          </div>
           <div class="input-box">
             <textarea
             id="inputBox"
@@ -1120,7 +1353,6 @@
             rows="1"
             onkeydown="handleKey(event)"
             oninput="autoResize(this)"
-
           ></textarea>
             <button class="send-btn" id="sendBtn" onclick="sendMessage()" disabled>
             <svg viewBox="0 0 15 15" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
@@ -1189,18 +1421,104 @@ document.addEventListener('click', (e) => {
   }
 });
 
-const SYSTEM_PROMPT = `You are Ardel 0'1, a specialized AI assistant for Roblox game development. You are an expert in:
-- Luau scripting (Roblox's dialect of Lua)
-- Roblox Studio APIs, services (RunService, TweenService, Players, Workspace, etc.)
-- Game architecture: client-server model, RemoteEvents, RemoteFunctions
-- DataStore and data persistence
-- Physics, character controllers, animations
-- GUI scripting (ScreenGui, BillboardGui, SurfaceGui)
-- Module scripts, OOP patterns in Luau
-- Performance optimization and best practices
-- Roblox-specific debugging
+const SCRIPT_MODES = {
+  command: {
+    label: 'Command Bar',
+    instruction: `The user wants a COMMAND BAR script. This runs directly in the Roblox Studio Command Bar (the output prompt). Rules:
+- No require(), no ModuleScript references
+- Use game.Workspace or workspace directly
+- Runs immediately, one-shot, no loops unless wrapped in task.spawn
+- Access services via game:GetService() or shorthand globals
+- Keep it concise — it's meant to mutate the workspace or fire a one-time action`
+  },
+  server: {
+    label: 'Server Script',
+    instruction: `The user wants a SERVER SCRIPT (Script, RunContext Server). Rules:
+- Runs on the server with full authority
+- Can access DataStoreService, Players, ServerStorage, ServerScriptService
+- Use RemoteEvents/RemoteFunctions to communicate to clients
+- Never trust client input directly — always validate server-side
+- Use task.spawn / task.delay instead of spawn/wait`
+  },
+  local: {
+    label: 'LocalScript',
+    instruction: `The user wants a LOCALSCRIPT. Rules:
+- Runs on the client (player's machine) only
+- Has access to LocalPlayer, UserInputService, camera, StarterGui
+- Cannot access ServerStorage or server-side services directly
+- Communicate with server via RemoteEvents/RemoteFunctions
+- Use Players.LocalPlayer for the controlling player`
+  },
+  module: {
+    label: 'ModuleScript',
+    instruction: `The user wants a MODULESCRIPT. Rules:
+- Must return a table or value at the end
+- Used with require() from a Script or LocalScript
+- No side effects on load — expose an API via the returned table
+- Use OOP patterns with metatables where appropriate
+- Name the module table to match the file name by convention`
+  },
+  plugin: {
+    label: 'Studio Plugin',
+    instruction: `The user wants a ROBLOX STUDIO PLUGIN. Rules:
+- Runs inside Roblox Studio, not in the game runtime
+- Use plugin global for toolbar buttons, widgets, settings
+- Access Selection, ChangeHistoryService for undo support
+- GUI lives inside plugin:CreateDockWidgetPluginGui()
+- Wrap workspace mutations in ChangeHistoryService:SetWaypoint()`
+  },
+  general: {
+    label: 'General',
+    instruction: `The user is asking a general question, concept explanation, or architecture discussion. No specific script type — focus on clarity, examples, and Roblox best practices.`
+  }
+};
 
-Always write clean, well-commented Luau code. Use strict typing with --!strict when appropriate. Prefer modern Roblox patterns. Keep explanations concise but accurate. When providing code, always use luau as the code block language tag.`;
+let activeScriptMode = 'command';
+let deepThinkOn = false;
+
+function buildSystemPrompt() {
+  const modeCtx = SCRIPT_MODES[activeScriptMode].instruction;
+  const thinkCtx = deepThinkOn
+    ? `\n\nDEEP THINK MODE IS ON: Before answering, reason step by step through the problem internally. Consider edge cases, performance implications, and alternative approaches. Then provide a thorough, well-structured answer.`
+    : '';
+  return `You are Ardel, a specialized AI assistant for Roblox game development. You are an expert in Luau scripting, Roblox Studio APIs, game architecture, DataStores, physics, GUI scripting, OOP patterns, and performance optimization.
+
+CURRENT SCRIPT MODE:
+${modeCtx}${thinkCtx}
+
+Always write clean, well-commented Luau code. Use --!strict when appropriate. Prefer modern Roblox patterns. Keep explanations concise but accurate. Always use \`luau\` as the code block language tag.`;
+}
+
+function toggleModeDropdown(e) {
+  e.stopPropagation();
+  const dd = document.getElementById('modeDropdown');
+  dd.classList.toggle('open');
+}
+
+function selectMode(e, key, label, icon) {
+  e.stopPropagation();
+  activeScriptMode = key;
+  document.getElementById('scriptModeLabel').textContent = label;
+  document.querySelectorAll('.mode-option').forEach(el => el.classList.remove('selected'));
+  e.currentTarget.classList.add('selected');
+  document.getElementById('modeDropdown').classList.remove('open');
+  showToast(icon + ' ' + label + ' mode');
+}
+
+function toggleDeepThink() {
+  deepThinkOn = !deepThinkOn;
+  const btn = document.getElementById('deepThinkBtn');
+  const lbl = document.getElementById('deepThinkLabel');
+  btn.classList.toggle('on', deepThinkOn);
+  lbl.textContent = deepThinkOn ? 'Thinking Deep' : 'Deep Think';
+  showToast(deepThinkOn ? '🔮 Deep Think on' : 'Deep Think off');
+}
+
+document.addEventListener('click', (e) => {
+  const dd = document.getElementById('modeDropdown');
+  const btn = document.getElementById('scriptModeBtn');
+  if (dd && btn && !btn.contains(e.target)) dd.classList.remove('open');
+});
 
 let chats = {};
 let currentChatId = null;
@@ -1542,7 +1860,7 @@ async function sendMessage() {
       body: JSON.stringify({
         model: MODELS[activeModel].id,
         messages: [
-          { role: 'system', content: SYSTEM_PROMPT },
+          { role: 'system', content: buildSystemPrompt() },
           ...messages
         ],
         stream: true,
