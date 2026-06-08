@@ -1083,7 +1083,6 @@
       line-height: 1.4;
     }
 
-    /* Deep think toggle */
     .deep-think-btn {
       display: flex;
       align-items: center;
@@ -1107,9 +1106,9 @@
     }
 
     .deep-think-btn.on {
-      background: rgba(147, 112, 219, 0.12);
-      border-color: rgba(147, 112, 219, 0.35);
-      color: #b39ddb;
+      background: rgba(255, 160, 50, 0.1);
+      border-color: rgba(255, 160, 50, 0.35);
+      color: #ffab40;
     }
 
     .deep-think-btn svg {
@@ -1122,13 +1121,36 @@
       width: 6px;
       height: 6px;
       border-radius: 50%;
-      background: #b39ddb;
-      box-shadow: 0 0 6px #b39ddb;
+      background: #ffab40;
+      box-shadow: 0 0 8px #ffab40;
       flex-shrink: 0;
+      animation: thinkPulse 1.4s ease infinite;
+    }
+
+    @keyframes thinkPulse {
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.4;
+      }
     }
 
     .deep-think-btn.on .think-glow {
       display: block;
+    }
+
+    /* Stop button state */
+    .send-btn.stop {
+      background: #ff5555;
+    }
+
+    .send-btn.stop:hover:not(:disabled) {
+      background: #ff7070;
+      transform: scale(1.05);
     }
 
     /* Toast */
@@ -1335,15 +1357,22 @@
                     <div class="mode-option-desc">No script context. Ask concepts, debug, architecture questions.</div>
                   </div>
                 </div>
+                <div class="mode-option" onclick="selectMode(event,'none','No Mode','🚫')">
+                  <div class="mode-option-icon">🚫</div>
+                  <div class="mode-option-body">
+                    <div class="mode-option-name">No Mode</div>
+                    <div class="mode-option-desc">No script instructions at all. Raw AI, no Roblox context injected.
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
             <button class="deep-think-btn" id="deepThinkBtn" onclick="toggleDeepThink()">
               <div class="think-glow"></div>
               <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="6" cy="5" r="3.2"/>
-                <path d="M4.5 9.5h3M6 8.2v1.3"/>
+                <path d="M2 10 L6 2 L10 10 M3.5 7h5"/>
               </svg>
-              <span id="deepThinkLabel">Deep Think</span>
+              <span id="deepThinkLabel">Big Code!</span>
             </button>
           </div>
           <div class="input-box">
@@ -1470,23 +1499,50 @@ const SCRIPT_MODES = {
   general: {
     label: 'General',
     instruction: `The user is asking a general question, concept explanation, or architecture discussion. No specific script type — focus on clarity, examples, and Roblox best practices.`
+  },
+  none: {
+    label: 'No Mode',
+    instruction: null
   }
 };
 
 let activeScriptMode = 'command';
-let deepThinkOn = false;
+let bigCodeOn = false;
 
 function buildSystemPrompt() {
+  if (activeScriptMode === 'none') {
+    return bigCodeOn
+      ? `BIG CODE MODE: The user wants a massive, exhaustive, fully-implemented script. Write THOUSANDS of lines if needed. Never truncate, never summarize, never say "you can add more here". Implement everything completely. Every function, every edge case, every feature fully coded out.`
+      : '';
+  }
+
   const modeCtx = SCRIPT_MODES[activeScriptMode].instruction;
-  const thinkCtx = deepThinkOn
-    ? `\n\nDEEP THINK MODE IS ON: Before answering, reason step by step through the problem internally. Consider edge cases, performance implications, and alternative approaches. Then provide a thorough, well-structured answer.`
+  const bigCtx = bigCodeOn
+    ? `\n\nBIG CODE MODE IS ON: The user wants a MASSIVE, production-grade, fully-implemented script. Rules:
+- Write thousands of lines if the feature warrants it — do NOT truncate or summarize
+- Implement EVERY function completely, no stubs, no "-- TODO", no "add your logic here"
+- Include full error handling, edge cases, comments, and helper functions
+- Split into clearly labelled sections with -- ═══ SECTION ═══ headers
+- Do not hold back. If it needs 2000 lines, write 2000 lines.`
     : '';
+
   return `You are Ardel, a specialized AI assistant for Roblox game development. You are an expert in Luau scripting, Roblox Studio APIs, game architecture, DataStores, physics, GUI scripting, OOP patterns, and performance optimization.
 
-CURRENT SCRIPT MODE:
-${modeCtx}${thinkCtx}
+CRITICAL ACCURACY RULES — follow these precisely or the code will not work:
+- NEVER use deprecated APIs: use task.wait() not wait(), task.spawn() not spawn(), task.delay() not delay()
+- NEVER index Instance properties that don't exist — always check with :FindFirstChild() before indexing
+- NEVER fire RemoteEvents from the server to all clients without using :FireAllClients() — use the correct method
+- NEVER use game.Players.LocalPlayer in a Script (server) — only in LocalScript
+- NEVER mix client and server logic in the same script
+- Always use pcall() for DataStore operations
+- Always disconnect connections when done (store them and call :Disconnect())
+- Use :IsA() for type checking Instances, not typeof()
+- Validate all RemoteEvent arguments server-side before using them
 
-Always write clean, well-commented Luau code. Use --!strict when appropriate. Prefer modern Roblox patterns. Keep explanations concise but accurate. Always use \`luau\` as the code block language tag.`;
+CURRENT SCRIPT MODE:
+${modeCtx}${bigCtx}
+
+Always write clean, well-commented Luau code. Use --!strict when appropriate. Prefer modern Roblox patterns. Always use \`luau\` as the code block language tag.`;
 }
 
 function toggleModeDropdown(e) {
@@ -1506,12 +1562,12 @@ function selectMode(e, key, label, icon) {
 }
 
 function toggleDeepThink() {
-  deepThinkOn = !deepThinkOn;
+  bigCodeOn = !bigCodeOn;
   const btn = document.getElementById('deepThinkBtn');
   const lbl = document.getElementById('deepThinkLabel');
-  btn.classList.toggle('on', deepThinkOn);
-  lbl.textContent = deepThinkOn ? 'Thinking Deep' : 'Deep Think';
-  showToast(deepThinkOn ? '🔮 Deep Think on' : 'Deep Think off');
+  btn.classList.toggle('on', bigCodeOn);
+  lbl.textContent = bigCodeOn ? 'Big Code! ON' : 'Big Code!';
+  showToast(bigCodeOn ? '🔥 Big Code mode on' : 'Big Code mode off');
 }
 
 document.addEventListener('click', (e) => {
@@ -1819,6 +1875,15 @@ function useStarter(btn) {
 }
 
 // ─── API ──────────────────────────────────────────────────────────────────────
+let currentReader = null;
+
+function stopGeneration() {
+  if (currentReader) {
+    currentReader.cancel();
+    currentReader = null;
+  }
+}
+
 async function sendMessage() {
   const input = document.getElementById('inputBox');
   const text = input.value.trim();
@@ -1846,6 +1911,13 @@ async function sendMessage() {
   showThinking();
   isGenerating = true;
 
+  // Switch to stop button
+  const sendBtn = document.getElementById('sendBtn');
+  sendBtn.disabled = false;
+  sendBtn.classList.add('stop');
+  sendBtn.onclick = () => { stopGeneration(); };
+  sendBtn.innerHTML = `<svg viewBox="0 0 15 15" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><rect x="3.5" y="3.5" width="8" height="8" rx="1.5"/></svg>`;
+
   try {
     const messages = chats[currentChatId].messages.slice(0, -1).concat([
       { role: 'user', content: text }
@@ -1864,8 +1936,8 @@ async function sendMessage() {
           ...messages
         ],
         stream: true,
-        temperature: 0.7,
-        max_tokens: 4096
+        temperature: 0.65,
+        max_tokens: bigCodeOn ? 32000 : 4096
       })
     });
 
@@ -1879,6 +1951,7 @@ async function sendMessage() {
     // Stream
     let full = '';
     const reader = res.body.getReader();
+    currentReader = reader;
     const decoder = new TextDecoder();
     let firstChunk = true;
 
@@ -1930,10 +2003,15 @@ async function sendMessage() {
   }
 
   isGenerating = false;
+  currentReader = null;
   const inputEl = document.getElementById('inputBox');
   inputEl.disabled = false;
   inputEl.focus();
-  document.getElementById('sendBtn').disabled = inputEl.value.trim() === '';
+  const sb = document.getElementById('sendBtn');
+  sb.classList.remove('stop');
+  sb.onclick = () => sendMessage();
+  sb.innerHTML = `<svg viewBox="0 0 15 15" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M1.5 1.5L13.5 7.5L1.5 13.5L4.5 7.5L1.5 1.5Z"/></svg>`;
+  sb.disabled = inputEl.value.trim() === '';
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
