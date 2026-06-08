@@ -1,0 +1,1323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ardel — Roblox AI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0b;
+    --surface: #111113;
+    --surface2: #18181b;
+    --border: rgba(255,255,255,0.06);
+    --border-hover: rgba(255,255,255,0.12);
+    --text: #e8e8ea;
+    --text-muted: #6b6b7a;
+    --text-dim: #3d3d4a;
+    --accent: #c8f060;
+    --accent-dim: rgba(200, 240, 96, 0.12);
+    --accent-glow: rgba(200, 240, 96, 0.05);
+    --user-bubble: #1a1a1f;
+    --code-bg: #0f0f12;
+    --scrollbar: #1e1e24;
+    --font-sans: 'Geist', sans-serif;
+    --font-mono: 'DM Mono', monospace;
+    --font-serif: 'Instrument Serif', serif;
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    line-height: 1.6;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--scrollbar); border-radius: 4px; }
+
+  /* Layout */
+  .app {
+    display: flex;
+    height: 100vh;
+    width: 100vw;
+    opacity: 0;
+    animation: appFadeIn 0.6s 0.1s ease forwards;
+  }
+
+  @keyframes appFadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Sidebar */
+  .sidebar {
+    width: 240px;
+    min-width: 240px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    position: relative;
+    transition: width 0.25s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  .sidebar-header {
+    padding: 20px 16px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .logo-mark {
+    width: 28px;
+    height: 28px;
+    background: var(--accent);
+    border-radius: 7px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .logo-mark svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .logo-text {
+    font-family: var(--font-serif);
+    font-size: 17px;
+    color: var(--text);
+    letter-spacing: -0.01em;
+    font-style: italic;
+  }
+
+  .logo-version {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-top: 1px;
+    letter-spacing: 0.02em;
+  }
+
+  .sidebar-actions {
+    padding: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .new-chat-btn {
+    width: 100%;
+    background: var(--accent-dim);
+    border: 1px solid rgba(200,240,96,0.2);
+    color: var(--accent);
+    font-family: var(--font-sans);
+    font-size: 12.5px;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.15s ease;
+  }
+
+  .new-chat-btn:hover {
+    background: rgba(200,240,96,0.18);
+    border-color: rgba(200,240,96,0.35);
+  }
+
+  .new-chat-btn svg { width: 13px; height: 13px; flex-shrink: 0; }
+
+  .sidebar-section-label {
+    padding: 12px 16px 6px;
+    font-family: var(--font-mono);
+    font-size: 9.5px;
+    color: var(--text-dim);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .chat-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 4px 8px;
+  }
+
+  .chat-item {
+    padding: 8px 10px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    transition: background 0.12s ease;
+    group: true;
+    position: relative;
+  }
+
+  .chat-item:hover { background: var(--surface2); }
+  .chat-item.active { background: var(--surface2); }
+  .chat-item.active::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 50%;
+    transform: translateY(-50%);
+    width: 2px; height: 60%;
+    background: var(--accent);
+    border-radius: 2px;
+  }
+
+  .chat-item-icon {
+    width: 14px;
+    height: 14px;
+    margin-top: 1px;
+    color: var(--text-dim);
+    flex-shrink: 0;
+  }
+
+  .chat-item-text {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .chat-item-title {
+    font-size: 12.5px;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.4;
+  }
+
+  .chat-item-meta {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-dim);
+    margin-top: 1px;
+  }
+
+  .chat-item-del {
+    opacity: 0;
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    cursor: pointer;
+    padding: 2px;
+    border-radius: 4px;
+    transition: all 0.12s ease;
+    flex-shrink: 0;
+  }
+
+  .chat-item:hover .chat-item-del { opacity: 1; }
+  .chat-item-del:hover { color: #ff6b6b; background: rgba(255,107,107,0.1); }
+
+  .sidebar-footer {
+    padding: 12px;
+    border-top: 1px solid var(--border);
+  }
+
+  /* Model selector */
+  .model-selector {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: border-color 0.15s ease;
+    position: relative;
+  }
+
+  .model-selector:hover { border-color: var(--border-hover); }
+
+  .model-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    flex-shrink: 0;
+    box-shadow: 0 0 6px var(--accent);
+  }
+
+  .model-info { flex: 1; min-width: 0; }
+
+  .model-name {
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    color: var(--text);
+    font-weight: 500;
+  }
+
+  .model-provider {
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-top: 1px;
+  }
+
+  .model-chevron {
+    color: var(--text-dim);
+    transition: transform 0.2s ease;
+  }
+
+  .model-selector:hover .model-chevron { transform: rotate(180deg); }
+
+  /* Main */
+  .main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .topbar {
+    height: 52px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    gap: 12px;
+    flex-shrink: 0;
+  }
+
+  .topbar-title {
+    font-size: 13px;
+    color: var(--text-muted);
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .topbar-badge {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    padding: 3px 8px;
+    border-radius: 20px;
+    letter-spacing: 0.04em;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .topbar-badge-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: pulse 2.5s ease infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(200,240,96,0.4); }
+    50% { opacity: 0.6; box-shadow: 0 0 0 4px rgba(200,240,96,0); }
+  }
+
+  /* Messages */
+  .messages-wrap {
+    flex: 1;
+    overflow-y: auto;
+    padding: 32px 0;
+    scroll-behavior: smooth;
+  }
+
+  .messages-inner {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 0 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+  }
+
+  /* Empty state */
+  .empty-state {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 80px 24px 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    animation: emptyFadeIn 0.5s 0.3s ease both;
+  }
+
+  @keyframes emptyFadeIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .empty-greeting {
+    font-family: var(--font-serif);
+    font-size: 38px;
+    color: var(--text);
+    line-height: 1.1;
+    margin-bottom: 8px;
+    letter-spacing: -0.02em;
+  }
+
+  .empty-greeting em { color: var(--accent); font-style: italic; }
+
+  .empty-sub {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin-bottom: 48px;
+    line-height: 1.7;
+    max-width: 400px;
+  }
+
+  .starters {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    width: 100%;
+    max-width: 540px;
+  }
+
+  .starter {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.18s ease;
+    animation: starterIn 0.4s ease both;
+  }
+
+  .starter:nth-child(1) { animation-delay: 0.35s; }
+  .starter:nth-child(2) { animation-delay: 0.42s; }
+  .starter:nth-child(3) { animation-delay: 0.49s; }
+  .starter:nth-child(4) { animation-delay: 0.56s; }
+
+  @keyframes starterIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .starter:hover {
+    background: var(--surface2);
+    border-color: var(--border-hover);
+    transform: translateY(-1px);
+  }
+
+  .starter-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 5px;
+  }
+
+  .starter-text {
+    font-size: 12.5px;
+    color: var(--text);
+    line-height: 1.5;
+  }
+
+  /* Message */
+  .message {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    animation: msgIn 0.3s ease both;
+  }
+
+  @keyframes msgIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .message.user { align-items: flex-end; }
+  .message.assistant { align-items: flex-start; }
+
+  .msg-role {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 0 4px;
+  }
+
+  .msg-bubble {
+    max-width: 88%;
+    padding: 14px 18px;
+    border-radius: var(--radius);
+    line-height: 1.7;
+    font-size: 13.5px;
+  }
+
+  .message.user .msg-bubble {
+    background: var(--user-bubble);
+    border: 1px solid var(--border);
+    border-bottom-right-radius: 4px;
+    color: var(--text);
+  }
+
+  .message.assistant .msg-bubble {
+    background: transparent;
+    border: none;
+    padding: 0;
+    max-width: 100%;
+    color: var(--text);
+  }
+
+  /* Markdown-like rendering */
+  .msg-bubble p { margin-bottom: 10px; }
+  .msg-bubble p:last-child { margin-bottom: 0; }
+  .msg-bubble strong { color: var(--text); font-weight: 600; }
+  .msg-bubble em { color: var(--text-muted); font-style: italic; }
+
+  .msg-bubble ul, .msg-bubble ol {
+    margin: 8px 0 10px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .msg-bubble li { color: var(--text); }
+
+  /* Code blocks */
+  .code-block {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin: 12px 0;
+    overflow: hidden;
+    font-family: var(--font-mono);
+  }
+
+  .code-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 14px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(255,255,255,0.02);
+  }
+
+  .code-lang {
+    font-size: 10px;
+    color: var(--text-muted);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    font-family: var(--font-mono);
+  }
+
+  .copy-btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    padding: 4px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.15s ease;
+    letter-spacing: 0.04em;
+  }
+
+  .copy-btn:hover {
+    border-color: var(--border-hover);
+    color: var(--text);
+  }
+
+  .copy-btn.copied {
+    border-color: rgba(200,240,96,0.4);
+    color: var(--accent);
+  }
+
+  .copy-btn svg { width: 11px; height: 11px; }
+
+  .code-content {
+    padding: 14px 16px;
+    overflow-x: auto;
+    font-size: 12.5px;
+    line-height: 1.65;
+    color: #b8c4d0;
+    white-space: pre;
+    tab-size: 2;
+  }
+
+  /* Lua syntax highlighting */
+  .lua-keyword { color: #7dd3fc; }
+  .lua-string { color: #a5d6a7; }
+  .lua-comment { color: #546e7a; font-style: italic; }
+  .lua-number { color: #ffb74d; }
+  .lua-function { color: #c8f060; }
+  .lua-builtin { color: #ce93d8; }
+
+  /* Inline code */
+  code:not(.code-content code) {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    padding: 1px 6px;
+    border-radius: 4px;
+    color: var(--accent);
+  }
+
+  /* Thinking indicator */
+  .thinking {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 0;
+    color: var(--text-muted);
+    font-size: 12.5px;
+  }
+
+  .thinking-dots {
+    display: flex;
+    gap: 4px;
+  }
+
+  .thinking-dot {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: dotBounce 1.2s ease infinite;
+  }
+
+  .thinking-dot:nth-child(1) { animation-delay: 0s; }
+  .thinking-dot:nth-child(2) { animation-delay: 0.16s; }
+  .thinking-dot:nth-child(3) { animation-delay: 0.32s; }
+
+  @keyframes dotBounce {
+    0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
+    40% { transform: translateY(-5px); opacity: 1; }
+  }
+
+  /* Input area */
+  .input-area {
+    padding: 16px 24px 20px;
+    border-top: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+
+  .input-inner {
+    max-width: 760px;
+    margin: 0 auto;
+  }
+
+  .input-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    padding: 10px 10px 10px 16px;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .input-box:focus-within {
+    border-color: rgba(200,240,96,0.3);
+    box-shadow: 0 0 0 3px rgba(200,240,96,0.04);
+  }
+
+  .input-box textarea {
+    flex: 1;
+    background: none;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-family: var(--font-sans);
+    font-size: 13.5px;
+    line-height: 1.6;
+    resize: none;
+    min-height: 24px;
+    max-height: 180px;
+    overflow-y: auto;
+  }
+
+  .input-box textarea::placeholder { color: var(--text-dim); }
+
+  .send-btn {
+    width: 34px;
+    height: 34px;
+    background: var(--accent);
+    border: none;
+    border-radius: 9px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.15s ease;
+    color: #0a0a0b;
+  }
+
+  .send-btn:hover:not(:disabled) {
+    background: #d4f472;
+    transform: scale(1.05);
+  }
+
+  .send-btn:disabled {
+    background: var(--surface2);
+    cursor: not-allowed;
+    color: var(--text-dim);
+  }
+
+  .send-btn svg { width: 15px; height: 15px; }
+
+  .input-hint {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 8px;
+    padding: 0 2px;
+  }
+
+  .input-hint-left {
+    font-size: 11px;
+    color: var(--text-dim);
+    font-family: var(--font-mono);
+  }
+
+  .input-hint kbd {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: 10px;
+    color: var(--text-muted);
+  }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--surface2);
+    border: 1px solid var(--border-hover);
+    color: var(--text);
+    font-size: 12.5px;
+    padding: 10px 16px;
+    border-radius: var(--radius-sm);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transform: translateY(20px);
+    opacity: 0;
+    transition: all 0.25s ease;
+    pointer-events: none;
+    font-family: var(--font-mono);
+    letter-spacing: 0.02em;
+  }
+
+  .toast.show {
+    transform: translateY(0);
+    opacity: 1;
+  }
+
+  .toast-dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--accent);
+    flex-shrink: 0;
+  }
+
+  /* Scrollbar for code */
+  .code-content::-webkit-scrollbar { height: 4px; }
+  .code-content::-webkit-scrollbar-track { background: transparent; }
+  .code-content::-webkit-scrollbar-thumb { background: var(--scrollbar); border-radius: 4px; }
+
+  /* Separator */
+  .msg-sep {
+    height: 1px;
+    background: var(--border);
+    margin: 4px 0;
+    opacity: 0.5;
+  }
+
+  /* Responsive */
+  @media (max-width: 640px) {
+    .sidebar { width: 200px; min-width: 200px; }
+    .starters { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app" id="app">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="logo-mark">
+        <svg viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M2 7h4M8 7h4M7 2v4M7 8v4" stroke="#0a0a0b" stroke-width="1.6" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div>
+        <div class="logo-text">Ardel</div>
+        <div class="logo-version">0'1 · Roblox</div>
+      </div>
+    </div>
+
+    <div class="sidebar-actions">
+      <button class="new-chat-btn" onclick="newChat()">
+        <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+          <path d="M7 2v10M2 7h10"/>
+        </svg>
+        New conversation
+      </button>
+    </div>
+
+    <div class="sidebar-section-label">Saved chats</div>
+    <div class="chat-list" id="chatList"></div>
+
+    <div class="sidebar-footer">
+      <div class="model-selector" title="Model: Ardel 0'1 (GLM-4.5 Air)">
+        <div class="model-dot"></div>
+        <div class="model-info">
+          <div class="model-name">ardel 0'1</div>
+          <div class="model-provider">GLM-4.5 Air · Z.ai</div>
+        </div>
+        <svg class="model-chevron" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+          <path d="M3 4.5l3 3 3-3"/>
+        </svg>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+    <div class="topbar">
+      <div class="topbar-title" id="topbarTitle">Ready to help with your Roblox project</div>
+      <div class="topbar-badge">
+        <div class="topbar-badge-dot"></div>
+        Online
+      </div>
+    </div>
+
+    <div class="messages-wrap" id="messagesWrap">
+      <!-- Empty state or messages rendered here -->
+    </div>
+
+    <div class="input-area">
+      <div class="input-inner">
+        <div class="input-box">
+          <textarea
+            id="inputBox"
+            placeholder="Ask about Roblox scripting, Luau, game mechanics…"
+            rows="1"
+            onkeydown="handleKey(event)"
+            oninput="autoResize(this)"
+          ></textarea>
+          <button class="send-btn" id="sendBtn" onclick="sendMessage()" disabled>
+            <svg viewBox="0 0 15 15" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+              <path d="M1.5 1.5L13.5 7.5L1.5 13.5L4.5 7.5L1.5 1.5Z"/>
+            </svg>
+          </button>
+        </div>
+        <div class="input-hint">
+          <span class="input-hint-left"><kbd>Enter</kbd> to send &nbsp;·&nbsp; <kbd>Shift+Enter</kbd> for newline</span>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div class="toast" id="toast">
+  <div class="toast-dot"></div>
+  <span id="toastMsg">Copied</span>
+</div>
+
+<script>
+// ─── State ────────────────────────────────────────────────────────────────────
+const STORAGE_KEY = 'ardel_chats_v1';
+const API_KEY = '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';
+const MODEL = 'z-ai/glm-4.5-air:free';
+
+const SYSTEM_PROMPT = `You are Ardel 0'1, a specialized AI assistant for Roblox game development. You are an expert in:
+- Luau scripting (Roblox's dialect of Lua)
+- Roblox Studio APIs, services (RunService, TweenService, Players, Workspace, etc.)
+- Game architecture: client-server model, RemoteEvents, RemoteFunctions
+- DataStore and data persistence
+- Physics, character controllers, animations
+- GUI scripting (ScreenGui, BillboardGui, SurfaceGui)
+- Module scripts, OOP patterns in Luau
+- Performance optimization and best practices
+- Roblox-specific debugging
+
+Always write clean, well-commented Luau code. Use strict typing with --!strict when appropriate. Prefer modern Roblox patterns. Keep explanations concise but accurate. When providing code, always use luau as the code block language tag.`;
+
+let chats = {};
+let currentChatId = null;
+let isGenerating = false;
+
+// ─── Storage ──────────────────────────────────────────────────────────────────
+function saveChats() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(chats)); } catch(e) {}
+}
+
+function loadChats() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) chats = JSON.parse(raw);
+  } catch(e) { chats = {}; }
+}
+
+// ─── Chat management ──────────────────────────────────────────────────────────
+function newChat() {
+  const id = 'chat_' + Date.now();
+  chats[id] = { title: 'New conversation', messages: [], created: Date.now() };
+  saveChats();
+  switchChat(id);
+  renderSidebar();
+  document.getElementById('inputBox').focus();
+}
+
+function switchChat(id) {
+  currentChatId = id;
+  renderMessages();
+  renderSidebar();
+  const chat = chats[id];
+  document.getElementById('topbarTitle').textContent =
+    chat?.title === 'New conversation' ? 'Ready to help with your Roblox project' : chat?.title;
+}
+
+function deleteChat(id, e) {
+  e.stopPropagation();
+  delete chats[id];
+  saveChats();
+  if (currentChatId === id) {
+    const remaining = Object.keys(chats);
+    if (remaining.length > 0) switchChat(remaining[remaining.length - 1]);
+    else { currentChatId = null; renderMessages(); }
+  }
+  renderSidebar();
+}
+
+function renderSidebar() {
+  const list = document.getElementById('chatList');
+  const ids = Object.keys(chats).sort((a,b) => (chats[b].created||0) - (chats[a].created||0));
+  if (ids.length === 0) {
+    list.innerHTML = `<div style="padding:16px;font-size:11.5px;color:var(--text-dim);font-family:var(--font-mono);">No saved chats yet.</div>`;
+    return;
+  }
+  list.innerHTML = ids.map(id => {
+    const c = chats[id];
+    const active = id === currentChatId ? 'active' : '';
+    return `<div class="chat-item ${active}" onclick="switchChat('${id}')">
+      <svg class="chat-item-icon" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M2 3h10a1 1 0 011 1v5a1 1 0 01-1 1H5l-3 2V4a1 1 0 011-1z"/>
+      </svg>
+      <div class="chat-item-text">
+        <div class="chat-item-title">${escHtml(c.title)}</div>
+        <div class="chat-item-meta">${c.messages.length} msg${c.messages.length !== 1?'s':''}</div>
+      </div>
+      <button class="chat-item-del" onclick="deleteChat('${id}', event)" title="Delete">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+          <path d="M2 2l8 8M10 2l-8 8"/>
+        </svg>
+      </button>
+    </div>`;
+  }).join('');
+}
+
+// ─── Message rendering ─────────────────────────────────────────────────────────
+function renderMessages() {
+  const wrap = document.getElementById('messagesWrap');
+  if (!currentChatId || !chats[currentChatId] || chats[currentChatId].messages.length === 0) {
+    renderEmptyState();
+    return;
+  }
+  const msgs = chats[currentChatId].messages;
+  wrap.innerHTML = `<div class="messages-inner" id="msgsInner">
+    ${msgs.map(m => renderMsg(m.role, m.content)).join('')}
+  </div>`;
+  scrollBottom();
+}
+
+function renderEmptyState() {
+  const wrap = document.getElementById('messagesWrap');
+  wrap.innerHTML = `<div class="empty-state">
+    <div class="empty-greeting">Hello,<br><em>let's build.</em></div>
+    <div class="empty-sub">Ardel 0'1 is ready to help with your Roblox scripts, game logic, and Luau code.</div>
+    <div class="starters">
+      <button class="starter" onclick="useStarter(this)">
+        <div class="starter-label">DataStore</div>
+        <div class="starter-text">Save and load player data with ProfileService pattern</div>
+      </button>
+      <button class="starter" onclick="useStarter(this)">
+        <div class="starter-label">Physics</div>
+        <div class="starter-text">Custom character controller with VectorForce</div>
+      </button>
+      <button class="starter" onclick="useStarter(this)">
+        <div class="starter-label">Remotes</div>
+        <div class="starter-text">How to structure RemoteEvents for a shop system</div>
+      </button>
+      <button class="starter" onclick="useStarter(this)">
+        <div class="starter-label">Tweening</div>
+        <div class="starter-text">Animate UI elements with TweenService smoothly</div>
+      </button>
+    </div>
+  </div>`;
+}
+
+function renderMsg(role, content) {
+  const roleLabel = role === 'user' ? 'You' : "Ardel 0'1";
+  const bubbleContent = role === 'assistant' ? formatAssistant(content) : `<div class="msg-bubble">${escHtml(content)}</div>`;
+  return `<div class="message ${role}">
+    <div class="msg-role">${roleLabel}</div>
+    ${bubbleContent}
+  </div>`;
+}
+
+function appendMessage(role, content) {
+  const wrap = document.getElementById('messagesWrap');
+  let inner = document.getElementById('msgsInner');
+  if (!inner) {
+    wrap.innerHTML = `<div class="messages-inner" id="msgsInner"></div>`;
+    inner = document.getElementById('msgsInner');
+  }
+  const div = document.createElement('div');
+  div.innerHTML = renderMsg(role, content);
+  inner.appendChild(div.firstElementChild);
+  scrollBottom();
+}
+
+function updateLastAssistant(content) {
+  const inner = document.getElementById('msgsInner');
+  if (!inner) return;
+  const msgs = inner.querySelectorAll('.message.assistant');
+  const last = msgs[msgs.length - 1];
+  if (last) {
+    const existing = last.querySelector('.msg-bubble, .thinking');
+    const div = document.createElement('div');
+    div.innerHTML = formatAssistant(content);
+    if (existing) last.replaceChild(div.firstElementChild, existing);
+    else last.appendChild(div.firstElementChild);
+  }
+  scrollBottom();
+}
+
+function showThinking() {
+  const wrap = document.getElementById('messagesWrap');
+  let inner = document.getElementById('msgsInner');
+  if (!inner) {
+    wrap.innerHTML = `<div class="messages-inner" id="msgsInner"></div>`;
+    inner = document.getElementById('msgsInner');
+  }
+  const div = document.createElement('div');
+  div.className = 'message assistant';
+  div.innerHTML = `<div class="msg-role">Ardel 0'1</div>
+    <div class="thinking">
+      <div class="thinking-dots">
+        <div class="thinking-dot"></div>
+        <div class="thinking-dot"></div>
+        <div class="thinking-dot"></div>
+      </div>
+      <span>Thinking…</span>
+    </div>`;
+  inner.appendChild(div);
+  scrollBottom();
+}
+
+function removeThinking() {
+  const inner = document.getElementById('msgsInner');
+  if (!inner) return;
+  const thinking = inner.querySelector('.thinking');
+  if (thinking) thinking.closest('.message')?.remove();
+}
+
+// ─── Formatting ───────────────────────────────────────────────────────────────
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function formatAssistant(text) {
+  // Split by code blocks
+  const parts = text.split(/(```[\s\S]*?```)/g);
+  let html = '<div class="msg-bubble">';
+  parts.forEach(part => {
+    if (part.startsWith('```')) {
+      const lines = part.slice(3, -3).split('\n');
+      const lang = lines[0].trim() || 'lua';
+      const code = lines.slice(1).join('\n');
+      const id = 'cb_' + Math.random().toString(36).slice(2,8);
+      html += `<div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">${escHtml(lang)}</span>
+          <button class="copy-btn" id="${id}" onclick="copyCode('${id}', \`${escJs(code)}\`)">
+            <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="4" y="4" width="8" height="8" rx="1.5"/>
+              <path d="M2 10V2.5A.5.5 0 012.5 2H10"/>
+            </svg>
+            Copy
+          </button>
+        </div>
+        <div class="code-content">${highlightLua(escHtml(code))}</div>
+      </div>`;
+    } else {
+      // inline formatting
+      let p = escHtml(part);
+      p = p.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+      p = p.replace(/\*(.+?)\*/g, '<em>$1</em>');
+      p = p.replace(/`([^`]+)`/g, '<code>$1</code>');
+      p = p.replace(/^#{1,3} (.+)$/gm, '<strong>$1</strong>');
+      p = p.replace(/^[-*] (.+)$/gm, '<li>$1</li>');
+      p = p.replace(/(<li>.*<\/li>\n?)+/g, m => `<ul>${m}</ul>`);
+      p = p.replace(/\n\n+/g, '</p><p>');
+      p = `<p>${p}</p>`;
+      html += p;
+    }
+  });
+  html += '</div>';
+  return html;
+}
+
+function escJs(s) {
+  return s.replace(/\\/g,'\\\\').replace(/`/g,'\\`').replace(/\$/g,'\\$');
+}
+
+function highlightLua(code) {
+  const keywords = ['local','function','end','if','then','else','elseif','for','while','do','repeat','until','return','break','true','false','nil','and','or','not','in'];
+  const builtins = ['print','warn','error','pairs','ipairs','next','type','tostring','tonumber','pcall','xpcall','rawget','rawset','select','unpack','table','string','math','task','wait','spawn','coroutine'];
+
+  let out = code;
+  // strings
+  out = out.replace(/(["'])(?:(?=(\\?))\2.)*?\1/g, m => `<span class="lua-string">${m}</span>`);
+  // comments
+  out = out.replace(/--[^\n]*/g, m => `<span class="lua-comment">${m}</span>`);
+  // numbers
+  out = out.replace(/\b(\d+\.?\d*)\b/g, '<span class="lua-number">$1</span>');
+  // keywords
+  keywords.forEach(k => {
+    out = out.replace(new RegExp(`\\b(${k})\\b`, 'g'), '<span class="lua-keyword">$1</span>');
+  });
+  // builtins
+  builtins.forEach(b => {
+    out = out.replace(new RegExp(`\\b(${b})\\b`, 'g'), '<span class="lua-builtin">$1</span>');
+  });
+  // function names (word followed by open paren)
+  out = out.replace(/\b([a-zA-Z_][a-zA-Z0-9_]*)(?=\s*\()/g, (m, n) => {
+    if (keywords.includes(n) || builtins.includes(n)) return m;
+    return `<span class="lua-function">${n}</span>`;
+  });
+  return out;
+}
+
+function copyCode(id, code) {
+  navigator.clipboard.writeText(code).then(() => {
+    const btn = document.getElementById(id);
+    if (btn) {
+      btn.classList.add('copied');
+      btn.innerHTML = `<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7l3.5 3.5L12 3"/></svg> Copied`;
+      setTimeout(() => {
+        btn.classList.remove('copied');
+        btn.innerHTML = `<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="8" height="8" rx="1.5"/><path d="M2 10V2.5A.5.5 0 012.5 2H10"/></svg> Copy`;
+      }, 2000);
+    }
+    showToast('Code copied to clipboard');
+  });
+}
+
+// ─── Input ────────────────────────────────────────────────────────────────────
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 180) + 'px';
+  document.getElementById('sendBtn').disabled = el.value.trim() === '' || isGenerating;
+}
+
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    if (!isGenerating && document.getElementById('inputBox').value.trim()) sendMessage();
+  }
+}
+
+function useStarter(btn) {
+  const text = btn.querySelector('.starter-text').textContent;
+  const input = document.getElementById('inputBox');
+  input.value = text;
+  autoResize(input);
+  sendMessage();
+}
+
+// ─── API ──────────────────────────────────────────────────────────────────────
+async function sendMessage() {
+  const input = document.getElementById('inputBox');
+  const text = input.value.trim();
+  if (!text || isGenerating) return;
+
+  // Ensure active chat
+  if (!currentChatId) newChat();
+
+  // Add user message
+  chats[currentChatId].messages.push({ role: 'user', content: text });
+  if (chats[currentChatId].messages.length === 1) {
+    chats[currentChatId].title = text.slice(0, 42) + (text.length > 42 ? '…' : '');
+    document.getElementById('topbarTitle').textContent = chats[currentChatId].title;
+  }
+  saveChats();
+  renderSidebar();
+
+  // Clear input
+  input.value = '';
+  input.style.height = 'auto';
+  document.getElementById('sendBtn').disabled = true;
+
+  // Show user msg & thinking
+  appendMessage('user', text);
+  showThinking();
+  isGenerating = true;
+
+  try {
+    const messages = chats[currentChatId].messages.slice(0, -1).concat([
+      { role: 'user', content: text }
+    ]);
+
+    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${API_KEY}`,
+        'HTTP-Referer': window.location.href,
+        'X-Title': 'Ardel — Roblox AI',
+      },
+      body: JSON.stringify({
+        model: MODEL,
+        messages: [
+          { role: 'system', content: SYSTEM_PROMPT },
+          ...messages
+        ],
+        stream: true,
+        temperature: 0.7,
+        max_tokens: 4096
+      })
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error?.message || `HTTP ${res.status}`);
+    }
+
+    removeThinking();
+
+    // Stream
+    let full = '';
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let firstChunk = true;
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      const chunk = decoder.decode(value, { stream: true });
+      const lines = chunk.split('\n');
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const data = line.slice(6).trim();
+        if (data === '[DONE]') break;
+        try {
+          const json = JSON.parse(data);
+          const delta = json.choices?.[0]?.delta?.content || '';
+          if (delta) {
+            full += delta;
+            if (firstChunk) {
+              // Insert assistant message placeholder
+              const inner = document.getElementById('msgsInner');
+              const div = document.createElement('div');
+              div.className = 'message assistant';
+              div.innerHTML = `<div class="msg-role">Ardel 0'1</div><div class="msg-bubble"></div>`;
+              inner?.appendChild(div);
+              firstChunk = false;
+            }
+            updateLastAssistant(full);
+          }
+        } catch(e) {}
+      }
+    }
+
+    // Save assistant message
+    chats[currentChatId].messages.push({ role: 'assistant', content: full });
+    saveChats();
+
+  } catch(err) {
+    removeThinking();
+    const errMsg = `Sorry, something went wrong: ${err.message}`;
+    const inner = document.getElementById('msgsInner');
+    if (inner) {
+      const div = document.createElement('div');
+      div.className = 'message assistant';
+      div.innerHTML = `<div class="msg-role">Ardel 0'1</div><div class="msg-bubble" style="color:var(--text-muted)">${escHtml(errMsg)}</div>`;
+      inner.appendChild(div);
+    }
+    chats[currentChatId].messages.push({ role: 'assistant', content: errMsg });
+    saveChats();
+  }
+
+  isGenerating = false;
+  const inputEl = document.getElementById('inputBox');
+  inputEl.disabled = false;
+  inputEl.focus();
+  document.getElementById('sendBtn').disabled = inputEl.value.trim() === '';
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+function scrollBottom() {
+  const wrap = document.getElementById('messagesWrap');
+  if (wrap) wrap.scrollTop = wrap.scrollHeight;
+}
+
+let toastTimer;
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  document.getElementById('toastMsg').textContent = msg;
+  toast.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove('show'), 2000);
+}
+
+// ─── Init ─────────────────────────────────────────────────────────────────────
+function init() {
+  loadChats();
+  const ids = Object.keys(chats);
+  if (ids.length > 0) {
+    const latest = ids.sort((a,b) => (chats[b].created||0) - (chats[a].created||0))[0];
+    switchChat(latest);
+  } else {
+    renderEmptyState();
+  }
+  renderSidebar();
+  document.getElementById('inputBox').addEventListener('input', function() {
+    document.getElementById('sendBtn').disabled = this.value.trim() === '' || isGenerating;
+  });
+}
+
+init();
+</script>
+</body>
+</html>
