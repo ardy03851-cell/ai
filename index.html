@@ -1070,7 +1070,7 @@
         <div class="model-selector" id="modelSelector" onclick="toggleModelDropdown()">
           <div class="model-dot"></div>
           <div class="model-info">
-            <div class="model-name" id="modelName">ardel 0'1</div>
+            <div class="model-name" id="modelName">Aryx</div>
             <div class="model-provider" id="modelProvider">Poolside Laguna · Z.ai</div>
           </div>
           <svg class="model-chevron" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor"
@@ -1079,14 +1079,14 @@
           </svg>
           <div class="model-dropdown" id="modelDropdown">
             <div class="model-option active" id="opt-01" onclick="selectModel(event,'01')">
-              <div class="model-option-name">ardel 0'1 <span class="model-option-tag">Scripting</span></div>
+              <div class="model-option-name">Aryx <span class="model-option-tag">Scripting</span></div>
               <div class="model-option-desc">Fast Roblox scripting assistant. Best for Luau code, quick fixes, and game
                 logic.
               </div>
               <div class="model-option-provider">Poolside Laguna XS · Z.ai</div>
             </div>
             <div class="model-option" id="opt-02" onclick="selectModel(event,'02')">
-              <div class="model-option-name">ardel 0'2 <span class="model-option-tag">Reasoning</span></div>
+              <div class="model-option-name">Ardyn <span class="model-option-tag">Reasoning</span></div>
               <div class="model-option-desc">Deep reasoning & architecture. Best for complex systems, agent pipelines,
                 and
                 long projects.</div>
@@ -1148,13 +1148,13 @@ const MODELS = {
   '01': {
     id: 'poolside/laguna-xs.2:free',
     apiKey: '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',
-    name: "ardel 0'1",
+    name: "Aryx",
     provider: 'Poolside Laguna · Z.ai'
   },
   '02': {
     id: 'nvidia/nemotron-3-ultra-550b-a55b:free',
     apiKey: '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',
-    name: "ardel 0'2",
+    name: "Ardyn",
     provider: 'Nemotron Ultra · NVIDIA'
   }
 };
@@ -1387,6 +1387,8 @@ function escHtml(s) {
   return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
+const codeStore = {};
+
 function formatAssistant(text) {
   // Split by code blocks
   const parts = text.split(/(```[\s\S]*?```)/g);
@@ -1397,10 +1399,11 @@ function formatAssistant(text) {
       const lang = lines[0].trim() || 'lua';
       const code = lines.slice(1).join('\n');
       const id = 'cb_' + Math.random().toString(36).slice(2,8);
+      codeStore[id] = code;
       html += `<div class="code-block">
         <div class="code-header">
           <span class="code-lang">${escHtml(lang)}</span>
-          <button class="copy-btn" id="${id}" onclick="copyCode('${id}', \`${escJs(code)}\`)">
+          <button class="copy-btn" id="${id}" onclick="copyCode('${id}')">
             <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
               <rect x="4" y="4" width="8" height="8" rx="1.5"/>
               <path d="M2 10V2.5A.5.5 0 012.5 2H10"/>
@@ -1459,7 +1462,8 @@ function highlightLua(code) {
   return out;
 }
 
-function copyCode(id, code) {
+function copyCode(id) {
+  const code = codeStore[id] ?? '';
   navigator.clipboard.writeText(code).then(() => {
     const btn = document.getElementById(id);
     if (btn) {
