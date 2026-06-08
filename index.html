@@ -327,8 +327,99 @@
       transition: transform 0.2s ease;
     }
 
-    .model-selector:hover .model-chevron {
+    .model-selector.open .model-chevron {
       transform: rotate(180deg);
+    }
+
+    .model-dropdown {
+      position: absolute;
+      bottom: calc(100% + 8px);
+      left: 0;
+      right: 0;
+      background: var(--surface2);
+      border: 1px solid var(--border-hover);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(6px);
+      transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 100;
+    }
+
+    .model-dropdown.open {
+      opacity: 1;
+      pointer-events: all;
+      transform: translateY(0);
+    }
+
+    .model-option {
+      padding: 10px 12px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      border-bottom: 1px solid var(--border);
+      transition: background 0.12s ease;
+      position: relative;
+    }
+
+    .model-option:last-child {
+      border-bottom: none;
+    }
+
+    .model-option:hover {
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .model-option.active {
+      background: var(--accent-dim);
+    }
+
+    .model-option.active::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: var(--accent);
+      border-radius: 0 2px 2px 0;
+    }
+
+    .model-option-name {
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      color: var(--text);
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .model-option-tag {
+      font-size: 9px;
+      font-family: var(--font-mono);
+      background: var(--accent-dim);
+      color: var(--accent);
+      border: 1px solid rgba(200, 240, 96, 0.2);
+      padding: 1px 5px;
+      border-radius: 3px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .model-option-desc {
+      font-size: 10.5px;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    .model-option-provider {
+      font-size: 9.5px;
+      color: var(--text-dim);
+      font-family: var(--font-mono);
+      margin-top: 1px;
     }
 
     /* Main */
@@ -951,8 +1042,10 @@
     <aside class="sidebar">
       <div class="sidebar-header">
         <div class="logo-mark">
-          <svg viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M2 7h4M8 7h4M7 2v4M7 8v4" stroke="#0a0a0b" stroke-width="1.6" stroke-linecap="round" />
+          <svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <polygon points="14,2 25,8 25,20 14,26 3,20 3,8" fill="#c8f060" stroke="none" />
+            <text x="14" y="19" text-anchor="middle" font-family="'Geist',sans-serif" font-size="13" font-weight="600"
+              fill="#0a0a0b" letter-spacing="-0.5">A</text>
           </svg>
         </div>
         <div>
@@ -974,16 +1067,32 @@
       <div class="chat-list" id="chatList"></div>
 
       <div class="sidebar-footer">
-        <div class="model-selector" title="Model: Ardel 0'1 (GLM-4.5 Air)">
+        <div class="model-selector" id="modelSelector" onclick="toggleModelDropdown()">
           <div class="model-dot"></div>
           <div class="model-info">
-            <div class="model-name">ardel 0'1</div>
-            <div class="model-provider">GLM-4.5 Air · Z.ai</div>
+            <div class="model-name" id="modelName">ardel 0'1</div>
+            <div class="model-provider" id="modelProvider">Poolside Laguna · Z.ai</div>
           </div>
           <svg class="model-chevron" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor"
             stroke-width="1.5" stroke-linecap="round">
             <path d="M3 4.5l3 3 3-3" />
           </svg>
+          <div class="model-dropdown" id="modelDropdown">
+            <div class="model-option active" id="opt-01" onclick="selectModel(event,'01')">
+              <div class="model-option-name">ardel 0'1 <span class="model-option-tag">Scripting</span></div>
+              <div class="model-option-desc">Fast Roblox scripting assistant. Best for Luau code, quick fixes, and game
+                logic.
+              </div>
+              <div class="model-option-provider">Poolside Laguna XS · Z.ai</div>
+            </div>
+            <div class="model-option" id="opt-02" onclick="selectModel(event,'02')">
+              <div class="model-option-name">ardel 0'2 <span class="model-option-tag">Reasoning</span></div>
+              <div class="model-option-desc">Deep reasoning & architecture. Best for complex systems, agent pipelines,
+                and
+                long projects.</div>
+              <div class="model-option-provider">Nemotron 3 Ultra 550B · NVIDIA</div>
+            </div>
+          </div>
         </div>
       </div>
     </aside>
@@ -1011,7 +1120,7 @@
             rows="1"
             onkeydown="handleKey(event)"
             oninput="autoResize(this)"
-            
+
           ></textarea>
             <button class="send-btn" id="sendBtn" onclick="sendMessage()" disabled>
             <svg viewBox="0 0 15 15" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
@@ -1035,8 +1144,50 @@
   <script>
     // ─── State ────────────────────────────────────────────────────────────────────
 const STORAGE_KEY = 'ardel_chats_v1';
-const API_KEY = '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';
-const MODEL = 'z-ai/glm-4.5-air:free';
+const MODELS = {
+  '01': {
+    id: 'poolside/laguna-xs.2:free',
+    apiKey: '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',
+    name: "ardel 0'1",
+    provider: 'Poolside Laguna · Z.ai'
+  },
+  '02': {
+    id: 'nvidia/nemotron-3-ultra-550b-a55b:free',
+    apiKey: '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',
+    name: "ardel 0'2",
+    provider: 'Nemotron Ultra · NVIDIA'
+  }
+};
+let activeModel = '01';
+
+function toggleModelDropdown() {
+  const sel = document.getElementById('modelSelector');
+  const dd = document.getElementById('modelDropdown');
+  const isOpen = dd.classList.contains('open');
+  if (isOpen) { dd.classList.remove('open'); sel.classList.remove('open'); }
+  else { dd.classList.add('open'); sel.classList.add('open'); }
+}
+
+function selectModel(e, key) {
+  e.stopPropagation();
+  activeModel = key;
+  const m = MODELS[key];
+  document.getElementById('modelName').textContent = m.name;
+  document.getElementById('modelProvider').textContent = m.provider;
+  document.querySelectorAll('.model-option').forEach(el => el.classList.remove('active'));
+  document.getElementById('opt-' + key).classList.add('active');
+  document.getElementById('modelDropdown').classList.remove('open');
+  document.getElementById('modelSelector').classList.remove('open');
+  showToast('Switched to ' + m.name);
+}
+
+document.addEventListener('click', (e) => {
+  const sel = document.getElementById('modelSelector');
+  if (sel && !sel.contains(e.target)) {
+    document.getElementById('modelDropdown')?.classList.remove('open');
+    sel.classList.remove('open');
+  }
+});
 
 const SYSTEM_PROMPT = `You are Ardel 0'1, a specialized AI assistant for Roblox game development. You are an expert in:
 - Luau scripting (Roblox's dialect of Lua)
@@ -1382,10 +1533,10 @@ async function sendMessage() {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${API_KEY}`,
+        'Authorization': `Bearer ${MODELS[activeModel].apiKey}`,
       },
       body: JSON.stringify({
-        model: MODEL,
+        model: MODELS[activeModel].id,
         messages: [
           { role: 'system', content: SYSTEM_PROMPT },
           ...messages
