@@ -558,16 +558,16 @@ let activeTab = "preview";
 let chatHistory = [];
 let thinkMode = false;
 
-const SYSTEM_PROMPT = `You are an expert web developer AI. Your job is to generate and iteratively edit complete, self-contained HTML files.
+const SYSTEM_PROMPT = `You are an expert web developer AI. Generate and edit complete, self-contained HTML files.
 
-RULES:
-- Always respond with a COMPLETE, valid HTML file (<!DOCTYPE html> ... </html>)
-- The file must be fully self-contained: all CSS in <style>, all JS in <script>
-- Make it visually impressive, modern, and professional
-- When the user asks to edit/add something, take the CURRENT HTML and modify it — preserve everything that was there
-- Never truncate or summarize — always output the full HTML
-- Do not explain or add text outside the HTML. Output ONLY the raw HTML.
-- Make designs look real and polished, not placeholder-like`;
+CRITICAL RULES — follow exactly:
+- Output ONLY raw HTML. No explanations, no markdown, no code fences, no comments outside HTML.
+- Always output a COMPLETE file: <!DOCTYPE html> through </html>. Never stop mid-way.
+- All CSS inside <style>, all JS inside <script>. Zero external dependencies.
+- Write efficient, concise code. Avoid bloat. Keep files under 500 lines where possible.
+- When editing: preserve all existing content, only add/change what was requested.
+- Designs must look polished and real — not placeholder-like.
+- NEVER truncate. If you're running long, simplify the implementation — but always close every tag and end with </html>.`;
 
 const SYSTEM_PROMPT_THINK = `You are a sharp, concise AI assistant. Respond conversationally and directly. Think carefully before answering. Be insightful and clear — no filler, no fluff. Do not generate HTML or code unless the user explicitly asks for it.`;
 
@@ -656,6 +656,53 @@ function switchTab(tab, el) {
   code.classList.toggle('hidden', tab !== 'code');
 }
 
+async function callAPI(messages, maxTokens, temperature) {
+  const res = await fetch(API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${API_KEY}` },
+    body: JSON.stringify({ model: MODEL, messages, max_tokens: maxTokens, temperature })
+  });
+  if (res.status === 429) {
+    const retry = res.headers.get('retry-after');
+    throw new Error(`Rate limited (429). ${retry ? `Retry in ${retry}s.` : 'Wait ~60s.'}`);
+  }
+  if (!res.ok) {
+    const e = await res.json().catch(() => ({}));
+    throw new Error(e?.error?.message || `API error ${res.status}`);
+  }
+  return res.json();
+}
+
+function isTruncated(text, finishReason) {
+  if (finishReason === 'length') return true;
+  const t = text.trimEnd();
+  if (!t.toLowerCase().includes('</html>')) return true;
+  return false;
+}
+
+async function fetchComplete(systemPrompt, messages, maxTokens, temperature) {
+  let accumulated = '';
+  let history = [...messages];
+  const MAX_CONTINUATIONS = 4;
+
+  for (let i = 0; i <= MAX_CONTINUATIONS; i++) {
+    const data = await callAPI([{ role: 'system', content: systemPrompt }, ...history], maxTokens, temperature);
+    const choice = data.choices?.[0];
+    const chunk = choice?.message?.content || '';
+    const finishReason = choice?.finish_reason;
+    accumulated += chunk;
+
+    if (!isTruncated(accumulated, finishReason)) break;
+
+    if (i === MAX_CONTINUATIONS) break;
+
+    // Ask model to continue exactly where it left off
+    history = [...history, { role: 'assistant', content: chunk }, { role: 'user', content: 'Continue exactly from where you left off. Do not repeat anything. Output only the remaining HTML.' }];
+  }
+
+  return accumulated;
+}
+
 async function sendMessage() {
   const input = document.getElementById('input');
   const sendBtn = document.getElementById('sendBtn');
@@ -672,33 +719,23 @@ async function sendMessage() {
     ? `Current HTML:\n\`\`\`html\n${currentHTML}\n\`\`\`\n\nUser request: ${text}`
     : text;
 
-  chatHistory.push({ role: "user", content: userContent });
+  chatHistory.push({ role: 'user', content: userContent });
   showThinking();
 
   try {
-    const res = await fetch(API_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${API_KEY}` },
-      body: JSON.stringify({ model: MODEL, messages: [{ role: "system", content: activePrompt }, ...chatHistory], max_tokens: thinkMode ? 1024 : 8000, temperature: thinkMode ? 0.85 : 0.7 })
-    });
-
-    if (res.status === 429) {
-      const retry = res.headers.get('retry-after');
-      const wait = retry ? `Try again in ${retry}s.` : 'Rate limited — wait ~60s and try again.';
-      throw new Error(`Rate limited (429). ${wait}`);
+    let reply;
+    if (thinkMode) {
+      const data = await callAPI([{ role: 'system', content: activePrompt }, ...chatHistory], 1024, 0.85);
+      reply = data.choices?.[0]?.message?.content || '';
+    } else {
+      reply = await fetchComplete(activePrompt, chatHistory, 8000, 0.7);
     }
-    if (!res.ok) {
-      const errData = await res.json().catch(() => ({}));
-      throw new Error(errData?.error?.message || `API error ${res.status}`);
-    }
-    const data = await res.json();
-    const reply = data.choices?.[0]?.message?.content || "";
-    chatHistory.push({ role: "assistant", content: reply });
 
+    chatHistory.push({ role: 'assistant', content: reply });
     removeThinking();
 
     if (thinkMode) {
-      addMessage('ai', reply || "No response.");
+      addMessage('ai', reply || 'No response.');
     } else {
       const html = extractHTML(reply);
       if (html) {
@@ -706,14 +743,14 @@ async function sendMessage() {
         renderPreview(html);
         addMessage('ai', 'Site updated. Ask me to add or change anything.');
       } else {
-        addMessage('ai', reply || "Something went wrong. Try again.");
+        addMessage('ai', reply || 'Something went wrong. Try again.');
       }
     }
   } catch (err) {
     removeThinking();
     const is429 = err.message.includes('429') || err.message.includes('Rate limited');
     addMessage('ai', is429
-      ? `Rate limited. OpenRouter free tier allows ~50 requests/day. Wait a minute or add credits to your account.`
+      ? 'Rate limited. OpenRouter free tier allows ~50 req/day. Wait a minute or add credits to your account.'
       : `Error: ${err.message}`);
   }
 
