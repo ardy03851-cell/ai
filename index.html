@@ -1745,13 +1745,58 @@ async function downloadAll() {
   if (names.length === 1) { downloadActiveFile(); return; }
 
   const zip = new JSZip();
-  names.forEach(n => zip.file(n, files[n]));
-  const blob = await zip.generateAsync({ type: 'blob' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = 'airvy-files.zip'; a.click();
-  URL.revokeObjectURL(url);
-  showToast(`Downloaded ${names.length} files`);
+
+  if (engine === 'godot') {
+    // Build a valid Godot 4 project structure
+    const projectGodot = `; Engine configuration file.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;    [section] ; section goes between []
+;    param=value ; assign values to parameters
+
+config_version=5
+
+[application]
+
+config/name="AirvyProject"
+config/features=PackedStringArray("4.3", "Forward Plus")
+config/icon="res://icon.svg"
+
+[rendering]
+
+renderer/rendering_method="forward_plus"
+`;
+    const iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128"><rect width="128" height="128" rx="16" fill="#000"/><polygon points="69,10 15,74 64,74 59,118 113,54 64,54" fill="#a585d6"/></svg>`;
+
+    zip.file('project.godot', projectGodot);
+    zip.file('icon.svg', iconSvg);
+
+    names.forEach(n => {
+      // Place .gd and .cs files under a Scripts/ folder
+      const ext = n.split('.').pop().toLowerCase();
+      const folder = (ext === 'gd' || ext === 'cs') ? `Scripts/${n}` : n;
+      zip.file(folder, files[n]);
+    });
+
+    const blob = await zip.generateAsync({ type: 'blob' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'AirvyProject.zip'; a.click();
+    URL.revokeObjectURL(url);
+    showToast(`Downloaded Godot project (${names.length} files)`);
+
+  } else {
+    // Unity: just zip files as-is (Unity projects are imported differently)
+    names.forEach(n => zip.file(n, files[n]));
+    const blob = await zip.generateAsync({ type: 'blob' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'airvy-unity-scripts.zip'; a.click();
+    URL.revokeObjectURL(url);
+    showToast(`Downloaded ${names.length} Unity scripts`);
+  }
 }
 
 function downloadBlob(content, name) {
