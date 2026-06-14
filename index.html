@@ -37,6 +37,7 @@
       --font-code: 'JetBrains Mono', monospace;
       --unity: #3db3f2;
       --godot: #a585d6;
+      --roblox: #e8472a;
     }
 
     html,
@@ -154,6 +155,12 @@
       border-color: var(--godot);
       color: var(--godot);
       background: rgba(165, 133, 214, 0.07);
+    }
+
+    .engine-tab.active[data-engine="roblox"] {
+      border-color: var(--roblox);
+      color: var(--roblox);
+      background: rgba(232, 71, 42, 0.07);
     }
 
     /* Model selector */
@@ -388,6 +395,10 @@
 
     .engine-badge.godot {
       color: var(--godot);
+    }
+
+    .engine-badge.roblox {
+      color: var(--roblox);
     }
 
     .topbar-spacer {
@@ -1073,6 +1084,534 @@
       background: var(--stroke);
       margin: 0 2px;
     }
+
+    /* ─── Neon spin ring behind input ─── */
+    .input-area-wrap {
+      position: relative;
+    }
+
+    .input-spin-ring {
+      position: absolute;
+      inset: -3px;
+      border-radius: calc(var(--radius) + 3px);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.4s ease;
+      background: conic-gradient(from var(--spin-angle, 0deg),
+          transparent 0deg,
+          rgba(255, 255, 255, 0.9) 60deg,
+          rgba(255, 255, 255, 0.05) 120deg,
+          rgba(0, 0, 0, 0) 180deg,
+          rgba(255, 255, 255, 0.05) 240deg,
+          rgba(255, 255, 255, 0.7) 300deg,
+          transparent 360deg);
+      -webkit-mask:
+        linear-gradient(#fff 0 0) content-box,
+        linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      padding: 1.5px;
+      filter: blur(0.5px) drop-shadow(0 0 4px rgba(255, 255, 255, 0.6));
+    }
+
+    .input-spin-ring.active {
+      opacity: 1;
+      animation: spin-ring 2.4s linear infinite;
+    }
+
+    @property --spin-angle {
+      syntax: '<angle>';
+      inherits: false;
+      initial-value: 0deg;
+    }
+
+    @keyframes spin-ring {
+      to {
+        --spin-angle: 360deg;
+      }
+    }
+
+    /* ─── Improved typing indicator ─── */
+    .typing-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 2px;
+    }
+
+    .typing-bar-dots {
+      display: flex;
+      gap: 5px;
+      align-items: center;
+    }
+
+    .typing-bar-dots span {
+      width: 3px;
+      height: 14px;
+      border-radius: 2px;
+      background: var(--text-muted);
+      animation: bar-pulse 1.1s ease-in-out infinite;
+      transform-origin: center bottom;
+    }
+
+    .typing-bar-dots span:nth-child(1) {
+      animation-delay: 0s;
+    }
+
+    .typing-bar-dots span:nth-child(2) {
+      animation-delay: 0.15s;
+    }
+
+    .typing-bar-dots span:nth-child(3) {
+      animation-delay: 0.3s;
+    }
+
+    .typing-bar-dots span:nth-child(4) {
+      animation-delay: 0.45s;
+    }
+
+    @keyframes bar-pulse {
+
+      0%,
+      100% {
+        transform: scaleY(0.4);
+        opacity: 0.3;
+        background: var(--text-muted);
+      }
+
+      50% {
+        transform: scaleY(1);
+        opacity: 1;
+        background: var(--white);
+      }
+    }
+
+    .typing-label {
+      font-size: 10px;
+      color: var(--text-muted);
+      letter-spacing: 0.06em;
+      animation: label-flicker 2s ease-in-out infinite;
+    }
+
+    @keyframes label-flicker {
+
+      0%,
+      100% {
+        opacity: 0.5;
+      }
+
+      50% {
+        opacity: 1;
+      }
+    }
+
+    /* ─── Settings modal ─── */
+    #settings-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(4px);
+      z-index: 500;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #settings-overlay.open {
+      display: flex;
+    }
+
+    #settings-modal {
+      width: 480px;
+      max-width: calc(100vw - 32px);
+      background: linear-gradient(160deg, #141414 0%, #000 100%);
+      border: 1px solid var(--stroke-bright);
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 24px 64px rgba(0, 0, 0, 0.8);
+    }
+
+    .settings-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 20px 16px;
+      border-bottom: 1px solid var(--stroke);
+    }
+
+    .settings-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--white);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .settings-close {
+      width: 28px;
+      height: 28px;
+      border: 1px solid var(--stroke);
+      border-radius: 6px;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.12s;
+    }
+
+    .settings-close:hover {
+      border-color: var(--stroke-bright);
+      color: var(--text);
+      background: var(--accent-dim);
+    }
+
+    .settings-body {
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      max-height: 60vh;
+      overflow-y: auto;
+    }
+
+    .settings-section-label {
+      font-size: 9px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .settings-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      border: 1px solid var(--stroke);
+      border-radius: var(--radius);
+      background: linear-gradient(135deg, #0e0e0e, #000);
+    }
+
+    .settings-row+.settings-row {
+      margin-top: 6px;
+    }
+
+    .settings-row-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .settings-row-name {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text);
+    }
+
+    .settings-row-desc {
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+
+    .settings-input {
+      background: transparent;
+      border: 1px solid var(--stroke);
+      border-radius: 5px;
+      color: var(--text);
+      font-family: var(--font-code);
+      font-size: 11px;
+      padding: 5px 8px;
+      outline: none;
+      width: 200px;
+      transition: border-color 0.15s;
+    }
+
+    .settings-input:focus {
+      border-color: var(--stroke-bright);
+    }
+
+    .settings-select {
+      background: #0a0a0a;
+      border: 1px solid var(--stroke);
+      border-radius: 5px;
+      color: var(--text);
+      font-family: var(--font-ui);
+      font-size: 11px;
+      padding: 5px 8px;
+      outline: none;
+      cursor: pointer;
+      transition: border-color 0.15s;
+    }
+
+    .settings-select:focus {
+      border-color: var(--stroke-bright);
+    }
+
+    .settings-toggle {
+      width: 36px;
+      height: 20px;
+      border-radius: 10px;
+      background: var(--stroke);
+      border: none;
+      cursor: pointer;
+      position: relative;
+      transition: background 0.2s;
+      flex-shrink: 0;
+    }
+
+    .settings-toggle::after {
+      content: '';
+      position: absolute;
+      left: 3px;
+      top: 3px;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--text-muted);
+      transition: all 0.2s;
+    }
+
+    .settings-toggle.on {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    .settings-toggle.on::after {
+      left: 19px;
+      background: var(--white);
+    }
+
+    .settings-footer {
+      padding: 14px 20px;
+      border-top: 1px solid var(--stroke);
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .settings-btn {
+      padding: 7px 16px;
+      border-radius: 6px;
+      font-family: var(--font-ui);
+      font-size: 11px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .settings-btn.secondary {
+      border: 1px solid var(--stroke);
+      background: transparent;
+      color: var(--text-dim);
+    }
+
+    .settings-btn.secondary:hover {
+      border-color: var(--stroke-bright);
+      color: var(--text);
+      background: var(--accent-dim);
+    }
+
+    .settings-btn.primary {
+      border: 1px solid var(--stroke-bright);
+      background: linear-gradient(135deg, #1a1a1a, #000);
+      color: var(--white);
+    }
+
+    .settings-btn.primary:hover {
+      background: linear-gradient(135deg, #2a2a2a, #111);
+    }
+
+    /* ─── Mode Menu ─── */
+    .mode-menu-wrap {
+      position: relative;
+    }
+
+    #mode-menu {
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      width: 220px;
+      background: linear-gradient(160deg, #141414, #000);
+      border: 1px solid var(--stroke-bright);
+      border-radius: 10px;
+      overflow: hidden;
+      z-index: 200;
+      display: none;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+    }
+
+    #mode-menu.open {
+      display: block;
+    }
+
+    .mode-menu-header {
+      padding: 8px 12px;
+      font-size: 9px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--stroke);
+    }
+
+    .mode-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 11px 12px;
+      cursor: pointer;
+      border-bottom: 1px solid var(--stroke);
+      transition: background 0.12s;
+    }
+
+    .mode-item:last-child {
+      border-bottom: none;
+    }
+
+    .mode-item:hover {
+      background: var(--accent-dim);
+    }
+
+    .mode-item.active-mode {
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .mode-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      border: 1.5px solid var(--stroke-bright);
+      flex-shrink: 0;
+      margin-top: 4px;
+      transition: all 0.15s;
+    }
+
+    .mode-item.active-mode .mode-dot {
+      background: var(--white);
+      border-color: var(--white);
+    }
+
+    .mode-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .mode-name {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text);
+    }
+
+    .mode-desc {
+      font-size: 10px;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    .mode-toggle-btn {
+      width: 28px;
+      height: 28px;
+      border: 1px solid var(--stroke);
+      border-radius: 6px;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+      font-size: 16px;
+      font-weight: 300;
+      line-height: 1;
+    }
+
+    .mode-toggle-btn:hover,
+    .mode-toggle-btn.open {
+      border-color: var(--stroke-bright);
+      color: var(--text);
+      background: var(--accent-dim);
+    }
+
+    /* Roblox command bar output area */
+    #roblox-output {
+      display: none;
+      flex-direction: column;
+      border-top: 1px solid var(--stroke);
+      background: #000;
+      flex-shrink: 0;
+      max-height: 200px;
+    }
+
+    #roblox-output.visible {
+      display: flex;
+    }
+
+    .roblox-out-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 12px;
+      border-bottom: 1px solid var(--stroke);
+      background: linear-gradient(135deg, #110800, #000);
+      font-size: 10px;
+      color: var(--roblox);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+
+    #roblox-cmd-box {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px 14px;
+      font-family: var(--font-code);
+      font-size: 11.5px;
+      line-height: 1.7;
+      color: #c9d1d9;
+      white-space: pre-wrap;
+    }
+
+    #roblox-cmd-box::-webkit-scrollbar {
+      width: 3px;
+    }
+
+    #roblox-cmd-box::-webkit-scrollbar-thumb {
+      background: var(--stroke);
+      border-radius: 2px;
+    }
+
+    .roblox-out-actions {
+      display: flex;
+      gap: 6px;
+      padding: 7px 12px;
+      border-top: 1px solid var(--stroke);
+      background: #000;
+      flex-shrink: 0;
+    }
+
+    /* Fix mode status badge in topbar */
+    .mode-badge {
+      font-size: 9px;
+      padding: 2px 7px;
+      border: 1px solid var(--stroke);
+      border-radius: 20px;
+      color: var(--text-muted);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .mode-badge.mode-big {
+      border-color: #4ade80;
+      color: #4ade80;
+    }
+
+    .mode-badge.mode-fix {
+      border-color: #facc15;
+      color: #facc15;
+    }
   </style>
 </head>
 
@@ -1104,6 +1643,10 @@
         <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>
         Godot
       </button>
+        <button class="engine-tab" data-engine="roblox" onclick="setEngine('roblox')">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
+        Roblox
+      </button>
       </div>
 
       <div class="sidebar-section">Model</div>
@@ -1111,6 +1654,11 @@
         <div class="model-item selected" data-model="google/gemma-4-31b-it:free" onclick="selectModel(this)">
           <div class="model-dot"></div>
           <span class="model-name">Airvy 1</span>
+          <span class="model-tag">FREE</span>
+        </div>
+        <div class="model-item" data-model="openai/gpt-oss-120b:free" onclick="selectModel(this)">
+          <div class="model-dot"></div>
+          <span class="model-name">Airvy 1.1</span>
           <span class="model-tag">FREE</span>
         </div>
       </div>
@@ -1144,12 +1692,40 @@
           <span class="engine-badge unity" id="engineBadge">Unity</span>
         </div>
         <div class="topbar-spacer"></div>
+        <span class="mode-badge" id="modeBadge" style="display:none;"></span>
         <div class="topbar-actions">
+          <div class="mode-menu-wrap">
+            <button class="mode-toggle-btn" id="modeToggleBtn" title="Toggle mode" onclick="toggleModeMenu()">+</button>
+            <div id="mode-menu">
+              <div class="mode-menu-header">Output Mode</div>
+              <div class="mode-item active-mode" data-mode="standard" onclick="setMode('standard')">
+                <div class="mode-dot"></div>
+                <div class="mode-info">
+                  <div class="mode-name">Standard</div>
+                  <div class="mode-desc">Default responses with code blocks</div>
+                </div>
+              </div>
+              <div class="mode-item" data-mode="big" onclick="setMode('big')">
+                <div class="mode-dot"></div>
+                <div class="mode-info">
+                  <div class="mode-name">Big Code</div>
+                  <div class="mode-desc">Entire game in one go — max output</div>
+                </div>
+              </div>
+              <div class="mode-item" data-mode="fix" onclick="setMode('fix')">
+                <div class="mode-dot"></div>
+                <div class="mode-info">
+                  <div class="mode-name">Code + Bug Fix</div>
+                  <div class="mode-desc">Generates code then auto-reviews for bugs and fixes them</div>
+                </div>
+              </div>
+            </div>
+          </div>
           <button class="icon-btn" onclick="clearChat()" title="Clear chat">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></polyline></svg>
         </button>
           <div class="divider"></div>
-          <button class="icon-btn" title="Settings" onclick="showToast('Settings coming soon')">
+          <button class="icon-btn" title="Settings" onclick="openSettings()">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
         </button>
         </div>
@@ -1187,24 +1763,44 @@
           <!-- Input -->
           <div id="input-area">
             <div id="attachmentsBar" class="input-attachments" style="display:none;"></div>
-            <div class="input-box">
-              <textarea id="prompt" rows="1" placeholder="Ask Airvy to write, explain, or debug code…" onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
-              <div class="input-tools">
-                <button class="input-icon-btn" title="Attach image" onclick="document.getElementById('img-input').click()">
+            <div class="input-area-wrap">
+              <div class="input-spin-ring" id="spinRing"></div>
+              <div class="input-box">
+                <textarea id="prompt" rows="1" placeholder="Ask Airvy to write, explain, or debug code…" onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+                <div class="input-tools">
+                  <button class="input-icon-btn" title="Attach image" onclick="document.getElementById('img-input').click()">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
               </button>
-                <button class="input-icon-btn" title="Attach file" onclick="document.getElementById('file-input').click()">
+                  <button class="input-icon-btn" title="Attach file" onclick="document.getElementById('file-input').click()">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
               </button>
-                <div class="divider"></div>
-                <button id="send-btn" onclick="sendMessage()" title="Send">
+                  <div class="divider"></div>
+                  <button id="send-btn" onclick="sendMessage()" title="Send">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
               </button>
+                </div>
               </div>
-            </div>
+            </div><!-- /input-area-wrap -->
           </div>
           <input type="file" id="img-input" accept="image/*,video/*" onchange="handleImageAttach(event)">
           <input type="file" id="file-input" accept=".cs,.gd,.gdscript,.txt,.json,.xml,.yaml,.md" onchange="handleFileAttach(event)">
+        </div>
+
+        <!-- Roblox Command Bar Output -->
+        <div id="roblox-output">
+          <div class="roblox-out-header">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor">
+              <rect x="4" y="4" width="16" height="16" rx="2" />
+            </svg>
+            Roblox Command Bar Script
+          </div>
+          <div id="roblox-cmd-box">-- Command bar script will appear here after generation</div>
+          <div class="roblox-out-actions">
+            <button class="btn-outline" style="font-size:10px;padding:5px 10px;" onclick="copyRobloxCmd()">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              Copy Script
+            </button>
+          </div>
         </div>
 
         <!-- Code Panel -->
@@ -1242,6 +1838,87 @@
     </div>
   </div>
 
+  <!-- Settings Modal -->
+  <div id="settings-overlay" onclick="if(event.target===this)closeSettings()">
+    <div id="settings-modal">
+      <div class="settings-header">
+        <div class="settings-title">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3" />
+            <path
+              d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+          </svg>
+          Settings
+        </div>
+        <button class="settings-close" onclick="closeSettings()">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="settings-body">
+        <div>
+          <div class="settings-section-label">API</div>
+          <div class="settings-row">
+            <div class="settings-row-info">
+              <div class="settings-row-name">OpenRouter API Key</div>
+              <div class="settings-row-desc">Your key is stored in memory only</div>
+            </div>
+            <input class="settings-input" type="password" id="settings-apikey" placeholder="sk-or-v1-…">
+          </div>
+          <div class="settings-row" style="margin-top:6px;">
+            <div class="settings-row-info">
+              <div class="settings-row-name">Max Tokens</div>
+              <div class="settings-row-desc">Max output length per response</div>
+            </div>
+            <select class="settings-select" id="settings-maxtokens">
+              <option value="2048">2048</option>
+              <option value="4096" selected>4096</option>
+              <option value="8192">8192</option>
+              <option value="16384">16384</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <div class="settings-section-label">Interface</div>
+          <div class="settings-row">
+            <div class="settings-row-info">
+              <div class="settings-row-name">Neon Spin Effect</div>
+              <div class="settings-row-desc">Spinning ring on the input while loading</div>
+            </div>
+            <button class="settings-toggle on" id="settings-spin" onclick="this.classList.toggle('on')"></button>
+          </div>
+          <div class="settings-row">
+            <div class="settings-row-info">
+              <div class="settings-row-name">Auto-save Files</div>
+              <div class="settings-row-desc">Automatically save generated code to file panel</div>
+            </div>
+            <button class="settings-toggle on" id="settings-autosave" onclick="this.classList.toggle('on')"></button>
+          </div>
+          <div class="settings-row">
+            <div class="settings-row-info">
+              <div class="settings-row-name">Stream Responses</div>
+              <div class="settings-row-desc">Show AI output as it's being generated</div>
+            </div>
+            <button class="settings-toggle on" id="settings-stream" onclick="this.classList.toggle('on')"></button>
+          </div>
+        </div>
+        <div>
+          <div class="settings-section-label">About</div>
+          <div class="settings-row">
+            <div class="settings-row-info">
+              <div class="settings-row-name">Airvy 1</div>
+              <div class="settings-row-desc">Powered by OpenRouter · Gemma 4 31B · Built with WebForge</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="settings-footer">
+        <button class="settings-btn secondary" onclick="closeSettings()">Cancel</button>
+        <button class="settings-btn primary" onclick="saveSettings()">Save</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast -->
   <div id="toast">
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -1263,6 +1940,61 @@ let attachments  = []; // {type:'image'|'file', name, data, mime}
 let files        = {}; // filename -> content
 let activeFile   = null;
 let isLoading    = false;
+let activeMode   = 'standard'; // 'standard' | 'big' | 'fix'
+
+function toggleModeMenu() {
+  const menu = document.getElementById('mode-menu');
+  const btn = document.getElementById('modeToggleBtn');
+  const open = menu.classList.toggle('open');
+  btn.classList.toggle('open', open);
+  if (open) {
+    setTimeout(() => document.addEventListener('click', closeModeMenuOutside, { once: true }), 0);
+  }
+}
+
+function closeModeMenuOutside(e) {
+  const menu = document.getElementById('mode-menu');
+  const btn = document.getElementById('modeToggleBtn');
+  if (!menu.contains(e.target) && e.target !== btn) {
+    menu.classList.remove('open');
+    btn.classList.remove('open');
+  }
+}
+
+function setMode(m) {
+  activeMode = m;
+  document.querySelectorAll('.mode-item').forEach(el => el.classList.remove('active-mode'));
+  document.querySelector(`.mode-item[data-mode="${m}"]`).classList.add('active-mode');
+  const badge = document.getElementById('modeBadge');
+  if (m === 'standard') {
+    badge.style.display = 'none';
+  } else if (m === 'big') {
+    badge.textContent = 'BIG CODE';
+    badge.className = 'mode-badge mode-big';
+    badge.style.display = '';
+  } else {
+    badge.textContent = 'BUG FIX';
+    badge.className = 'mode-badge mode-fix';
+    badge.style.display = '';
+  }
+  document.getElementById('mode-menu').classList.remove('open');
+  document.getElementById('modeToggleBtn').classList.remove('open');
+}
+
+function copyRobloxCmd() {
+  const box = document.getElementById('roblox-cmd-box');
+  navigator.clipboard.writeText(box.textContent).then(() => showToast('Command bar script copied!'));
+}
+
+function extractRobloxCommand(text) {
+  // Grab the last lua code block as the command bar script
+  const regex = /```(?:lua|luau)\n?([\s\S]*?)```/g;
+  let match, last;
+  while ((match = regex.exec(text)) !== null) last = match[1].trim();
+  if (last) {
+    document.getElementById('roblox-cmd-box').textContent = last;
+  }
+}
 
 // ─── Engine ───
 function setEngine(e) {
@@ -1270,8 +2002,23 @@ function setEngine(e) {
   document.querySelectorAll('.engine-tab').forEach(t => t.classList.remove('active'));
   document.querySelector(`.engine-tab[data-engine="${e}"]`).classList.add('active');
   const badge = document.getElementById('engineBadge');
-  badge.textContent = e === 'unity' ? 'Unity' : 'Godot';
+  badge.textContent = e === 'unity' ? 'Unity' : e === 'godot' ? 'Godot' : 'Roblox';
   badge.className = `engine-badge ${e}`;
+  // Show/hide Roblox command bar panel
+  const robloxOut = document.getElementById('roblox-output');
+  if (e === 'roblox') {
+    robloxOut.classList.add('visible');
+    document.getElementById('prompt').placeholder = 'Describe your Roblox game and Airvy will generate a Command Bar script…';
+    // Switch to Llama for Roblox — Gemma hits rate limits fast on long scripts
+    const llamaItem = document.querySelector('.model-item[data-model="openai/gpt-oss-120b:free"]');
+    if (llamaItem) selectModel(llamaItem);
+  } else {
+    robloxOut.classList.remove('visible');
+    document.getElementById('prompt').placeholder = 'Ask Airvy to write, explain, or debug code…';
+    // Switch back to Gemma for Unity/Godot
+    const gemmaItem = document.querySelector('.model-item[data-model="google/gemma-4-31b-it:free"]');
+    if (gemmaItem) selectModel(gemmaItem);
+  }
 }
 
 // ─── Model ───
@@ -1355,6 +2102,7 @@ async function sendMessage() {
   document.getElementById('welcomeState')?.remove();
   isLoading = true;
   document.getElementById('send-btn').disabled = true;
+  setSpinRing(true);
 
   // Build user message display
   const userMsg = { role: 'user', content: [] };
@@ -1400,7 +2148,7 @@ async function sendMessage() {
     const response = await fetch(API_URL, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${API_KEY}`,
+        'Authorization': `Bearer ${window._overrideApiKey || (activeModel === 'openai/gpt-oss-120b:free' ? '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' : API_KEY)}`,
         'Content-Type': 'application/json',
         'HTTP-Referer': window.location.href,
         'X-Title': 'Airvy Game Dev AI'
@@ -1408,8 +2156,8 @@ async function sendMessage() {
       body: JSON.stringify({
         model: activeModel,
         messages: msgs,
-        stream: true,
-        max_tokens: 4096
+        stream: document.getElementById('settings-stream')?.classList.contains('on') ?? true,
+        max_tokens: settingsMaxTokens
       })
     });
 
@@ -1423,10 +2171,11 @@ async function sendMessage() {
       return;
     }
 
+    let fullText = '';
+
     // Stream
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
-    let fullText = '';
     const aiBubbleId = appendAIMsg('', true);
 
     while (true) {
@@ -1448,6 +2197,7 @@ async function sendMessage() {
 
     // Extract and register code files from response
     extractAndSaveFiles(fullText);
+    if (engine === 'roblox') extractRobloxCommand(fullText);
 
     // Save to history
     history.push(userMsg);
@@ -1460,12 +2210,40 @@ async function sendMessage() {
 
   isLoading = false;
   document.getElementById('send-btn').disabled = false;
+  setSpinRing(false);
 }
 
 function buildSystemPrompt() {
+  if (engine === 'roblox') {
+    const modeExtra = activeMode === 'big'
+      ? '\n\nBIG CODE MODE: Generate the ENTIRE game in one complete script. Do not leave placeholders. Write every function, every mechanic, fully implemented.'
+      : activeMode === 'fix'
+      ? '\n\nCODE + BUG FIX MODE: After writing the full script, add a section titled "## Bug Review" where you carefully re-read your own code, identify any bugs, logic errors, or missing requires, and output a final corrected version in a second code block labeled "## Fixed Script".'
+      : '';
+
+    return `You are Airvy 1, a Roblox game development expert. Your job is to generate complete, runnable Lua/Luau scripts that work in the Roblox Studio Command Bar or as LocalScripts/Scripts.
+
+ROBLOX COMMAND BAR RULES:
+- The primary output must always be a single self-contained Lua script wrapped in \`\`\`lua ... \`\`\`
+- The script must use game:GetService(), Instance.new(), and Roblox APIs correctly
+- Build everything in one script: parts, models, scripts, GUIs — all created programmatically
+- Use pcall() for error-prone operations
+- Always anchor BaseParts unless physics is intended
+- Comment each section clearly so the user knows what it does
+- Do NOT require external modules that don't exist by default
+- The script should run without errors when pasted directly into the Command Bar
+${modeExtra}`;
+  }
+
   const engineInfo = engine === 'unity'
     ? 'Unity (C#, MonoBehaviour, Unity API). Prefer modern Unity patterns. Use namespaces. Comment code thoroughly.'
     : 'Godot 4 (GDScript or C# as requested). Use @export, signals, nodes correctly. Comment code thoroughly.';
+
+  const modeExtra = activeMode === 'big'
+    ? '\n\nBIG CODE MODE: Write the entire system fully — no TODOs, no placeholders. Complete, runnable code only.'
+    : activeMode === 'fix'
+    ? '\n\nCODE + BUG FIX MODE: After writing all code, add a "## Bug Review" section where you re-analyze your output for bugs, then provide a corrected final version.'
+    : '';
 
   return `You are Airvy 1, an expert game development AI assistant specialized in ${engineInfo}
 
@@ -1478,7 +2256,7 @@ When writing code:
 - Use best practices and clean architecture
 - If the user shares an image or video, analyze it carefully and respond based on what you see
 
-Engine context: ${engine === 'unity' ? 'Unity 2022+ with C#' : 'Godot 4 with GDScript'}`;
+Engine context: ${engine === 'unity' ? 'Unity 2022+ with C#' : 'Godot 4 with GDScript'}${modeExtra}`;
 }
 
 // ─── Render messages ───
@@ -1508,7 +2286,7 @@ function appendTyping() {
     <div class="msg-avatar">A</div>
     <div class="msg-body">
       <div class="msg-name">Airvy 1</div>
-      <div class="msg-bubble"><div class="typing-dots"><span></span><span></span><span></span></div></div>
+      <div class="msg-bubble"><div class="typing-bar"><div class="typing-bar-dots"><span></span><span></span><span></span><span></span></div><span class="typing-label">thinking…</span></div></div>
     </div>
   `;
   msgs.appendChild(div);
@@ -1620,7 +2398,8 @@ function extractAndSaveFiles(text) {
 }
 
 function langToExt(lang) {
-  const map = { csharp: '.cs', cs: '.cs', gdscript: '.gd', gd: '.gd', glsl: '.glsl', json: '.json', xml: '.xml', shader: '.shader', hlsl: '.hlsl' };
+  const map = { csharp: '.cs', cs: '.cs', gdscript: '.gd', gd: '.gd', glsl: '.glsl', json: '.json', xml: '.xml', shader: '.shader', hlsl: '.hlsl', lua: '.lua', luau: '.lua' };
+
   return map[lang?.toLowerCase()] || '.txt';
 }
 
@@ -1829,6 +2608,39 @@ function clearChat() {
     </div>
   </div>`;
   showToast('Chat cleared');
+}
+
+// ─── Spin ring ───
+function setSpinRing(on) {
+  const spinEnabled = document.getElementById('settings-spin')?.classList.contains('on') ?? true;
+  const ring = document.getElementById('spinRing');
+  if (!ring) return;
+  if (on && spinEnabled) ring.classList.add('active');
+  else ring.classList.remove('active');
+}
+
+// ─── Settings ───
+let settingsMaxTokens = 4096;
+
+function openSettings() {
+  document.getElementById('settings-apikey').value = '';
+  document.getElementById('settings-maxtokens').value = String(settingsMaxTokens);
+  document.getElementById('settings-overlay').classList.add('open');
+}
+
+function closeSettings() {
+  document.getElementById('settings-overlay').classList.remove('open');
+}
+
+function saveSettings() {
+  const keyEl = document.getElementById('settings-apikey');
+  if (keyEl.value.trim()) {
+    window._overrideApiKey = keyEl.value.trim();
+    showToast('API key updated');
+  }
+  settingsMaxTokens = parseInt(document.getElementById('settings-maxtokens').value) || 4096;
+  closeSettings();
+  showToast('Settings saved');
 }
 
 // ─── Toast ───
