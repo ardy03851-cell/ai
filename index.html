@@ -515,7 +515,7 @@
       font-size: 1rem;
       line-height: 1.7;
       resize: vertical;
-      min-height: 160px;
+      min-height: 200px;
       transition: border-color 0.15s;
       outline: none;
     }
@@ -796,6 +796,178 @@
       border-color: var(--card-accent, var(--red));
     }
 
+    /* ── SKELETON LOADING ── */
+    .skeleton-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .skel {
+      background: linear-gradient(90deg, var(--surface) 25%, #1f2235 50%, var(--surface) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.4s infinite;
+      border-radius: 6px;
+    }
+
+    .skel-title {
+      height: 14px;
+      width: 70%;
+    }
+
+    .skel-badge {
+      height: 12px;
+      width: 30%;
+      border-radius: 12px;
+    }
+
+    .skel-line {
+      height: 10px;
+    }
+
+    .skel-line.w80 {
+      width: 80%;
+    }
+
+    .skel-line.w60 {
+      width: 60%;
+    }
+
+    .skel-box {
+      height: 36px;
+      border-radius: 8px;
+      margin-top: 4px;
+    }
+
+    @keyframes shimmer {
+      0% {
+        background-position: 200% 0;
+      }
+
+      100% {
+        background-position: -200% 0;
+      }
+    }
+
+    /* ── MODE STACKING ROW ── */
+    .mode-stack-row {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 32px 0;
+      flex-wrap: wrap;
+    }
+
+    .mode-stack-row.visible {
+      display: flex;
+    }
+
+    .stack-label {
+      font-size: 0.7rem;
+      color: var(--muted);
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      white-space: nowrap;
+    }
+
+    .stack-chip {
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.72rem;
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--muted);
+      transition: border-color 0.15s, color 0.15s, background 0.15s;
+      user-select: none;
+    }
+
+    .stack-chip:hover {
+      border-color: var(--red);
+      color: var(--text);
+    }
+
+    .stack-chip.on {
+      background: var(--red-dim);
+      border-color: var(--red);
+      color: var(--red);
+    }
+
+    /* ── LOCATION BANNER (beta mode) ── */
+    .location-row {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 32px 0;
+    }
+
+    .location-row.visible {
+      display: flex;
+    }
+
+    .location-icon {
+      color: #a78bfa;
+      flex-shrink: 0;
+    }
+
+    #location-input {
+      flex: 1;
+      background: var(--bg);
+      border: 1.5px solid #7c3aed44;
+      border-radius: 8px;
+      padding: 8px 12px;
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.85rem;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    #location-input:focus {
+      border-color: #a78bfa;
+    }
+
+    #location-input::placeholder {
+      color: var(--muted);
+    }
+
+    .location-label {
+      font-size: 0.72rem;
+      color: #a78bfa;
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    /* ── COUNT ANIMATE ── */
+    @keyframes countPop {
+      0% {
+        transform: scale(0.5);
+        opacity: 0;
+      }
+
+      70% {
+        transform: scale(1.3);
+      }
+
+      100% {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+
+    .badge.pop {
+      animation: countPop 0.4s cubic-bezier(.34, 1.56, .64, 1) forwards;
+    }
+
     /* ── RAW ── */
     #raw-section {
       width: 100%;
@@ -917,6 +1089,26 @@
         </div>
       </div>
 
+      <!-- MODE STACK ROW -->
+      <div class="mode-stack-row" id="mode-stack-row">
+        <span class="stack-label">+ Stack:</span>
+        <span class="stack-chip" data-mod="super" onclick="toggleStackMod('super')">⚡ Super Cheap</span>
+        <span class="stack-chip" data-mod="fast" onclick="toggleStackMod('fast')">▶ Fast Delivery</span>
+        <span class="stack-chip" data-mod="quality" onclick="toggleStackMod('quality')">✦ Quality Filter</span>
+        <span class="stack-chip" data-mod="bulk" onclick="toggleStackMod('bulk')">▦ Bulk Deals</span>
+      </div>
+
+      <!-- LOCATION ROW (beta mode) -->
+      <div class="location-row" id="location-row">
+        <svg class="location-icon" width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M8 1.5C5.79 1.5 4 3.29 4 5.5c0 3.25 4 9 4 9s4-5.75 4-9c0-2.21-1.79-3.5-4-4z" stroke="#a78bfa"
+            stroke-width="1.4" />
+          <circle cx="8" cy="5.5" r="1.5" stroke="#a78bfa" stroke-width="1.3" />
+        </svg>
+        <span class="location-label">Your country / region:</span>
+        <input id="location-input" type="text" placeholder="e.g. Ireland, UK, USA, Australia…" />
+      </div>
+
       <!-- FOOTER -->
       <div class="search-footer">
         <span class="search-hint" id="search-hint">Upload an image to get started</span>
@@ -1001,16 +1193,20 @@ const ENDPOINT = "https://openrouter.ai/api/v1/chat/completions";
 
 // ── MODES ──
 const MODES = {
-  normal:  { label: '◎ Normal',       icon: '◎' },
-  quality: { label: '✦ Quality',      icon: '✦' },
-  super:   { label: '⚡ Ultra Cheap', icon: '⚡' },
-  niche:   { label: '◈ Niche',        icon: '◈' },
-  bulk:    { label: '▦ Bulk Deal',    icon: '▦' },
-  fast:    { label: '▶ Fast Delivery',icon: '▶' },
-  beta:    { label: '↗ Exact Link ·BETA', icon: '↗' }
+  normal:  { label: '◎ Normal',           isBeta: false },
+  quality: { label: '✦ Quality',          isBeta: false },
+  super:   { label: '⚡ Ultra Cheap',     isBeta: false },
+  niche:   { label: '◈ Niche',            isBeta: false },
+  bulk:    { label: '▦ Bulk Deal',        isBeta: false },
+  fast:    { label: '▶ Fast Delivery',    isBeta: false },
+  beta:    { label: '↗ Exact Link · BETA', isBeta: true }
 };
 
+// Modes that support stacking (beta always shows location instead)
+const STACKABLE_BASE_MODES = ['normal', 'niche'];
+
 let currentMode = 'normal';
+let activeStackMods = new Set(); // e.g. Set{'super','fast'}
 
 function toggleDial() {
   const dial = document.getElementById('mode-dial');
@@ -1021,19 +1217,41 @@ function toggleDial() {
 
 function setMode(mode) {
   currentMode = mode;
-  // update spokes active state
+  activeStackMods.clear();
+  // sync spoke highlights
   Object.keys(MODES).forEach(m => {
     const spoke = document.getElementById('spoke-' + m);
     if (spoke) spoke.classList.toggle('active-mode', m === mode);
   });
-  document.getElementById('mode-badge').textContent = MODES[mode].label;
-  document.getElementById('mode-badge').style.color = mode === 'beta' ? '#a78bfa' : '';
-  document.getElementById('mode-badge').style.borderColor = mode === 'beta' ? 'rgba(167,139,250,0.3)' : '';
-  document.getElementById('mode-badge').style.background = mode === 'beta' ? 'rgba(167,139,250,0.08)' : '';
+  // header badge
+  const badge = document.getElementById('mode-badge');
+  badge.textContent = MODES[mode].label;
+  const isBeta = mode === 'beta';
+  badge.style.color       = isBeta ? '#a78bfa' : '';
+  badge.style.borderColor = isBeta ? 'rgba(167,139,250,0.3)' : '';
+  badge.style.background  = isBeta ? 'rgba(167,139,250,0.08)' : '';
+  // show/hide stack row & location row
+  const showStack = STACKABLE_BASE_MODES.includes(mode);
+  document.getElementById('mode-stack-row').classList.toggle('visible', showStack);
+  document.getElementById('location-row').classList.toggle('visible', isBeta);
+  // reset stack chips UI
+  document.querySelectorAll('.stack-chip').forEach(c => c.classList.remove('on'));
   // close dial
   document.getElementById('mode-dial').classList.remove('open');
   document.getElementById('mode-dial-btn').classList.remove('open');
-  // update hint
+  updateSearchState();
+}
+
+function toggleStackMod(mod) {
+  if (activeStackMods.has(mod)) {
+    activeStackMods.delete(mod);
+  } else {
+    activeStackMods.add(mod);
+  }
+  // sync chip UI
+  document.querySelectorAll('.stack-chip').forEach(c => {
+    c.classList.toggle('on', activeStackMods.has(c.dataset.mod));
+  });
   updateSearchState();
 }
 
@@ -1043,6 +1261,29 @@ document.addEventListener('click', e => {
   if (!dial.contains(e.target)) {
     dial.classList.remove('open');
     document.getElementById('mode-dial-btn').classList.remove('open');
+  }
+});
+
+// ── KEYBOARD SHORTCUTS ──
+document.addEventListener('keydown', e => {
+  // Enter to search (when textarea not focused or shift not held)
+  if (e.key === 'Enter' && !e.shiftKey && document.activeElement !== document.getElementById('text-input')) {
+    const btn = document.getElementById('search-btn');
+    if (!btn.disabled) runSearch();
+  }
+  // Escape to clear
+  if (e.key === 'Escape') {
+    document.getElementById('text-input').value = '';
+    clearResults();
+    updateSearchState();
+  }
+});
+
+// Also allow Ctrl+Enter / Cmd+Enter from inside textarea
+document.getElementById('text-input').addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+    const btn = document.getElementById('search-btn');
+    if (!btn.disabled) runSearch();
   }
 });
 
@@ -1063,16 +1304,21 @@ function updateSearchState() {
   const hint = document.getElementById('search-hint');
   const hasText = document.getElementById('text-input').value.trim().length > 2;
   btn.disabled = !hasText;
+  const stackSuffix = activeStackMods.size > 0 ? ` + ${[...activeStackMods].join(', ')}` : '';
   const modeHints = {
-    normal:  hasText ? 'Ready to search' : 'Describe what you want to find',
+    normal:  hasText ? `Ready to search${stackSuffix}` : 'Describe what you want to find',
     quality: hasText ? 'Finding high quality + cheap picks…' : 'Describe item for quality cheap mode',
     super:   hasText ? 'Hunting the absolute lowest prices…' : 'Describe item for super cheap mode',
-    niche:   hasText ? 'Searching for hidden gems…' : 'Describe item to find niche products',
+    niche:   hasText ? `Searching for hidden gems${stackSuffix}` : 'Describe item to find niche products',
     bulk:    hasText ? 'Finding best bulk deals…' : 'Describe item for bulk deal mode',
     fast:    hasText ? 'Finding fast-shipping items…' : 'Describe item for fast delivery mode',
     beta:    hasText ? 'Generating exact item links… (Beta)' : 'Describe item to get exact Temu links'
   };
   hint.textContent = modeHints[currentMode] || modeHints.normal;
+  // hint about keyboard shortcut
+  if (hasText && currentMode !== 'beta') {
+    hint.title = 'Tip: Ctrl+Enter to search, Esc to clear';
+  }
 }
 
 function clearResults() {
@@ -1134,10 +1380,50 @@ Each object must have:
 
     fast: `\n\nMode: FAST DELIVERY — find items on Temu that are likely to ship and deliver quickly. Prioritize items that Temu marks as "fast shipping", "ships in 1-3 days", "local warehouse", or "express". Add keywords like "fast shipping", "quick delivery", "in stock", "express" to temuQuery. Add a "deliveryEst" field like "3–5 days" or "1 week". Return 4–6 items likely to arrive fast.`,
 
-    beta: `\n\nMode: EXACT LINK (BETA) — your job is to generate the most accurate possible direct Temu product URL for the exact item described. Use the known Temu URL format for product pages: https://www.temu.com/goods.html?goods_id=XXXXXXXXX or https://www.temu.com/[slug]-g-XXXXXXXXX.html. For each item, construct the most plausible direct product URL using realistic goods_id numbers (9–12 digits). Also include a temuQuery and googleQuery as normal. Add an "exactUrl" field with the constructed direct URL. Add a "confidence" field: "high" | "medium" | "low" — how confident the link guess is. Return 3–5 items. Warn in "tip" that these are AI-estimated links and may need verification.`
+    beta: `\n\nMode: EXACT LINK (BETA) — generate the most targeted possible Temu product search for the exact item described, tailored to the user's country/region. CRITICAL RULES: (1) Only include items that are widely listed and in-stock on Temu for that region — do NOT suggest niche items that may be unavailable or region-blocked. (2) Prefer items with high listing volume on Temu (many sellers = less likely to be sold out). (3) Build temuQuery with region-specific availability signals: add "in stock", "available", "ships to [country]" where relevant. (4) For googleQuery use "site:temu.com/[country-subdomain-if-known]" e.g. site:temu.com/ie for Ireland, site:temu.com/uk for UK. (5) Construct an exactUrl using the Temu search URL format: https://www.temu.com/search_result.html?search_key=QUERY&refer_page_name=search — make QUERY very specific to maximise the chance of finding the exact item. (6) Add an "exactUrl" field with this constructed URL. (7) Add a "confidence" field: "high" | "medium" | "low". (8) Add a "regionNote" field: short note about availability in the user's region. Return 4–6 items. Warn in "tip" to verify stock before purchasing.`
   };
 
   return base + (modeInstructions[mode] || modeInstructions.normal) + `\n\nExample output shape:\n[{"name":"Item","description":"...","temuQuery":"...","googleQuery":"site:temu.com ...","priceHint":"~$3","tip":"..."}]`;
+}
+
+// ── SKELETON HELPERS ──
+function showSkeletons(count = 5) {
+  const grid = document.getElementById('results-grid');
+  const section = document.getElementById('results-section');
+  grid.innerHTML = '';
+  section.classList.add('visible');
+  for (let i = 0; i < count; i++) {
+    const sk = document.createElement('div');
+    sk.className = 'skeleton-card';
+    sk.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+        <div class="skel skel-title"></div>
+        <div class="skel skel-badge"></div>
+      </div>
+      <div class="skel skel-line w80"></div>
+      <div class="skel skel-line w60"></div>
+      <div class="skel skel-line w80"></div>
+      <div class="skel skel-box"></div>
+      <div class="skel skel-box"></div>
+    `;
+    grid.appendChild(sk);
+  }
+}
+
+function animateCount(target) {
+  const badge = document.getElementById('count-badge');
+  badge.classList.remove('pop');
+  void badge.offsetWidth; // reflow
+  let n = 0;
+  const step = Math.ceil(target / 12);
+  const iv = setInterval(() => {
+    n = Math.min(n + step, target);
+    badge.textContent = n;
+    if (n >= target) {
+      clearInterval(iv);
+      badge.classList.add('pop');
+    }
+  }, 30);
 }
 
 // ── MAIN SEARCH ──
@@ -1155,10 +1441,25 @@ async function runSearch() {
     beta:    'Generating exact item links… (Beta)'
   };
   setStatus(statusMessages[currentMode] || 'Searching…');
+  showSkeletons(currentMode === 'bulk' ? 4 : currentMode === 'beta' ? 4 : 6);
 
   const desc = document.getElementById('text-input').value.trim();
+  const location = document.getElementById('location-input')?.value.trim() || '';
+
+  // Build effective mode string including stack mods
+  let effectiveMode = currentMode;
+  let stackNote = '';
+  if (activeStackMods.size > 0) {
+    stackNote = ` Additionally stack these secondary goals: ${[...activeStackMods].map(m => m.toUpperCase()).join(' + ')}.`;
+  }
+
   const systemPrompt = getSystemPrompt(currentMode);
-  const userContent  = `Find Temu products for: "${desc}". Mode: ${currentMode.toUpperCase()}. Return JSON array only.`;
+  let userContent = `Find Temu products for: "${desc}". Mode: ${currentMode.toUpperCase()}.`;
+  if (stackNote) userContent += stackNote;
+  if (currentMode === 'beta' && location) {
+    userContent += ` The user is located in: ${location}. Only return items available and in-stock in that region. Tailor googleQuery to that region's Temu subdomain if one exists.`;
+  }
+  userContent += ' Return JSON array only.';
 
   let rawText = '';
 
@@ -1237,9 +1538,8 @@ async function runSearch() {
 
 function renderResults(items, mode) {
   const grid  = document.getElementById('results-grid');
-  const badge = document.getElementById('count-badge');
   grid.innerHTML = '';
-  badge.textContent = items.length;
+  animateCount(items.length);
 
   // mode-specific extras
   const modeColor = { normal:'#FF6B00', quality:'#f0b429', super:'#3ecf8e', niche:'#a78bfa', bulk:'#60a5fa', fast:'#22d3ee', beta:'#a78bfa' };
@@ -1264,7 +1564,7 @@ function renderResults(items, mode) {
     if (mode === 'fast' && item.deliveryEst)
       extraBadge = `<div class="item-extra" style="color:${accent}">▶ Est. delivery: ${escHtml(item.deliveryEst)}</div>`;
     if (mode === 'beta' && item.confidence)
-      extraBadge = `<div class="item-extra" style="color:${accent}">↗ Link confidence: ${escHtml(item.confidence)}</div>`;
+      extraBadge = `<div class="item-extra" style="color:${accent}">↗ Link confidence: ${escHtml(item.confidence)}${item.regionNote ? ' · ' + escHtml(item.regionNote) : ''}</div>`;
 
     const priceTag = item.priceHint
       ? `<span class="price-hint" style="background:${accent}22;color:${accent};border-color:${accent}44">${escHtml(item.priceHint)}</span>` : '';
