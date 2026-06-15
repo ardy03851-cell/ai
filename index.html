@@ -88,12 +88,12 @@
     /* ── MAIN ── */
     main {
       width: 100%;
-      max-width: 780px;
-      padding: 52px 24px 80px;
+      max-width: 1100px;
+      padding: 52px 48px 80px;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 32px;
+      gap: 36px;
     }
 
     .hero {
@@ -105,10 +105,10 @@
 
     .hero-label {
       font-family: 'Space Grotesk', sans-serif;
-      font-size: 2.6rem;
+      font-size: 3.4rem;
       font-weight: 700;
-      letter-spacing: -1.5px;
-      line-height: 1.1;
+      letter-spacing: -2px;
+      line-height: 1.05;
     }
 
     .hero-label em {
@@ -165,6 +165,175 @@
       }
     }
 
+    /* ── MODE DIAL ── */
+    .mode-dial {
+      position: fixed;
+      bottom: 160px;
+      right: 28px;
+      z-index: 150;
+    }
+
+    .mode-dial-btn {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: var(--red);
+      border: none;
+      color: #fff;
+      font-size: 1.3rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 20px var(--red-glow);
+      transition: transform 0.2s, box-shadow 0.2s;
+      position: relative;
+      z-index: 2;
+    }
+
+    .mode-dial-btn:hover {
+      transform: scale(1.1);
+      box-shadow: 0 0 32px var(--red-glow);
+    }
+
+    .mode-dial-btn.open {
+      transform: rotate(45deg) scale(1.1);
+    }
+
+    .mode-spoke {
+      position: absolute;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      transition: all 0.35s cubic-bezier(.34, 1.56, .64, 1);
+      transform: translate(0, 0) scale(0);
+      opacity: 0;
+      pointer-events: none;
+      bottom: 0;
+      right: 0;
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      color: var(--text);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+    }
+
+    .mode-spoke.active-mode {
+      border-color: var(--red);
+      box-shadow: 0 0 14px var(--red-glow);
+    }
+
+    .mode-spoke.beta-spoke {
+      border-color: #7c3aed44;
+      background: #1a1330;
+    }
+
+    .mode-spoke.beta-spoke.active-mode {
+      border-color: #a78bfa;
+      box-shadow: 0 0 14px rgba(167, 139, 250, 0.4);
+    }
+
+    .beta-badge {
+      position: absolute;
+      top: -5px;
+      right: -5px;
+      background: #7c3aed;
+      color: #fff;
+      font-size: 0.45rem;
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+      padding: 1px 4px;
+      border-radius: 4px;
+      letter-spacing: 0.04em;
+      pointer-events: none;
+    }
+
+    .mode-dial.open .mode-spoke {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .mode-dial.open .mode-spoke:nth-child(2) {
+      transform: translate(-4px, -80px) scale(1);
+      transition-delay: 0.00s;
+    }
+
+    .mode-dial.open .mode-spoke:nth-child(3) {
+      transform: translate(-56px, -60px) scale(1);
+      transition-delay: 0.04s;
+    }
+
+    .mode-dial.open .mode-spoke:nth-child(4) {
+      transform: translate(-80px, -4px) scale(1);
+      transition-delay: 0.08s;
+    }
+
+    .mode-dial.open .mode-spoke:nth-child(5) {
+      transform: translate(-56px, 52px) scale(1);
+      transition-delay: 0.12s;
+    }
+
+    .mode-dial.open .mode-spoke:nth-child(6) {
+      transform: translate(-4px, 72px) scale(1);
+      transition-delay: 0.16s;
+    }
+
+    .mode-dial.open .mode-spoke:nth-child(7) {
+      transform: translate(-56px, 116px) scale(1);
+      transition-delay: 0.20s;
+    }
+
+    .mode-dial.open .mode-spoke:nth-child(8) {
+      transform: translate(-4px, 148px) scale(1);
+      transition-delay: 0.24s;
+    }
+
+    .mode-tooltip {
+      position: absolute;
+      right: 54px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 5px 10px;
+      font-size: 0.73rem;
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 600;
+      color: var(--text);
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.15s;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    .mode-spoke:hover .mode-tooltip {
+      opacity: 1;
+    }
+
+    /* active mode badge in header */
+    .mode-badge {
+      margin-left: auto;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 0.7rem;
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      background: var(--red-dim);
+      color: var(--red);
+      border: 1px solid rgba(255, 107, 0, 0.3);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
     /* ── TABS ── */
     .tabs {
       display: flex;
@@ -209,7 +378,7 @@
     /* ── PANELS ── */
     .panel {
       display: none;
-      padding: 24px;
+      padding: 32px 32px 24px;
     }
 
     .panel.active {
@@ -340,13 +509,13 @@
       background: var(--bg);
       border: 1.5px solid var(--border);
       border-radius: 12px;
-      padding: 14px 16px;
+      padding: 18px 20px;
       color: var(--text);
       font-family: 'Inter', sans-serif;
-      font-size: 0.9rem;
-      line-height: 1.6;
+      font-size: 1rem;
+      line-height: 1.7;
       resize: vertical;
-      min-height: 100px;
+      min-height: 160px;
       transition: border-color 0.15s;
       outline: none;
     }
@@ -383,7 +552,7 @@
 
     /* ── SEARCH FOOTER ── */
     .search-footer {
-      padding: 16px 24px;
+      padding: 20px 32px;
       border-top: 1px solid var(--border);
       display: flex;
       align-items: center;
@@ -592,6 +761,41 @@
       opacity: 0.75;
     }
 
+    .item-name-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .price-hint {
+      font-size: 0.68rem;
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 12px;
+      border: 1px solid;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .item-extra {
+      font-size: 0.72rem;
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 600;
+    }
+
+    .item-tip {
+      font-size: 0.71rem;
+      color: var(--muted);
+      font-style: italic;
+      line-height: 1.5;
+    }
+
+    .result-card:hover {
+      border-color: var(--card-accent, var(--red));
+    }
+
     /* ── RAW ── */
     #raw-section {
       width: 100%;
@@ -673,6 +877,7 @@
     <div class="logo">Temu<span>Lens</span></div>
     <div class="logo-dot"></div>
     <span class="tagline">AI Search</span>
+    <span class="mode-badge" id="mode-badge">◎ Normal</span>
   </header>
 
   <main>
@@ -686,60 +891,28 @@
 
       <!-- TABS -->
       <div class="tabs">
-        <div class="tab active" id="tab-image" onclick="switchTab('image')">
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-            <rect x="1" y="1" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.5" />
-            <circle cx="4.5" cy="4.5" r="1" fill="currentColor" />
-            <path d="M1 9.5l3-3 2.5 2.5L9 6.5l4 4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"
-              stroke-linejoin="round" />
-          </svg>
-          Image
-        </div>
-        <div class="tab" id="tab-text" onclick="switchTab('text')">
+        <div class="tab active" id="tab-text">
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
             <path d="M2 4h10M2 7h7M2 10h5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
           </svg>
-          Describe
-        </div>
-      </div>
-
-      <!-- IMAGE PANEL -->
-      <div class="panel active" id="panel-image">
-        <!-- drop zone (shown when no image) -->
-        <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()">
-          <svg class="drop-icon" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M22 8v18M22 8l-7 7M22 8l7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-              stroke-linejoin="round" />
-            <path d="M6 32h32" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-            <path d="M6 38h32" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" opacity="0.3" />
-          </svg>
-          <div class="drop-text">Drop an image here</div>
-          <div class="drop-sub">PNG, JPG, WEBP — up to 10MB</div>
-          <button class="btn-upload" onclick="event.stopPropagation(); document.getElementById('file-input').click()">Browse files</button>
-          <input type="file" id="file-input" accept="image/*" />
-        </div>
-        <!-- preview (shown when image loaded) -->
-        <div class="preview-row" id="preview-row">
-          <img id="preview-img" src="" alt="Preview" />
-          <div class="preview-info">
-            <div class="preview-name" id="file-name"></div>
-            <span class="preview-change" onclick="resetImage()">Remove image</span>
-          </div>
+          Search
         </div>
       </div>
 
       <!-- TEXT PANEL -->
-      <div class="panel" id="panel-text">
+      <div class="panel active" id="panel-text">
         <div class="text-panel-inner">
           <label>What are you looking for?</label>
           <textarea id="text-input" placeholder="e.g. oversized vintage denim jacket with distressed pockets, light blue wash..."></textarea>
-          <div class="text-examples">
+          <div class="text-examples" id="chip-examples">
             <span class="chip" onclick="fillChip(this)">floral summer dress</span>
             <span class="chip" onclick="fillChip(this)">minimalist white sneakers</span>
             <span class="chip" onclick="fillChip(this)">vintage leather crossbody bag</span>
             <span class="chip" onclick="fillChip(this)">chunky knit cardigan</span>
             <span class="chip" onclick="fillChip(this)">wide leg cargo pants</span>
-            <span class="chip" onclick="fillChip(this)">silver hoop earrings</span>
+            <span class="chip" onclick="fillChip(this)">aesthetic desk organizer</span>
+            <span class="chip" onclick="fillChip(this)">mini projector</span>
+            <span class="chip" onclick="fillChip(this)">LED plant grow light</span>
           </div>
         </div>
       </div>
@@ -775,24 +948,108 @@
     </div>
   </main>
 
+  <!-- MODE BADGE in header injected by JS -->
+
+  <!-- MODE DIAL -->
+  <div class="mode-dial" id="mode-dial">
+    <button class="mode-dial-btn" id="mode-dial-btn" onclick="toggleDial()" title="Search modes">
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="3" fill="#fff"/><circle cx="9" cy="2.5" r="1.5" fill="#fff"/><circle cx="9" cy="15.5" r="1.5" fill="#fff"/><circle cx="2.5" cy="9" r="1.5" fill="#fff"/><circle cx="15.5" cy="9" r="1.5" fill="#fff"/></svg>
+    </button>
+
+    <!-- Normal -->
+    <button class="mode-spoke" id="spoke-normal" onclick="setMode('normal')">
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="8" cy="8" r="5" stroke="currentColor" stroke-width="1.6"/><path d="M12 12l3.5 3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      <span class="mode-tooltip">Normal — Standard search</span>
+    </button>
+    <!-- Quality -->
+    <button class="mode-spoke" id="spoke-quality" onclick="setMode('quality')">
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 2l1.8 4h4.2l-3.4 2.5 1.3 4L9 10l-3.9 2.5 1.3-4L3 6h4.2z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+      <span class="mode-tooltip">High Quality Cheap — Best bang for buck</span>
+    </button>
+    <!-- Super Cheap -->
+    <button class="mode-spoke" id="spoke-super" onclick="setMode('super')">
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M10 2L4 10h5l-1 6 7-9h-5z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+      <span class="mode-tooltip">Super Cheap — Lowest price finds</span>
+    </button>
+    <!-- Niche -->
+    <button class="mode-spoke" id="spoke-niche" onclick="setMode('niche')">
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="6.5" stroke="currentColor" stroke-width="1.5"/><path d="M9 5v4l2.5 2.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="9" cy="9" r="1" fill="currentColor"/></svg>
+      <span class="mode-tooltip">Niche — Hidden gems nobody knows</span>
+    </button>
+    <!-- Bulk -->
+    <button class="mode-spoke" id="spoke-bulk" onclick="setMode('bulk')">
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="2" y="8" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.5"/><rect x="10" y="8" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.5"/><rect x="6" y="3" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.5"/></svg>
+      <span class="mode-tooltip">Bulk Deal — Multi-pack value buys</span>
+    </button>
+    <!-- Fast Delivery -->
+    <button class="mode-spoke" id="spoke-fast" onclick="setMode('fast')">
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M2 9h10M8 5l4 4-4 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 6h1a1 1 0 011 1v4a1 1 0 01-1 1h-1" stroke="currentColor" stroke-width="1.5"/></svg>
+      <span class="mode-tooltip">Fast Delivery — Ships quickly</span>
+    </button>
+    <!-- Beta: Exact Link -->
+    <button class="mode-spoke beta-spoke" id="spoke-beta" onclick="setMode('beta')">
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M7 3H4a1 1 0 00-1 1v10a1 1 0 001 1h10a1 1 0 001-1v-3" stroke="#a78bfa" stroke-width="1.5" stroke-linecap="round"/><path d="M10 3h5v5" stroke="#a78bfa" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M15 3L8 10" stroke="#a78bfa" stroke-width="1.5" stroke-linecap="round"/></svg>
+      <span class="mode-tooltip">Beta — Exact item direct link</span>
+      <span class="beta-badge">BETA</span>
+    </button>
+  </div>
+
   <script>
-    const API_KEY  = "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";
-const MODELS   = ["openrouter/free","qwen/qwen2.5-vl-32b-instruct:free","google/gemma-4-26b-a4b-it:free"];
+    const API_KEY  = "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";
+const MODELS   = ["openrouter/auto","qwen/qwen2.5-vl-32b-instruct:free","google/gemma-4-26b-a4b-it:free"];
 const ENDPOINT = "https://openrouter.ai/api/v1/chat/completions";
 
-let currentFile = null;
-let currentB64  = null;
-let activeTab   = 'image';
+// ── MODES ──
+const MODES = {
+  normal:  { label: '◎ Normal',       icon: '◎' },
+  quality: { label: '✦ Quality',      icon: '✦' },
+  super:   { label: '⚡ Ultra Cheap', icon: '⚡' },
+  niche:   { label: '◈ Niche',        icon: '◈' },
+  bulk:    { label: '▦ Bulk Deal',    icon: '▦' },
+  fast:    { label: '▶ Fast Delivery',icon: '▶' },
+  beta:    { label: '↗ Exact Link ·BETA', icon: '↗' }
+};
 
-// ── TABS ──
-function switchTab(tab) {
-  activeTab = tab;
-  document.getElementById('tab-image').classList.toggle('active', tab === 'image');
-  document.getElementById('tab-text').classList.toggle('active', tab === 'text');
-  document.getElementById('panel-image').classList.toggle('active', tab === 'image');
-  document.getElementById('panel-text').classList.toggle('active', tab === 'text');
+let currentMode = 'normal';
+
+function toggleDial() {
+  const dial = document.getElementById('mode-dial');
+  const btn  = document.getElementById('mode-dial-btn');
+  dial.classList.toggle('open');
+  btn.classList.toggle('open');
+}
+
+function setMode(mode) {
+  currentMode = mode;
+  // update spokes active state
+  Object.keys(MODES).forEach(m => {
+    const spoke = document.getElementById('spoke-' + m);
+    if (spoke) spoke.classList.toggle('active-mode', m === mode);
+  });
+  document.getElementById('mode-badge').textContent = MODES[mode].label;
+  document.getElementById('mode-badge').style.color = mode === 'beta' ? '#a78bfa' : '';
+  document.getElementById('mode-badge').style.borderColor = mode === 'beta' ? 'rgba(167,139,250,0.3)' : '';
+  document.getElementById('mode-badge').style.background = mode === 'beta' ? 'rgba(167,139,250,0.08)' : '';
+  // close dial
+  document.getElementById('mode-dial').classList.remove('open');
+  document.getElementById('mode-dial-btn').classList.remove('open');
+  // update hint
   updateSearchState();
 }
+
+// close dial on outside click
+document.addEventListener('click', e => {
+  const dial = document.getElementById('mode-dial');
+  if (!dial.contains(e.target)) {
+    dial.classList.remove('open');
+    document.getElementById('mode-dial-btn').classList.remove('open');
+  }
+});
+
+// init first spoke active
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('spoke-normal').classList.add('active-mode');
+});
 
 function fillChip(el) {
   document.getElementById('text-input').value = el.textContent;
@@ -804,54 +1061,18 @@ document.getElementById('text-input').addEventListener('input', updateSearchStat
 function updateSearchState() {
   const btn  = document.getElementById('search-btn');
   const hint = document.getElementById('search-hint');
-  if (activeTab === 'image') {
-    const hasImage = !!currentB64;
-    btn.disabled = !hasImage;
-    hint.textContent = hasImage ? 'Image ready — hit search' : 'Upload an image to get started';
-  } else {
-    const hasText = document.getElementById('text-input').value.trim().length > 2;
-    btn.disabled = !hasText;
-    hint.textContent = hasText ? 'Ready to search' : 'Describe what you want to find';
-  }
-}
-
-// ── DROP ZONE ──
-const dropZone = document.getElementById('drop-zone');
-const fileInput = document.getElementById('file-input');
-
-dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
-dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
-dropZone.addEventListener('drop', e => {
-  e.preventDefault();
-  dropZone.classList.remove('drag-over');
-  const file = e.dataTransfer.files[0];
-  if (file && file.type.startsWith('image/')) loadFile(file);
-});
-fileInput.addEventListener('change', () => { if (fileInput.files[0]) loadFile(fileInput.files[0]); });
-
-function loadFile(file) {
-  currentFile = file;
-  const reader = new FileReader();
-  reader.onload = e => {
-    const dataUrl = e.target.result;
-    currentB64 = dataUrl.split(',')[1];
-    document.getElementById('preview-img').src = dataUrl;
-    document.getElementById('file-name').textContent = file.name;
-    dropZone.style.display = 'none';
-    document.getElementById('preview-row').classList.add('visible');
-    clearResults();
-    updateSearchState();
+  const hasText = document.getElementById('text-input').value.trim().length > 2;
+  btn.disabled = !hasText;
+  const modeHints = {
+    normal:  hasText ? 'Ready to search' : 'Describe what you want to find',
+    quality: hasText ? 'Finding high quality + cheap picks…' : 'Describe item for quality cheap mode',
+    super:   hasText ? 'Hunting the absolute lowest prices…' : 'Describe item for super cheap mode',
+    niche:   hasText ? 'Searching for hidden gems…' : 'Describe item to find niche products',
+    bulk:    hasText ? 'Finding best bulk deals…' : 'Describe item for bulk deal mode',
+    fast:    hasText ? 'Finding fast-shipping items…' : 'Describe item for fast delivery mode',
+    beta:    hasText ? 'Generating exact item links… (Beta)' : 'Describe item to get exact Temu links'
   };
-  reader.readAsDataURL(file);
-}
-
-function resetImage() {
-  currentFile = null; currentB64 = null;
-  dropZone.style.display = '';
-  document.getElementById('preview-row').classList.remove('visible');
-  fileInput.value = '';
-  clearResults();
-  updateSearchState();
+  hint.textContent = modeHints[currentMode] || modeHints.normal;
 }
 
 function clearResults() {
@@ -888,36 +1109,56 @@ function toggleRaw() {
   document.getElementById('raw-content').classList.toggle('open');
 }
 
+// ── MODE-AWARE SYSTEM PROMPTS ──
+function getSystemPrompt(mode) {
+  const base = `You are a Temu product-finding assistant. Output ONLY a valid JSON array — no markdown, no preamble, no explanation.
+
+Each object must have:
+- "name": short product name
+- "description": 1-sentence visual/functional description
+- "temuQuery": highly specific Temu search string with color, material, style, keywords
+- "googleQuery": "site:temu.com " + best search string
+- "priceHint": short string like "~$2–5" or "under $10" based on the mode
+- "tip": one short shopping tip for this mode`;
+
+  const modeInstructions = {
+    normal: `\n\nMode: NORMAL — find the most relevant and popular matching items on Temu. Return 4–6 items.`,
+
+    quality: `\n\nMode: HIGH QUALITY CHEAP — find items that punch above their price on Temu. Look for things with good ratings potential, decent materials, and reviews-worthy quality but still very affordable (under $15 ideally). Add quality keywords like "high quality", "premium feel", "durable", "well-reviewed" to temuQuery. Return 5–7 items, prioritise variety of great value options. Include a "qualitySignal" field: a 1-phrase signal of why it's good value.`,
+
+    super: `\n\nMode: SUPER CHEAP — find the absolute lowest-priced versions of the item on Temu. Focus on budget, wholesale, clearance-style finds under $5 where possible. Use keywords like "cheap", "budget", "wholesale", "lot", "low price" in temuQuery. Return 5–8 options across different price tiers. Add a "priceRank" field: "cheapest" | "very cheap" | "budget".`,
+
+    niche: `\n\nMode: NICHE HIDDEN GEMS — find unusual, underrated, or barely-known variants of the requested item. These should be products that mainstream shoppers wouldn't think to search for but are surprisingly useful, aesthetic, or interesting. Avoid generic popular results. Add "nicheScore" field: 1–10 rating of how obscure/unique this find is. Return 5–8 items. Use unusual, specific, creative search terms in temuQuery.`,
+
+    bulk: `\n\nMode: BULK DEAL — find multi-pack, bundle, or wholesale versions of the item. Keywords: "pack of", "set of", "bulk", "lot", "multipack", "wholesale", "bundle". Add a "unitCount" field like "10 pack" or "50 pieces". Return 4–6 bulk-focused options with good per-unit value.`,
+
+    fast: `\n\nMode: FAST DELIVERY — find items on Temu that are likely to ship and deliver quickly. Prioritize items that Temu marks as "fast shipping", "ships in 1-3 days", "local warehouse", or "express". Add keywords like "fast shipping", "quick delivery", "in stock", "express" to temuQuery. Add a "deliveryEst" field like "3–5 days" or "1 week". Return 4–6 items likely to arrive fast.`,
+
+    beta: `\n\nMode: EXACT LINK (BETA) — your job is to generate the most accurate possible direct Temu product URL for the exact item described. Use the known Temu URL format for product pages: https://www.temu.com/goods.html?goods_id=XXXXXXXXX or https://www.temu.com/[slug]-g-XXXXXXXXX.html. For each item, construct the most plausible direct product URL using realistic goods_id numbers (9–12 digits). Also include a temuQuery and googleQuery as normal. Add an "exactUrl" field with the constructed direct URL. Add a "confidence" field: "high" | "medium" | "low" — how confident the link guess is. Return 3–5 items. Warn in "tip" that these are AI-estimated links and may need verification.`
+  };
+
+  return base + (modeInstructions[mode] || modeInstructions.normal) + `\n\nExample output shape:\n[{"name":"Item","description":"...","temuQuery":"...","googleQuery":"site:temu.com ...","priceHint":"~$3","tip":"..."}]`;
+}
+
 // ── MAIN SEARCH ──
 async function runSearch() {
   clearResults();
   setLoading(true);
-  setStatus('Asking AI to find your items…');
 
-  const isImage = activeTab === 'image';
-  const mime    = currentFile?.type || 'image/jpeg';
+  const statusMessages = {
+    normal:  'Searching Temu for matches…',
+    quality: 'Finding quality cheap picks…',
+    super:   'Hunting the lowest prices…',
+    niche:   'Digging for hidden gems…',
+    bulk:    'Finding bulk deals…',
+    fast:    'Finding fast-delivery items…',
+    beta:    'Generating exact item links… (Beta)'
+  };
+  setStatus(statusMessages[currentMode] || 'Searching…');
 
-  const systemPrompt = `You are a product-finding assistant for Temu. Identify every distinct item or piece of clothing the user mentions (from an image or text description) and output a JSON array — NOTHING else, no markdown, no preamble.
-
-Each object must have:
-- "name": short product name
-- "description": 1-sentence visual description useful for shopping
-- "temuQuery": precise Temu search string (color, material, style, cut, pattern)
-- "googleQuery": "site:temu.com " + best search string
-
-Output ONLY valid JSON. Example:
-[{"name":"Black Cargo Pants","description":"Loose-fit black pants with side pockets.","temuQuery":"black loose cargo pants drawstring waist streetwear","googleQuery":"site:temu.com black loose cargo pants drawstring waist"},{"name":"White Sneakers","description":"Chunky white platform sneakers.","temuQuery":"white chunky platform sneakers thick sole women","googleQuery":"site:temu.com white chunky platform sneakers"}]`;
-
-  let userContent;
-  if (isImage) {
-    userContent = [
-      { type: 'image_url', image_url: { url: `data:${mime};base64,${currentB64}` } },
-      { type: 'text', text: 'Identify all items in this image and return the JSON array.' }
-    ];
-  } else {
-    const desc = document.getElementById('text-input').value.trim();
-    userContent = `Find this item on Temu and return the JSON array: "${desc}"`;
-  }
+  const desc = document.getElementById('text-input').value.trim();
+  const systemPrompt = getSystemPrompt(currentMode);
+  const userContent  = `Find Temu products for: "${desc}". Mode: ${currentMode.toUpperCase()}. Return JSON array only.`;
 
   let rawText = '';
 
@@ -935,10 +1176,10 @@ Output ONLY valid JSON. Example:
           },
           body: JSON.stringify({
             model: MODEL,
-            max_tokens: 1200,
+            max_tokens: 1800,
             messages: [
               { role: 'system', content: systemPrompt },
-              { role: 'user', content: userContent }
+              { role: 'user',   content: userContent }
             ]
           })
         });
@@ -963,13 +1204,13 @@ Output ONLY valid JSON. Example:
 
         let jsonStr = rawText.trim().replace(/^```(?:json)?/i, '').replace(/```$/, '').trim();
         const match = jsonStr.match(/\[[\s\S]*\]/);
-        if (!match) throw new Error('AI response had no JSON array. Try rephrasing or use a clearer image.');
+        if (!match) throw new Error('AI returned no JSON array. Try rephrasing your search.');
 
         const items = JSON.parse(match[0]);
         if (!Array.isArray(items) || items.length === 0)
-          throw new Error('No items found. Try a clearer image or more specific description.');
+          throw new Error('No items found. Try a more specific description.');
 
-        renderResults(items);
+        renderResults(items, currentMode);
         setStatus('');
         return;
 
@@ -979,7 +1220,7 @@ Output ONLY valid JSON. Example:
       }
     }
 
-    setError((lastError || 'All models failed.') + ' Please try again in a moment.');
+    setError((lastError || 'All models failed.') + ' Please try again.');
     setStatus('');
     if (rawText) {
       document.getElementById('raw-content').textContent = rawText;
@@ -994,11 +1235,15 @@ Output ONLY valid JSON. Example:
   }
 }
 
-function renderResults(items) {
+function renderResults(items, mode) {
   const grid  = document.getElementById('results-grid');
   const badge = document.getElementById('count-badge');
   grid.innerHTML = '';
   badge.textContent = items.length;
+
+  // mode-specific extras
+  const modeColor = { normal:'#FF6B00', quality:'#f0b429', super:'#3ecf8e', niche:'#a78bfa', bulk:'#60a5fa', fast:'#22d3ee', beta:'#a78bfa' };
+  const accent = modeColor[mode] || modeColor.normal;
 
   items.forEach(item => {
     const q       = encodeURIComponent(item.temuQuery || item.name || '');
@@ -1006,18 +1251,48 @@ function renderResults(items) {
     const ddgQ    = encodeURIComponent(item.googleQuery || `site:temu.com ${item.temuQuery || item.name}`);
     const ddgUrl  = `https://duckduckgo.com/?q=${ddgQ}`;
 
+    // build extra badges per mode
+    let extraBadge = '';
+    if (mode === 'quality' && item.qualitySignal)
+      extraBadge = `<div class="item-extra" style="color:${accent}">✦ ${escHtml(item.qualitySignal)}</div>`;
+    if (mode === 'super' && item.priceRank)
+      extraBadge = `<div class="item-extra" style="color:${accent}">💸 ${escHtml(item.priceRank)}</div>`;
+    if (mode === 'niche' && item.nicheScore)
+      extraBadge = `<div class="item-extra" style="color:${accent}">🕵️ Niche score: ${escHtml(String(item.nicheScore))}/10</div>`;
+    if (mode === 'bulk' && item.unitCount)
+      extraBadge = `<div class="item-extra" style="color:${accent}">▦ ${escHtml(item.unitCount)}</div>`;
+    if (mode === 'fast' && item.deliveryEst)
+      extraBadge = `<div class="item-extra" style="color:${accent}">▶ Est. delivery: ${escHtml(item.deliveryEst)}</div>`;
+    if (mode === 'beta' && item.confidence)
+      extraBadge = `<div class="item-extra" style="color:${accent}">↗ Link confidence: ${escHtml(item.confidence)}</div>`;
+
+    const priceTag = item.priceHint
+      ? `<span class="price-hint" style="background:${accent}22;color:${accent};border-color:${accent}44">${escHtml(item.priceHint)}</span>` : '';
+    const tipTag   = item.tip
+      ? `<div class="item-tip">💡 ${escHtml(item.tip)}</div>` : '';
+
     const card = document.createElement('div');
     card.className = 'result-card';
+    card.style.setProperty('--card-accent', accent);
     card.innerHTML = `
-      <div class="item-name">${escHtml(item.name || 'Item')}</div>
+      <div class="item-name-row">
+        <div class="item-name">${escHtml(item.name || 'Item')}</div>
+        ${priceTag}
+      </div>
       <div class="item-desc">${escHtml(item.description || '')}</div>
+      ${extraBadge}
       <div class="item-query">🔍 ${escHtml(item.temuQuery || '')}</div>
+      ${tipTag}
       <div class="card-links">
-        <a class="temu-link" href="${temuUrl}" target="_blank" rel="noopener">
+        <a class="temu-link" href="${temuUrl}" target="_blank" rel="noopener" style="background:${accent}">
           <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2 7h10M7 2l5 5-5 5" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
           Search Temu
         </a>
-        <a class="ddg-link" href="${ddgUrl}" target="_blank" rel="noopener">
+        ${mode === 'beta' && item.exactUrl ? `<a class="temu-link" href="${escHtml(item.exactUrl)}" target="_blank" rel="noopener" style="background:#7c3aed">
+          <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M3 7h7M6 4l4 3-4 3" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 2h2v10h-2" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/></svg>
+          Open Direct Link
+        </a>` : ''}
+        <a class="ddg-link" href="${ddgUrl}" target="_blank" rel="noopener" style="color:${accent};border-color:${accent}66">
           <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2 7h10M7 2l5 5-5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
           Find Exact Item
         </a>
@@ -1032,6 +1307,9 @@ function renderResults(items) {
 function escHtml(str) {
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
+
+// init
+updateSearchState();
   </script>
 </body>
 
