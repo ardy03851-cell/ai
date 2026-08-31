@@ -706,6 +706,134 @@
       }
     }
 
+    .fx-cyber {
+      position: relative;
+      border-radius: 12px;
+      animation: fxCyberGlow 1.8s infinite alternate ease-in-out;
+    }
+
+    @keyframes fxCyberGlow {
+      0% {
+        box-shadow: 0 0 8px #00f3ff, inset 0 0 6px #ff0055;
+      }
+
+      50% {
+        box-shadow: 0 0 18px #ff0055, 0 0 28px #00f3ff;
+      }
+
+      100% {
+        box-shadow: 0 0 10px #00f3ff, inset 0 0 12px #ff0055;
+      }
+    }
+
+    .fx-matrix {
+      animation: fxMatrixPulse 1.6s infinite ease-in-out;
+      border-radius: 12px;
+    }
+
+    @keyframes fxMatrixPulse {
+
+      0%,
+      100% {
+        box-shadow: 0 0 4px #00ff66, 0 0 10px rgba(0, 255, 102, 0.4);
+      }
+
+      50% {
+        box-shadow: 0 0 16px #00ff66, 0 0 32px #003311;
+      }
+    }
+
+    .fx-supernova {
+      position: relative;
+      border-radius: 12px;
+      z-index: 1;
+    }
+
+    .fx-supernova::before {
+      content: "";
+      position: absolute;
+      inset: -4px;
+      border-radius: 16px;
+      background: radial-gradient(circle, #ffffff 0%, #fbbf24 40%, #f59e0b 70%, transparent 100%);
+      animation: fxSupernovaPulse 2s infinite ease-in-out;
+      z-index: -1;
+      opacity: 0.85;
+    }
+
+    @keyframes fxSupernovaPulse {
+
+      0%,
+      100% {
+        transform: scale(0.96);
+        opacity: 0.7;
+      }
+
+      50% {
+        transform: scale(1.08);
+        opacity: 1;
+        filter: blur(2px);
+      }
+    }
+
+    .fx-frost {
+      animation: fxFrostAura 2.2s infinite alternate ease-in-out;
+      border-radius: 12px;
+    }
+
+    @keyframes fxFrostAura {
+      0% {
+        box-shadow: 0 0 6px #38bdf8, 0 0 12px #e0f2fe;
+      }
+
+      100% {
+        box-shadow: 0 0 20px #bae6fd, 0 0 36px #0284c7;
+      }
+    }
+
+    .fx-plasma {
+      position: relative;
+      border-radius: 12px;
+      z-index: 1;
+    }
+
+    .fx-plasma::before {
+      content: "";
+      position: absolute;
+      inset: -3px;
+      border-radius: 14px;
+      background: conic-gradient(from 0deg, #ec4899, #8b5cf6, #d946ef, #6366f1, #ec4899);
+      animation: fxPlasmaRotate 2.4s linear infinite;
+      z-index: -1;
+      filter: blur(1px);
+    }
+
+    @keyframes fxPlasmaRotate {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(-360deg);
+      }
+    }
+
+    .fx-void {
+      animation: fxVoidPulse 2.5s infinite ease-in-out;
+      border-radius: 12px;
+    }
+
+    @keyframes fxVoidPulse {
+
+      0%,
+      100% {
+        box-shadow: 0 0 8px #4c1d95, 0 0 16px #1e1b4b;
+      }
+
+      50% {
+        box-shadow: 0 0 22px #7c3aed, 0 0 40px #2e1065;
+      }
+    }
+
     /* Profile Badges & Status Tags */
     .profile-badge {
       display: inline-flex;
@@ -2129,6 +2257,36 @@
                     <div class="msg-avatar-wrap fx-water"><img class="effect-preview-avatar" src="https://api.dicebear.com/7.x/initials/svg?seed=P" alt="">
                     </div>
                     <span>Ripple</span>
+                  </div>
+                  <div class="effect-opt" data-fx="cyber">
+                    <div class="msg-avatar-wrap fx-cyber"><img class="effect-preview-avatar" src="https://api.dicebear.com/7.x/initials/svg?seed=P" alt="">
+                    </div>
+                    <span>Cyber</span>
+                  </div>
+                  <div class="effect-opt" data-fx="matrix">
+                    <div class="msg-avatar-wrap fx-matrix"><img class="effect-preview-avatar" src="https://api.dicebear.com/7.x/initials/svg?seed=P" alt="">
+                    </div>
+                    <span>Matrix</span>
+                  </div>
+                  <div class="effect-opt" data-fx="supernova">
+                    <div class="msg-avatar-wrap fx-supernova"><img class="effect-preview-avatar" src="https://api.dicebear.com/7.x/initials/svg?seed=P" alt="">
+                    </div>
+                    <span>Supernova</span>
+                  </div>
+                  <div class="effect-opt" data-fx="frost">
+                    <div class="msg-avatar-wrap fx-frost"><img class="effect-preview-avatar" src="https://api.dicebear.com/7.x/initials/svg?seed=P" alt="">
+                    </div>
+                    <span>Frost</span>
+                  </div>
+                  <div class="effect-opt" data-fx="plasma">
+                    <div class="msg-avatar-wrap fx-plasma"><img class="effect-preview-avatar" src="https://api.dicebear.com/7.x/initials/svg?seed=P" alt="">
+                    </div>
+                    <span>Plasma</span>
+                  </div>
+                  <div class="effect-opt" data-fx="void">
+                    <div class="msg-avatar-wrap fx-void"><img class="effect-preview-avatar" src="https://api.dicebear.com/7.x/initials/svg?seed=P" alt="">
+                    </div>
+                    <span>Void</span>
                   </div>
                 </div>
               </div>
