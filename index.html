@@ -2446,7 +2446,6 @@
       getFirestore, collection, addDoc, query, orderBy, onSnapshot,
       serverTimestamp, doc, updateDoc, deleteDoc, setDoc, deleteField
     } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-    import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-messaging.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyC7BTQubCi89xzYsiw9XzjLlEBfjRE_X4M",
@@ -2462,9 +2461,8 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 const provider = new GoogleAuthProvider();
-const messaging = getMessaging(app);
 
-// Keep live participant count udated for all users
+// Keep live participant count updated for all users
 onSnapshot(collection(db, "public_call_participants"), (snapshot) => {
   const badge = document.getElementById("call-count-badge");
   if (badge) badge.textContent = `(${snapshot.size} online)`;
@@ -2501,47 +2499,6 @@ onSnapshot(collection(db, "public_call_participants"), (snapshot) => {
     const toggleThemeSwitch = document.getElementById("toggle-theme");
     const toggleSound = document.getElementById("toggle-sound");
     const toggleNotifySwitch = document.getElementById("toggle-notify-switch");
-
-// --- Notification Setup ---
-const vapidKey = "BBK0AtjlGGGe9ssB5QmrCETWdujInmTcPOEArIW0e9dDVubQ_HLQS1NidauM-ECKUzbhocF5qel7DYJtDHTxgMQ";
-
-async function requestNotificationPermission() {
-  try {
-    const permission = await Notification.requestPermission();
-    if (permission === 'granted') {
-      const token = await getToken(messaging, { vapidKey });
-      if (token && currentUser) {
-        await setDoc(doc(db, "users", currentUser.uid), { fcmToken: token }, { merge: true });
-        if (typeof showToast === "function") showToast("Notifications enabled!");
-      }
-    } else {
-      if (typeof showToast === "function") showToast("Notification permission denied.");
-      toggleNotifySwitch.checked = false;
-    }
-  } catch (err) {
-    console.error("Error getting notification permission:", err);
-    toggleNotifySwitch.checked = false;
-  }
-}
-
-if (toggleNotifySwitch) {
-  toggleNotifySwitch.addEventListener('change', (e) => {
-    if (e.target.checked) {
-      requestNotificationPermission();
-    }
-  });
-  
-  // Set toggle state based on existing browser permission
-  if (Notification.permission === 'granted') {
-    toggleNotifySwitch.checked = true;
-  }
-}
-
-onMessage(messaging, (payload) => {
-  if (typeof showToast === "function") {
-    showToast(`New Message: ${payload.notification?.title || "New notification"}`);
-  }
-});
 
     const btnOpenDrawer = document.getElementById("btn-open-drawer");
     const btnCloseDrawer = document.getElementById("btn-close-drawer");
