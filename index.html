@@ -5,6 +5,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Minimal Chat</title>
+  <link rel="icon" type="image/svg+xml"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><linearGradient id='g' x1='0%' y1='0%' x2='100%' y2='100%'><stop offset='0%' stop-color='%233b82f6'/><stop offset='100%' stop-color='%231d4ed8'/></linearGradient></defs><rect width='100' height='100' rx='24' fill='url(%23g)'/><path d='M30 32h40c4.4 0 8 3.6 8 8v20c0 4.4-3.6 8-8 8H48L34 78v-10h-4c-4.4 0-8-3.6-8-8V40c0-4.4 3.6-8 8-8z' fill='%23ffffff'/><circle cx='40' cy='48' r='4' fill='%232563eb'/><circle cx='50' cy='48' r='4' fill='%232563eb'/><circle cx='60' cy='48' r='4' fill='%232563eb'/></svg>" />
   <style>
     :root {
       --bg-color: #0f172a;
@@ -547,6 +549,280 @@
       height: 18px;
       fill: currentColor;
     }
+
+
+
+
+    /* Side Drawer & Animated Menu */
+    .btn-menu-toggle {
+      background: transparent;
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s, border-color 0.2s;
+    }
+
+    .btn-menu-toggle:hover {
+      background: var(--card-bg);
+      border-color: var(--text-muted);
+    }
+
+    #drawer-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(4px);
+      z-index: 100;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    #drawer-overlay.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    #side-drawer {
+      position: absolute;
+      top: 0;
+      right: -100%;
+      width: 320px;
+      max-width: 85%;
+      height: 100%;
+      background: #1e293b;
+      box-shadow: -5px 0 25px rgba(0, 0, 0, 0.5);
+      z-index: 101;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      border-left: 1px solid var(--border-color);
+    }
+
+    #drawer-overlay.open #side-drawer {
+      transform: translateX(-100%);
+    }
+
+    .drawer-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--bg-color);
+    }
+
+    .drawer-header h3 {
+      font-size: 16px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-close-drawer {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 22px;
+      cursor: pointer;
+      line-height: 1;
+    }
+
+    .btn-close-drawer:hover {
+      color: var(--text-main);
+    }
+
+    /* Tabbed Navigation inside Side Menu */
+    .drawer-tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border-color);
+      background: var(--bg-color);
+    }
+
+    .drawer-tab {
+      flex: 1;
+      padding: 12px 8px;
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: var(--text-muted);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+    }
+
+    .drawer-tab:hover {
+      color: var(--text-main);
+    }
+
+    .drawer-tab.active {
+      color: #60a5fa;
+      border-bottom-color: #60a5fa;
+      background: rgba(96, 165, 250, 0.05);
+    }
+
+    .drawer-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    /* Custom Change Logs & Customisation Cards */
+    .changelog-filter-bar {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .filter-btn {
+      background: var(--bg-color);
+      border: 1px solid var(--border-color);
+      color: var(--text-muted);
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 11px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .filter-btn.active,
+    .filter-btn:hover {
+      background: #2563eb;
+      color: #ffffff;
+      border-color: #2563eb;
+    }
+
+    .changelog-card {
+      background: var(--bg-color);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 14px;
+      margin-bottom: 14px;
+    }
+
+    .changelog-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .version-tag {
+      background: #2563eb;
+      color: white;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 6px;
+    }
+
+    .changelog-date {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .changelog-card h4 {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: var(--text-main);
+    }
+
+    .changelog-list {
+      list-style: none;
+      padding: 0;
+    }
+
+    .changelog-item {
+      font-size: 12px;
+      color: #cbd5e1;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+      line-height: 1.4;
+    }
+
+    .badge {
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 2px 5px;
+      border-radius: 4px;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .badge-feat {
+      background: #059669;
+      color: white;
+    }
+
+    .badge-fix {
+      background: #dc2626;
+      color: white;
+    }
+
+    .badge-ui {
+      background: #7c3aed;
+      color: white;
+    }
+
+    .badge-sec {
+      background: #d97706;
+      color: white;
+    }
+
+    /* Customisation Settings */
+    .setting-group {
+      margin-bottom: 20px;
+    }
+
+    .setting-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-main);
+      margin-bottom: 8px;
+    }
+
+    .color-presets {
+      display: flex;
+      gap: 10px;
+    }
+
+    .color-swatch {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+
+    .color-swatch:hover,
+    .color-swatch.active {
+      transform: scale(1.15);
+      border-color: white;
+    }
   </style>
 </head>
 
@@ -584,8 +860,147 @@
         <div class="header-actions">
           <button class="btn-logout" id="btn-notify" style="display:none;">Enable Notifications</button>
           <button class="btn-logout" id="btn-logout">Sign Out</button>
+          <button class="btn-menu-toggle" id="btn-open-drawer" title="Open Server Menu">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="3" y1="12" x2="21" y2="12"></line>
+              <line x1="3" y1="6" x2="21" y2="6"></line>
+              <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+          </button>
         </div>
       </header>
+
+      <!-- Side Drawer Container -->
+      <div id="drawer-overlay">
+        <div id="side-drawer">
+          <div class="drawer-header">
+            <h3>
+              <svg width="18" height="18" viewBox="0 0 100 100" style="border-radius: 4px;">
+                <rect width="100" height="100" rx="20" fill="#2563eb" />
+                <path
+                  d="M30 32h40c4.4 0 8 3.6 8 8v20c0 4.4-3.6 8-8 8H48L34 78v-10h-4c-4.4 0-8-3.6-8-8V40c0-4.4 3.6-8 8-8z"
+                  fill="#ffffff" />
+              </svg>
+              Server Hub
+            </h3>
+            <button class="btn-close-drawer" id="btn-close-drawer">&times;</button>
+          </div>
+
+          <div class="drawer-tabs">
+            <button class="drawer-tab active" data-tab="changelog">Change Logs</button>
+            <button class="drawer-tab" data-tab="customise">Customise</button>
+            <button class="drawer-tab" data-tab="info">Server Info</button>
+          </div>
+
+          <div class="drawer-body">
+            <!-- TAB 1: Change Logs -->
+            <div id="tab-changelog" class="tab-content active">
+              <div class="changelog-filter-bar">
+                <button class="filter-btn active" data-filter="all">All</button>
+                <button class="filter-btn" data-filter="feat">Features</button>
+                <button class="filter-btn" data-filter="fix">Fixes</button>
+                <button class="filter-btn" data-filter="ui">UI/UX</button>
+              </div>
+
+              <!-- Release v1.3.0 -->
+              <div class="changelog-card" data-tags="feat ui">
+                <div class="changelog-card-header">
+                  <span class="version-tag">v1.3.0</span>
+                  <span class="changelog-date">Aug 31, 2026</span>
+                </div>
+                <h4>Server Hub & Custom Favicon</h4>
+                <ul class="changelog-list">
+                  <li class="changelog-item"><span class="badge badge-feat">FEAT</span> Added custom animated side menu
+                    drawer with tabs</li>
+                  <li class="changelog-item"><span class="badge badge-ui">UI</span> Integrated custom branded SVG server
+                    icon & browser tab favicon</li>
+                  <li class="changelog-item"><span class="badge badge-feat">FEAT</span> Comprehensive Change Log system
+                    with tag filters</li>
+                  <li class="changelog-item"><span class="badge badge-ui">UI</span> Added accent theme color
+                    customisation controls</li>
+                </ul>
+              </div>
+
+              <!-- Release v1.2.0 -->
+              <div class="changelog-card" data-tags="feat ui">
+                <div class="changelog-card-header">
+                  <span class="version-tag">v1.2.0</span>
+                  <span class="changelog-date">Aug 28, 2026</span>
+                </div>
+                <h4>Replies & Web Notifications</h4>
+                <ul class="changelog-list">
+                  <li class="changelog-item"><span class="badge badge-feat">FEAT</span> In-line message replying with
+                    quoted context preview</li>
+                  <li class="changelog-item"><span class="badge badge-feat">FEAT</span> Native Web Notifications support
+                    for iPadOS & Mobile</li>
+                  <li class="changelog-item"><span class="badge badge-ui">UI</span> Sleek dark message bubbles with
+                    refined layout</li>
+                </ul>
+              </div>
+
+              <!-- Release v1.1.0 -->
+              <div class="changelog-card" data-tags="feat sec">
+                <div class="changelog-card-header">
+                  <span class="version-tag">v1.1.0</span>
+                  <span class="changelog-date">Aug 26, 2026</span>
+                </div>
+                <h4>Guest Access & Moderation</h4>
+                <ul class="changelog-list">
+                  <li class="changelog-item"><span class="badge badge-feat">FEAT</span> Firebase Anonymous Auth for
+                    instant guest access</li>
+                  <li class="changelog-item"><span class="badge badge-sec">SEC</span> Real-time profanity filter for
+                    guest accounts</li>
+                  <li class="changelog-item"><span class="badge badge-feat">FEAT</span> Custom display name / nickname
+                    modification</li>
+                </ul>
+              </div>
+
+              <!-- Release v1.0.0 -->
+              <div class="changelog-card" data-tags="feat">
+                <div class="changelog-card-header">
+                  <span class="version-tag">v1.0.0</span>
+                  <span class="changelog-date">Aug 20, 2026</span>
+                </div>
+                <h4>Initial Launch</h4>
+                <ul class="changelog-list">
+                  <li class="changelog-item"><span class="badge badge-feat">FEAT</span> Real-time chat powered by
+                    Firebase Cloud Firestore</li>
+                  <li class="changelog-item"><span class="badge badge-feat">FEAT</span> Google Authentication
+                    integration</li>
+                </ul>
+              </div>
+            </div>
+
+            <!-- TAB 2: Customisation -->
+            <div id="tab-customise" class="tab-content">
+              <div class="setting-group">
+                <label>Bubble Theme Accent</label>
+                <div class="color-presets">
+                  <div class="color-swatch active" data-color="#2563eb" style="background: #2563eb;" title="Royal Blue">
+                  </div>
+                  <div class="color-swatch" data-color="#7c3aed" style="background: #7c3aed;" title="Purple Orbit">
+                  </div>
+                  <div class="color-swatch" data-color="#059669" style="background: #059669;" title="Emerald Green">
+                  </div>
+                  <div class="color-swatch" data-color="#e11d48" style="background: #e11d48;" title="Crimson Red"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- TAB 3: Server Info -->
+            <div id="tab-info" class="tab-content">
+              <div class="changelog-card">
+                <h4>Server Details</h4>
+                <ul class="changelog-list">
+                  <li class="changelog-item"><strong>Status:</strong> <span style="color:#10b981;">● Online</span></li>
+                  <li class="changelog-item"><strong>Engine:</strong> Firebase Firestore Real-Time</li>
+                  <li class="changelog-item"><strong>Encryption:</strong> SSL / TLS Standard</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <div id="messages-container"></div>
 
@@ -646,6 +1061,72 @@
     const replyPreviewName = document.getElementById("reply-preview-name");
     const replyPreviewText = document.getElementById("reply-preview-text");
     const cancelReplyBtn = document.getElementById("cancel-reply-btn");
+
+    // Drawer & Side Menu Elements
+    const btnOpenDrawer = document.getElementById("btn-open-drawer");
+    const btnCloseDrawer = document.getElementById("btn-close-drawer");
+    const drawerOverlay = document.getElementById("drawer-overlay");
+    const drawerTabs = document.querySelectorAll(".drawer-tab");
+    const tabContents = document.querySelectorAll(".tab-content");
+    const filterBtns = document.querySelectorAll(".filter-btn");
+    const changelogCards = document.querySelectorAll(".changelog-card");
+    const colorSwatches = document.querySelectorAll(".color-swatch");
+
+    // Side Drawer Open / Close Animation Logic
+    function toggleDrawer(open) {
+      if (open) {
+        drawerOverlay.classList.add("open");
+      } else {
+        drawerOverlay.classList.remove("open");
+      }
+    }
+
+    btnOpenDrawer.addEventListener("click", () => toggleDrawer(true));
+    btnCloseDrawer.addEventListener("click", () => toggleDrawer(false));
+    drawerOverlay.addEventListener("click", (e) => {
+      if (e.target === drawerOverlay) toggleDrawer(false);
+    });
+
+    // Drawer Tabs Switching Logic
+    drawerTabs.forEach(tab => {
+      tab.addEventListener("click", () => {
+        const targetTab = tab.getAttribute("data-tab");
+        drawerTabs.forEach(t => t.classList.remove("active"));
+        tabContents.forEach(c => c.classList.remove("active"));
+        
+        tab.classList.add("active");
+        document.getElementById(`tab-${targetTab}`).classList.add("active");
+      });
+    });
+
+    // Change Log Filtering Logic
+    filterBtns.forEach(btn => {
+      btn.addEventListener("click", () => {
+        const filter = btn.getAttribute("data-filter");
+        filterBtns.forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+
+        changelogCards.forEach(card => {
+          const tags = card.getAttribute("data-tags");
+          if (!tags) return;
+          if (filter === "all" || tags.includes(filter)) {
+            card.style.display = "block";
+          } else {
+            card.style.display = "none";
+          }
+        });
+      });
+    });
+
+    // Theme Accent Customisation
+    colorSwatches.forEach(swatch => {
+      swatch.addEventListener("click", () => {
+        colorSwatches.forEach(s => s.classList.remove("active"));
+        swatch.classList.add("active");
+        const color = swatch.getAttribute("data-color");
+        document.documentElement.style.setProperty("--user-bubble", color);
+      });
+    });
 
     let currentUser = null;
     let unsubscribeMessages = null;
