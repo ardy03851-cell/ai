@@ -565,9 +565,6 @@
       border: 1px solid var(--border-color);
     }
 
-
-
-
     /* Avatar Wrappers & Animated Effects */
     .msg-avatar-wrap {
       position: relative;
@@ -579,9 +576,6 @@
       flex-shrink: 0;
       transition: all 0.3s ease;
     }
-
-
-
 
     /* Animated Profile Pic Effects */
     .fx-neon {
@@ -598,9 +592,6 @@
         box-shadow: 0 0 16px #00f0ff, 0 0 28px #ff007f;
       }
     }
-
-
-
 
     .fx-fire {
       animation: fxFireAura 1.5s infinite alternate ease-in-out;
@@ -620,9 +611,6 @@
         box-shadow: 0 0 10px #ff4500, 0 0 22px #ff8c00;
       }
     }
-
-
-
 
     .fx-glitch {
       animation: fxGlitch 0.8s infinite steps(2, start);
@@ -651,9 +639,6 @@
       }
     }
 
-
-
-
     .fx-cosmic {
       position: relative;
       border-radius: 12px;
@@ -676,9 +661,6 @@
       }
     }
 
-
-
-
     .fx-gold {
       animation: fxGoldShimmer 2s infinite alternate ease-in-out;
       border-radius: 12px;
@@ -693,9 +675,6 @@
         box-shadow: 0 0 20px rgba(255, 223, 0, 1), 0 0 35px rgba(255, 140, 0, 0.9);
       }
     }
-
-
-
 
     .fx-rainbow {
       animation: fxRainbowRotate 3s linear infinite;
@@ -712,9 +691,6 @@
       }
     }
 
-
-
-
     .fx-water {
       animation: fxWaterRipple 2s infinite ease-out;
       border-radius: 12px;
@@ -729,9 +705,6 @@
         box-shadow: 0 0 0 12px rgba(14, 165, 233, 0);
       }
     }
-
-
-
 
     /* Profile Badges & Status Tags */
     .profile-badge {
@@ -749,9 +722,6 @@
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
     }
 
-
-
-
     .user-status-tag {
       font-size: 11px;
       color: var(--text-muted);
@@ -761,18 +731,12 @@
       display: block;
     }
 
-
-
-
     .effect-selector-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(75px, 1fr));
       gap: 8px;
       margin-top: 8px;
     }
-
-
-
 
     .effect-opt {
       background: var(--surface);
@@ -790,18 +754,12 @@
       gap: 6px;
     }
 
-
-
-
     .effect-opt:hover,
     .effect-opt.active {
       border-color: var(--user-bubble);
       background: rgba(37, 99, 235, 0.2);
       transform: translateY(-2px);
     }
-
-
-
 
     .effect-preview-avatar {
       width: 26px;
@@ -2341,10 +2299,16 @@
       measurementId: "G-6VG6YRLE7Y"
     };
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-    const provider = new GoogleAuthProvider();
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const provider = new GoogleAuthProvider();
+
+// Keep live participant count updated for all users
+onSnapshot(collection(db, "public_call_participants"), (snapshot) => {
+  const badge = document.getElementById("call-count-badge");
+  if (badge) badge.textContent = `(${snapshot.size} online)`;
+});
 
     // ---------- DOM refs ----------
     const splash = document.getElementById("splash");
@@ -2504,12 +2468,13 @@
       const unsub = onSnapshot(participantsRef, (snapshot) => {
         const activeUids = [];
         snapshot.forEach((docSnap) => {
-          const peerData = docSnap.data();
-          activeUids.push(peerData.uid);
-          if (peerData.uid !== currentUser.uid && !peerConnections[peerData.uid]) {
-            initiatePeerConnection(peerData, true);
-          }
-        });
+          const peerData = docSnap.data();
+          activeUids.push(peerData.uid);
+          if (peerData.uid !== currentUser.uid && !peerConnections[peerData.uid]) {
+            const isInitiator = currentUser.uid > peerData.uid;
+            initiatePeerConnection(peerData, isInitiator);
+          }
+        });
 
         document.getElementById("call-count-badge").textContent = `(${activeUids.length} online)`;
 
@@ -2548,7 +2513,7 @@
     async function initiatePeerConnection(peerData, isInitiator) {
       if (peerConnections[peerData.uid]) return;
       const pc = new RTCPeerConnection(iceServers);
-      
+
       peerConnections[peerData.uid] = { pc, data: peerData };
 
       localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
@@ -2638,7 +2603,8 @@
       `;
       const videoEl = card.querySelector(`#video-${peerData.uid}`);
       videoEl.srcObject = stream;
-      
+      videoEl.play().catch(err => console.error("Error playing remote video stream:", err));
+
       const hasVideo = stream.getVideoTracks().length > 0 && stream.getVideoTracks()[0].enabled;
       if (!hasVideo) {
         card.querySelector(`#fallback-${peerData.uid}`).style.display = "flex";
@@ -2661,7 +2627,7 @@
         localStream = null;
       }
       Object.keys(peerConnections).forEach(uid => closePeerConnection(uid));
-      
+
       callUnsubscribers.forEach(unsub => unsub());
       callUnsubscribers = [];
 
