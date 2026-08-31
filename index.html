@@ -3,1613 +3,393 @@
 
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>TemuLens — Find Anything</title>
-  <link
-    href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500&display=swap"
-    rel="stylesheet" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Minimal Chat</title>
   <style>
-    *,
-    *::before,
-    *::after {
+    :root {
+      --bg-color: #e5ddd5;
+      --header-bg: #075e54;
+      --user-bubble: #dcf8c6;
+      --other-bubble: #ffffff;
+      --text-dark: #111111;
+      --text-muted: #666666;
+    }
+
+    * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-    }
-
-    :root {
-      --bg: #0D0F14;
-      --surface: #151820;
-      --border: #232633;
-      --red: #FF6B00;
-      --red-dim: rgba(255, 107, 0, 0.08);
-      --red-glow: rgba(255, 107, 0, 0.3);
-      --text: #F0F0F2;
-      --muted: #7A7E91;
-      --card-bg: #1A1D28;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
 
     body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: 'Inter', sans-serif;
-      min-height: 100vh;
+      background-color: #d1d7db;
       display: flex;
-      flex-direction: column;
+      justify-content: center;
       align-items: center;
+      height: 100vh;
+      height: 100dvh;
     }
 
-    /* ── HEADER ── */
+    /* Container setup optimized for iPad / Tablet / Mobile */
+    #app-container {
+      width: 100%;
+      max-width: 900px;
+      height: 100%;
+      max-height: 100%;
+      background: var(--bg-color);
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      position: relative;
+      overflow: hidden;
+    }
+
+    @media (min-width: 768px) {
+      #app-container {
+        height: 95vh;
+        border-radius: 12px;
+      }
+    }
+
+    /* Auth Screen */
+    #auth-screen {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100%;
+      background: #ffffff;
+      padding: 20px;
+      text-align: center;
+    }
+
+    #auth-screen h1 {
+      color: var(--header-bg);
+      margin-bottom: 8px;
+    }
+
+    #auth-screen p {
+      color: var(--text-muted);
+      margin-bottom: 24px;
+    }
+
+    .btn-google {
+      background-color: #4285f4;
+      color: #ffffff;
+      border: none;
+      padding: 12px 24px;
+      font-size: 16px;
+      font-weight: 600;
+      border-radius: 24px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: background 0.2s ease;
+    }
+
+    .btn-google:hover {
+      background-color: #357ae8;
+    }
+
+    /* Chat App Interface */
+    #chat-screen {
+      display: none;
+      flex-direction: column;
+      height: 100%;
+    }
+
     header {
-      width: 100%;
-      padding: 18px 40px;
+      background-color: var(--header-bg);
+      color: #ffffff;
+      padding: 12px 16px;
       display: flex;
+      justify-content: space-between;
       align-items: center;
-      gap: 12px;
-      border-bottom: 1px solid var(--border);
-      backdrop-filter: blur(10px);
-      position: sticky;
-      top: 0;
       z-index: 10;
-      background: rgba(13, 15, 20, 0.92);
     }
 
-    .logo {
-      font-family: 'Space Grotesk', sans-serif;
-      font-size: 1.25rem;
-      font-weight: 700;
-      letter-spacing: -0.5px;
-    }
-
-    .logo span {
-      color: var(--red);
-    }
-
-    .logo-dot {
-      width: 6px;
-      height: 6px;
-      background: var(--red);
-      border-radius: 50%;
-      box-shadow: 0 0 8px var(--red);
-      margin-left: 2px;
-      flex-shrink: 0;
-    }
-
-    .tagline {
-      font-size: 0.72rem;
-      color: var(--muted);
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      padding: 3px 8px;
-      border: 1px solid var(--border);
-      border-radius: 20px;
-    }
-
-    /* ── MAIN ── */
-    main {
-      width: 100%;
-      max-width: 1100px;
-      padding: 52px 48px 80px;
+    .user-profile {
       display: flex;
-      flex-direction: column;
       align-items: center;
-      gap: 36px;
-    }
-
-    .hero {
-      text-align: center;
-      display: flex;
-      flex-direction: column;
       gap: 12px;
     }
 
-    .hero-label {
-      font-family: 'Space Grotesk', sans-serif;
-      font-size: 3.4rem;
-      font-weight: 700;
-      letter-spacing: -2px;
-      line-height: 1.05;
-    }
-
-    .hero-label em {
-      font-style: normal;
-      color: var(--red);
-    }
-
-    .sub {
-      font-size: 0.88rem;
-      color: var(--muted);
-      line-height: 1.6;
-    }
-
-    /* ── INPUT CARD ── */
-    .input-card {
-      width: 100%;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      overflow: hidden;
-      position: relative;
-    }
-
-    /* animated orange border on searching */
-    .input-card::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      border-radius: 20px;
-      padding: 1.5px;
-      background: conic-gradient(from var(--angle, 0deg), transparent 60%, var(--red) 80%, transparent 100%);
-      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-      -webkit-mask-composite: xor;
-      mask-composite: exclude;
-      opacity: 0;
-      transition: opacity 0.3s;
-      pointer-events: none;
-    }
-
-    .input-card.searching::before {
-      opacity: 1;
-      animation: borderSpin 1.2s linear infinite;
-    }
-
-    @property --angle {
-      syntax: '<angle>';
-      initial-value: 0deg;
-      inherits: false;
-    }
-
-    @keyframes borderSpin {
-      to {
-        --angle: 360deg;
-      }
-    }
-
-    /* ── MODE DIAL ── */
-    .mode-dial {
-      position: fixed;
-      bottom: 160px;
-      right: 28px;
-      z-index: 150;
-    }
-
-    .mode-dial-btn {
-      width: 48px;
-      height: 48px;
+    .user-profile img {
+      width: 40px;
+      height: 40px;
       border-radius: 50%;
-      background: var(--red);
-      border: none;
-      color: #fff;
-      font-size: 1.3rem;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 0 20px var(--red-glow);
-      transition: transform 0.2s, box-shadow 0.2s;
-      position: relative;
-      z-index: 2;
-    }
-
-    .mode-dial-btn:hover {
-      transform: scale(1.1);
-      box-shadow: 0 0 32px var(--red-glow);
-    }
-
-    .mode-dial-btn.open {
-      transform: rotate(45deg) scale(1.1);
-    }
-
-    .mode-spoke {
-      position: absolute;
-      width: 44px;
-      height: 44px;
-      border-radius: 50%;
-      border: none;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1rem;
-      transition: all 0.35s cubic-bezier(.34, 1.56, .64, 1);
-      transform: translate(0, 0) scale(0);
-      opacity: 0;
-      pointer-events: none;
-      bottom: 0;
-      right: 0;
-      background: var(--surface);
-      border: 1.5px solid var(--border);
-      color: var(--text);
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
-    }
-
-    .mode-spoke.active-mode {
-      border-color: var(--red);
-      box-shadow: 0 0 14px var(--red-glow);
-    }
-
-    .mode-spoke.beta-spoke {
-      border-color: #7c3aed44;
-      background: #1a1330;
-    }
-
-    .mode-spoke.beta-spoke.active-mode {
-      border-color: #a78bfa;
-      box-shadow: 0 0 14px rgba(167, 139, 250, 0.4);
-    }
-
-    .beta-badge {
-      position: absolute;
-      top: -5px;
-      right: -5px;
-      background: #7c3aed;
-      color: #fff;
-      font-size: 0.45rem;
-      font-family: 'Space Grotesk', sans-serif;
-      font-weight: 700;
-      padding: 1px 4px;
-      border-radius: 4px;
-      letter-spacing: 0.04em;
-      pointer-events: none;
-    }
-
-    .mode-dial.open .mode-spoke {
-      opacity: 1;
-      pointer-events: all;
-    }
-
-    .mode-dial.open .mode-spoke:nth-child(2) {
-      transform: translate(-4px, -80px) scale(1);
-      transition-delay: 0.00s;
-    }
-
-    .mode-dial.open .mode-spoke:nth-child(3) {
-      transform: translate(-56px, -60px) scale(1);
-      transition-delay: 0.04s;
-    }
-
-    .mode-dial.open .mode-spoke:nth-child(4) {
-      transform: translate(-80px, -4px) scale(1);
-      transition-delay: 0.08s;
-    }
-
-    .mode-dial.open .mode-spoke:nth-child(5) {
-      transform: translate(-56px, 52px) scale(1);
-      transition-delay: 0.12s;
-    }
-
-    .mode-dial.open .mode-spoke:nth-child(6) {
-      transform: translate(-4px, 72px) scale(1);
-      transition-delay: 0.16s;
-    }
-
-    .mode-dial.open .mode-spoke:nth-child(7) {
-      transform: translate(-56px, 116px) scale(1);
-      transition-delay: 0.20s;
-    }
-
-    .mode-dial.open .mode-spoke:nth-child(8) {
-      transform: translate(-4px, 148px) scale(1);
-      transition-delay: 0.24s;
-    }
-
-    .mode-tooltip {
-      position: absolute;
-      right: 54px;
-      top: 50%;
-      transform: translateY(-50%);
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 5px 10px;
-      font-size: 0.73rem;
-      font-family: 'Space Grotesk', sans-serif;
-      font-weight: 600;
-      color: var(--text);
-      white-space: nowrap;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.15s;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    }
-
-    .mode-spoke:hover .mode-tooltip {
-      opacity: 1;
-    }
-
-    /* active mode badge in header */
-    .mode-badge {
-      margin-left: auto;
-      padding: 4px 10px;
-      border-radius: 20px;
-      font-size: 0.7rem;
-      font-family: 'Space Grotesk', sans-serif;
-      font-weight: 600;
-      letter-spacing: 0.05em;
-      background: var(--red-dim);
-      color: var(--red);
-      border: 1px solid rgba(255, 107, 0, 0.3);
-      display: flex;
-      align-items: center;
-      gap: 5px;
-    }
-
-    /* ── TABS ── */
-    .tabs {
-      display: flex;
-      border-bottom: 1px solid var(--border);
-      padding: 0 20px;
-    }
-
-    .tab {
-      padding: 16px 20px;
-      font-family: 'Space Grotesk', sans-serif;
-      font-size: 0.85rem;
-      font-weight: 600;
-      color: var(--muted);
-      cursor: pointer;
-      border-bottom: 2px solid transparent;
-      margin-bottom: -1px;
-      transition: color 0.15s, border-color 0.15s;
-      display: flex;
-      align-items: center;
-      gap: 7px;
-      user-select: none;
-    }
-
-    .tab svg {
-      opacity: 0.5;
-      transition: opacity 0.15s;
-    }
-
-    .tab.active {
-      color: var(--text);
-      border-bottom-color: var(--red);
-    }
-
-    .tab.active svg {
-      opacity: 1;
-    }
-
-    .tab:hover:not(.active) {
-      color: var(--text);
-    }
-
-    /* ── PANELS ── */
-    .panel {
-      display: none;
-      padding: 32px 32px 24px;
-    }
-
-    .panel.active {
-      display: block;
-    }
-
-    /* ── DROP ZONE ── */
-    .drop-zone {
-      border: 1.5px dashed var(--border);
-      border-radius: 14px;
-      padding: 44px 24px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 12px;
-      cursor: pointer;
-      transition: border-color 0.2s, background 0.2s;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .drop-zone:hover,
-    .drop-zone.drag-over {
-      border-color: var(--red);
-      background: var(--red-dim);
-    }
-
-    .drop-icon {
-      width: 44px;
-      height: 44px;
-      color: var(--red);
-    }
-
-    .drop-text {
-      font-family: 'Space Grotesk', sans-serif;
-      font-size: 0.95rem;
-      font-weight: 600;
-      color: var(--text);
-    }
-
-    .drop-sub {
-      font-size: 0.78rem;
-      color: var(--muted);
-    }
-
-    #file-input {
-      display: none;
-    }
-
-    .btn-upload {
-      margin-top: 6px;
-      padding: 9px 22px;
-      background: var(--red);
-      color: #fff;
-      border: none;
-      border-radius: 8px;
-      font-family: 'Space Grotesk', sans-serif;
-      font-size: 0.85rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: opacity 0.15s, box-shadow 0.15s;
-    }
-
-    .btn-upload:hover {
-      opacity: 0.85;
-      box-shadow: 0 0 16px var(--red-glow);
-    }
-
-    /* ── IMAGE PREVIEW ── */
-    .preview-row {
-      display: none;
-      gap: 16px;
-      align-items: center;
-    }
-
-    .preview-row.visible {
-      display: flex;
-    }
-
-    #preview-img {
-      width: 80px;
-      height: 80px;
       object-fit: cover;
-      border-radius: 10px;
-      border: 1px solid var(--border);
-      flex-shrink: 0;
     }
 
-    .preview-info {
-      flex: 1;
-      min-width: 0;
-    }
-
-    .preview-name {
-      font-family: 'Space Grotesk', sans-serif;
-      font-size: 0.85rem;
+    .user-profile span {
       font-weight: 600;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      margin-bottom: 5px;
+      font-size: 16px;
     }
 
-    .preview-change {
-      font-size: 0.75rem;
-      color: var(--red);
-      cursor: pointer;
-      text-decoration: underline;
-    }
-
-    /* ── TEXT PANEL ── */
-    .text-panel-inner {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .text-panel-inner label {
-      font-size: 0.78rem;
-      color: var(--muted);
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-      font-weight: 500;
-    }
-
-    #text-input {
-      width: 100%;
-      background: var(--bg);
-      border: 1.5px solid var(--border);
-      border-radius: 12px;
-      padding: 18px 20px;
-      color: var(--text);
-      font-family: 'Inter', sans-serif;
-      font-size: 1rem;
-      line-height: 1.7;
-      resize: vertical;
-      min-height: 200px;
-      transition: border-color 0.15s;
-      outline: none;
-    }
-
-    #text-input:focus {
-      border-color: var(--red);
-    }
-
-    #text-input::placeholder {
-      color: var(--muted);
-    }
-
-    .text-examples {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 7px;
-    }
-
-    .chip {
-      padding: 5px 12px;
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      font-size: 0.75rem;
-      color: var(--muted);
-      cursor: pointer;
-      transition: border-color 0.15s, color 0.15s;
-    }
-
-    .chip:hover {
-      border-color: var(--red);
-      color: var(--text);
-    }
-
-    /* ── SEARCH FOOTER ── */
-    .search-footer {
-      padding: 20px 32px;
-      border-top: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-    }
-
-    .search-hint {
-      font-size: 0.78rem;
-      color: var(--muted);
-    }
-
-    .btn-search {
-      padding: 11px 28px;
-      background: var(--red);
-      color: #fff;
-      border: none;
-      border-radius: 10px;
-      font-family: 'Space Grotesk', sans-serif;
-      font-size: 0.92rem;
-      font-weight: 700;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      transition: opacity 0.15s, box-shadow 0.15s;
-    }
-
-    .btn-search:hover {
-      opacity: 0.88;
-      box-shadow: 0 0 24px var(--red-glow);
-    }
-
-    .btn-search:disabled {
-      opacity: 0.35;
-      cursor: not-allowed;
-      box-shadow: none;
-    }
-
-    .spinner {
-      width: 15px;
-      height: 15px;
-      border: 2px solid rgba(255, 255, 255, 0.3);
-      border-top-color: #fff;
-      border-radius: 50%;
-      animation: spin 0.7s linear infinite;
-      display: none;
-    }
-
-    .btn-search.loading .spinner {
-      display: block;
-    }
-
-    @keyframes spin {
-      to {
-        transform: rotate(360deg);
-      }
-    }
-
-    /* ── STATUS ── */
-    #status {
-      display: none;
-      font-size: 0.82rem;
-      color: var(--muted);
-      text-align: center;
-      font-style: italic;
-    }
-
-    #status.visible {
-      display: block;
-    }
-
-    /* ── ERROR ── */
-    #error-box {
-      display: none;
-      background: rgba(255, 60, 60, 0.08);
-      border: 1px solid rgba(255, 60, 60, 0.4);
-      border-radius: 12px;
-      padding: 14px 18px;
-      font-size: 0.83rem;
-      color: #ff8080;
-      width: 100%;
-      line-height: 1.5;
-    }
-
-    #error-box.visible {
-      display: block;
-    }
-
-    /* ── RESULTS ── */
-    #results-section {
-      width: 100%;
-      display: none;
-    }
-
-    #results-section.visible {
-      display: block;
-    }
-
-    .results-header {
-      font-family: 'Space Grotesk', sans-serif;
-      font-size: 0.78rem;
-      font-weight: 600;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin-bottom: 14px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .results-header .badge {
-      background: var(--red);
-      color: #fff;
-      font-size: 0.68rem;
-      padding: 2px 7px;
-      border-radius: 20px;
-      font-weight: 700;
-      letter-spacing: 0;
-    }
-
-    .results-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
-      gap: 14px;
-    }
-
-    .result-card {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      transition: border-color 0.15s, transform 0.15s, box-shadow 0.15s;
-    }
-
-    .result-card:hover {
-      border-color: var(--red);
-      transform: translateY(-2px);
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
-    }
-
-    .item-name {
-      font-family: 'Space Grotesk', sans-serif;
-      font-size: 0.88rem;
-      font-weight: 600;
-      line-height: 1.35;
-      color: var(--text);
-    }
-
-    .item-desc {
-      font-size: 0.76rem;
-      color: var(--muted);
-      line-height: 1.55;
-    }
-
-    .item-query {
-      font-size: 0.72rem;
-      color: #666;
-      background: var(--surface);
-      border-radius: 6px;
-      padding: 5px 8px;
-      word-break: break-word;
-      font-family: 'Space Grotesk', sans-serif;
-      border: 1px solid var(--border);
-    }
-
-    .card-links {
-      display: flex;
-      flex-direction: column;
-      gap: 7px;
-      margin-top: auto;
-    }
-
-    .result-card a.temu-link,
-    .result-card a.ddg-link {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      padding: 9px 14px;
-      text-decoration: none;
-      border-radius: 8px;
-      font-family: 'Space Grotesk', sans-serif;
-      font-size: 0.8rem;
-      font-weight: 700;
-      transition: opacity 0.15s;
-    }
-
-    .result-card a.temu-link {
-      background: var(--red);
-      color: #fff;
-    }
-
-    .result-card a.ddg-link {
+    .btn-logout {
       background: transparent;
-      color: var(--red);
-      border: 1px solid rgba(255, 107, 0, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      color: #ffffff;
+      padding: 6px 14px;
+      border-radius: 16px;
+      cursor: pointer;
+      font-size: 13px;
     }
 
-    .result-card a.temu-link:hover,
-    .result-card a.ddg-link:hover {
-      opacity: 0.75;
-    }
-
-    .item-name-row {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 8px;
-    }
-
-    .price-hint {
-      font-size: 0.68rem;
-      font-family: 'Space Grotesk', sans-serif;
-      font-weight: 700;
-      padding: 2px 7px;
-      border-radius: 12px;
-      border: 1px solid;
-      white-space: nowrap;
-      flex-shrink: 0;
-    }
-
-    .item-extra {
-      font-size: 0.72rem;
-      font-family: 'Space Grotesk', sans-serif;
-      font-weight: 600;
-    }
-
-    .item-tip {
-      font-size: 0.71rem;
-      color: var(--muted);
-      font-style: italic;
-      line-height: 1.5;
-    }
-
-    .result-card:hover {
-      border-color: var(--card-accent, var(--red));
-    }
-
-    /* ── SKELETON LOADING ── */
-    .skeleton-card {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 14px;
+    /* Messages Area */
+    #messages-container {
+      flex: 1;
+      overflow-y: auto;
       padding: 16px;
       display: flex;
       flex-direction: column;
       gap: 10px;
+      -webkit-overflow-scrolling: touch;
     }
 
-    .skel {
-      background: linear-gradient(90deg, var(--surface) 25%, #1f2235 50%, var(--surface) 75%);
-      background-size: 200% 100%;
-      animation: shimmer 1.4s infinite;
-      border-radius: 6px;
-    }
-
-    .skel-title {
-      height: 14px;
-      width: 70%;
-    }
-
-    .skel-badge {
-      height: 12px;
-      width: 30%;
-      border-radius: 12px;
-    }
-
-    .skel-line {
-      height: 10px;
-    }
-
-    .skel-line.w80 {
-      width: 80%;
-    }
-
-    .skel-line.w60 {
-      width: 60%;
-    }
-
-    .skel-box {
-      height: 36px;
+    .message {
+      max-width: 75%;
+      padding: 8px 12px;
       border-radius: 8px;
+      position: relative;
+      word-wrap: break-word;
+      font-size: 15px;
+      line-height: 1.4;
+      box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+    }
+
+    .message.sent {
+      align-self: flex-end;
+      background-color: var(--user-bubble);
+      border-top-right-radius: 0;
+    }
+
+    .message.received {
+      align-self: flex-start;
+      background-color: var(--other-bubble);
+      border-top-left-radius: 0;
+    }
+
+    .sender-name {
+      font-size: 11px;
+      font-weight: bold;
+      color: #075e54;
+      margin-bottom: 2px;
+    }
+
+    .message-time {
+      font-size: 10px;
+      color: var(--text-muted);
+      float: right;
+      margin-left: 12px;
       margin-top: 4px;
     }
 
-    @keyframes shimmer {
-      0% {
-        background-position: 200% 0;
-      }
-
-      100% {
-        background-position: -200% 0;
-      }
-    }
-
-    /* ── MODE STACKING ROW ── */
-    .mode-stack-row {
-      display: none;
-      align-items: center;
+    /* Input Bar */
+    form#chat-form {
+      display: flex;
+      padding: 10px;
+      background-color: #f0f0f0;
       gap: 8px;
-      padding: 10px 32px 0;
-      flex-wrap: wrap;
-    }
-
-    .mode-stack-row.visible {
-      display: flex;
-    }
-
-    .stack-label {
-      font-size: 0.7rem;
-      color: var(--muted);
-      font-family: 'Space Grotesk', sans-serif;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      white-space: nowrap;
-    }
-
-    .stack-chip {
-      padding: 4px 12px;
-      border-radius: 20px;
-      font-size: 0.72rem;
-      font-family: 'Space Grotesk', sans-serif;
-      font-weight: 600;
-      cursor: pointer;
-      border: 1px solid var(--border);
-      background: var(--bg);
-      color: var(--muted);
-      transition: border-color 0.15s, color 0.15s, background 0.15s;
-      user-select: none;
-    }
-
-    .stack-chip:hover {
-      border-color: var(--red);
-      color: var(--text);
-    }
-
-    .stack-chip.on {
-      background: var(--red-dim);
-      border-color: var(--red);
-      color: var(--red);
-    }
-
-    /* ── LOCATION BANNER (beta mode) ── */
-    .location-row {
-      display: none;
       align-items: center;
-      gap: 10px;
-      padding: 10px 32px 0;
     }
 
-    .location-row.visible {
+    #message-input {
+      flex: 1;
+      padding: 12px 16px;
+      border: 1px solid #cccccc;
+      border-radius: 24px;
+      outline: none;
+      font-size: 15px;
+      background-color: #ffffff;
+    }
+
+    #send-btn {
+      background-color: var(--header-bg);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 44px;
+      height: 44px;
       display: flex;
-    }
-
-    .location-icon {
-      color: #a78bfa;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
       flex-shrink: 0;
     }
 
-    #location-input {
-      flex: 1;
-      background: var(--bg);
-      border: 1.5px solid #7c3aed44;
-      border-radius: 8px;
-      padding: 8px 12px;
-      color: var(--text);
-      font-family: 'Inter', sans-serif;
-      font-size: 0.85rem;
-      outline: none;
-      transition: border-color 0.15s;
-    }
-
-    #location-input:focus {
-      border-color: #a78bfa;
-    }
-
-    #location-input::placeholder {
-      color: var(--muted);
-    }
-
-    .location-label {
-      font-size: 0.72rem;
-      color: #a78bfa;
-      font-family: 'Space Grotesk', sans-serif;
-      font-weight: 600;
-      white-space: nowrap;
-    }
-
-    /* ── COUNT ANIMATE ── */
-    @keyframes countPop {
-      0% {
-        transform: scale(0.5);
-        opacity: 0;
-      }
-
-      70% {
-        transform: scale(1.3);
-      }
-
-      100% {
-        transform: scale(1);
-        opacity: 1;
-      }
-    }
-
-    .badge.pop {
-      animation: countPop 0.4s cubic-bezier(.34, 1.56, .64, 1) forwards;
-    }
-
-    /* ── RAW ── */
-    #raw-section {
-      width: 100%;
-      display: none;
-    }
-
-    #raw-section.visible {
-      display: block;
-    }
-
-    .raw-toggle {
-      background: none;
-      border: 1px solid var(--border);
-      color: var(--muted);
-      font-size: 0.75rem;
-      padding: 5px 12px;
-      border-radius: 6px;
-      cursor: pointer;
-      margin-bottom: 10px;
-      font-family: 'Inter', sans-serif;
-      transition: border-color 0.15s;
-    }
-
-    .raw-toggle:hover {
-      border-color: var(--muted);
-    }
-
-    #raw-content {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 16px;
-      font-size: 0.75rem;
-      color: var(--muted);
-      white-space: pre-wrap;
-      line-height: 1.6;
-      display: none;
-      max-height: 260px;
-      overflow-y: auto;
-    }
-
-    #raw-content.open {
-      display: block;
-    }
-
-    @media (max-width: 600px) {
-      .hero-label {
-        font-size: 1.9rem;
-      }
-
-      header {
-        padding: 14px 18px;
-      }
-
-      main {
-        padding: 32px 14px 60px;
-        gap: 24px;
-      }
-
-      .results-grid {
-        grid-template-columns: 1fr 1fr;
-      }
-
-      .search-footer {
-        flex-direction: column;
-        align-items: stretch;
-      }
-
-      .btn-search {
-        justify-content: center;
-      }
+    #send-btn svg {
+      width: 20px;
+      height: 20px;
+      fill: currentColor;
+      margin-left: 2px;
     }
   </style>
 </head>
 
 <body>
 
-  <header>
-    <div class="logo">Temu<span>Lens</span></div>
-    <div class="logo-dot"></div>
-    <span class="tagline">AI Search</span>
-    <span class="mode-badge" id="mode-badge">◎ Normal</span>
-  </header>
-
-  <main>
-    <div class="hero">
-      <h1 class="hero-label">Find anything<br/>on <em>Temu</em>.</h1>
-      <p class="sub">Upload a photo or describe what you're looking for — get Temu links instantly.</p>
-    </div>
-
-    <!-- INPUT CARD -->
-    <div class="input-card" id="input-card">
-
-      <!-- TABS -->
-      <div class="tabs">
-        <div class="tab active" id="tab-text">
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-            <path d="M2 4h10M2 7h7M2 10h5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
-          </svg>
-          Search
-        </div>
-      </div>
-
-      <!-- TEXT PANEL -->
-      <div class="panel active" id="panel-text">
-        <div class="text-panel-inner">
-          <label>What are you looking for?</label>
-          <textarea id="text-input" placeholder="e.g. oversized vintage denim jacket with distressed pockets, light blue wash..."></textarea>
-          <div class="text-examples" id="chip-examples">
-            <span class="chip" onclick="fillChip(this)">floral summer dress</span>
-            <span class="chip" onclick="fillChip(this)">minimalist white sneakers</span>
-            <span class="chip" onclick="fillChip(this)">vintage leather crossbody bag</span>
-            <span class="chip" onclick="fillChip(this)">chunky knit cardigan</span>
-            <span class="chip" onclick="fillChip(this)">wide leg cargo pants</span>
-            <span class="chip" onclick="fillChip(this)">aesthetic desk organizer</span>
-            <span class="chip" onclick="fillChip(this)">mini projector</span>
-            <span class="chip" onclick="fillChip(this)">LED plant grow light</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- MODE STACK ROW -->
-      <div class="mode-stack-row" id="mode-stack-row">
-        <span class="stack-label">+ Stack:</span>
-        <span class="stack-chip" data-mod="super" onclick="toggleStackMod('super')">⚡ Super Cheap</span>
-        <span class="stack-chip" data-mod="fast" onclick="toggleStackMod('fast')">▶ Fast Delivery</span>
-        <span class="stack-chip" data-mod="quality" onclick="toggleStackMod('quality')">✦ Quality Filter</span>
-        <span class="stack-chip" data-mod="bulk" onclick="toggleStackMod('bulk')">▦ Bulk Deals</span>
-      </div>
-
-      <!-- LOCATION ROW (beta mode) -->
-      <div class="location-row" id="location-row">
-        <svg class="location-icon" width="16" height="16" viewBox="0 0 16 16" fill="none">
-          <path d="M8 1.5C5.79 1.5 4 3.29 4 5.5c0 3.25 4 9 4 9s4-5.75 4-9c0-2.21-1.79-3.5-4-4z" stroke="#a78bfa"
-            stroke-width="1.4" />
-          <circle cx="8" cy="5.5" r="1.5" stroke="#a78bfa" stroke-width="1.3" />
+  <div id="app-container">
+    <div id="auth-screen">
+      <h1>Simple Chat</h1>
+      <p>Connect with your friends instantly</p>
+      <button class="btn-google" id="btn-login">
+        <svg width="18" height="18" viewBox="0 0 18 18">
+          <path fill="#4285F4" d="M17.64 9.2c0-.74-.06-1.28-.19-1.84H9v3.34h4.96c-.1.83-.64 2.08-1.84 2.92l2.84 2.2c1.7-1.57 2.68-3.88 2.68-6.62z"/>
+          <path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.84-2.2c-.76.53-1.78.9-3.12.9-2.38 0-4.4-1.57-5.12-3.74L.97 13.04C2.45 15.98 5.48 18 9 18z"/>
+          <path fill="#FBBC05" d="M3.88 10.78A5.54 5.54 0 0 1 3.58 9c0-.62.11-1.22.29-1.78L.97 4.96A9.008 9.008 0 0 0 0 9c0 1.45.35 2.82.97 4.04l2.91-2.26z"/>
+          <path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58C13.46.89 11.43 0 9 0 5.48 0 2.45 2.02.97 4.96l2.91 2.26C4.6 5.15 6.62 3.58 9 3.58z"/>
         </svg>
-        <span class="location-label">Your country / region:</span>
-        <input id="location-input" type="text" placeholder="e.g. Ireland, UK, USA, Australia…" />
-      </div>
-
-      <!-- FOOTER -->
-      <div class="search-footer">
-        <span class="search-hint" id="search-hint">Upload an image to get started</span>
-        <button class="btn-search" id="search-btn" onclick="runSearch()" disabled>
-        <div class="spinner"></div>
-        <span class="btn-label">Search Temu</span>
+        Sign in with Google
       </button>
-      </div>
     </div>
 
-    <!-- STATUS -->
-    <div id="status"></div>
+    <div id="chat-screen">
+      <header>
+        <div class="user-profile">
+          <img id="user-avatar" src="" alt="Avatar" />
+          <span id="user-name">User</span>
+        </div>
+        <button class="btn-logout" id="btn-logout">Logout</button>
+      </header>
 
-    <!-- ERROR -->
-    <div id="error-box"></div>
+      <div id="messages-container"></div>
 
-    <!-- RESULTS -->
-    <section id="results-section">
-      <div class="results-header">
-        Results <span class="badge" id="count-badge">0</span>
-      </div>
-      <div class="results-grid" id="results-grid"></div>
-    </section>
-
-    <!-- RAW -->
-    <div id="raw-section">
-      <button class="raw-toggle" onclick="toggleRaw()">Show / hide AI response</button>
-      <pre id="raw-content"></pre>
+      <form id="chat-form">
+        <input type="text" id="message-input" placeholder="Type a message..." autocomplete="off" required />
+        <button type="submit" id="send-btn">
+          <svg viewBox="0 0 24 24">
+            <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+          </svg>
+        </button>
+      </form>
     </div>
-  </main>
-
-  <!-- MODE BADGE in header injected by JS -->
-
-  <!-- MODE DIAL -->
-  <div class="mode-dial" id="mode-dial">
-    <button class="mode-dial-btn" id="mode-dial-btn" onclick="toggleDial()" title="Search modes">
-      <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="3" fill="#fff"/><circle cx="9" cy="2.5" r="1.5" fill="#fff"/><circle cx="9" cy="15.5" r="1.5" fill="#fff"/><circle cx="2.5" cy="9" r="1.5" fill="#fff"/><circle cx="15.5" cy="9" r="1.5" fill="#fff"/></svg>
-    </button>
-
-    <!-- Normal -->
-    <button class="mode-spoke" id="spoke-normal" onclick="setMode('normal')">
-      <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="8" cy="8" r="5" stroke="currentColor" stroke-width="1.6"/><path d="M12 12l3.5 3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
-      <span class="mode-tooltip">Normal — Standard search</span>
-    </button>
-    <!-- Quality -->
-    <button class="mode-spoke" id="spoke-quality" onclick="setMode('quality')">
-      <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 2l1.8 4h4.2l-3.4 2.5 1.3 4L9 10l-3.9 2.5 1.3-4L3 6h4.2z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
-      <span class="mode-tooltip">High Quality Cheap — Best bang for buck</span>
-    </button>
-    <!-- Super Cheap -->
-    <button class="mode-spoke" id="spoke-super" onclick="setMode('super')">
-      <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M10 2L4 10h5l-1 6 7-9h-5z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
-      <span class="mode-tooltip">Super Cheap — Lowest price finds</span>
-    </button>
-    <!-- Niche -->
-    <button class="mode-spoke" id="spoke-niche" onclick="setMode('niche')">
-      <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="6.5" stroke="currentColor" stroke-width="1.5"/><path d="M9 5v4l2.5 2.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="9" cy="9" r="1" fill="currentColor"/></svg>
-      <span class="mode-tooltip">Niche — Hidden gems nobody knows</span>
-    </button>
-    <!-- Bulk -->
-    <button class="mode-spoke" id="spoke-bulk" onclick="setMode('bulk')">
-      <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="2" y="8" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.5"/><rect x="10" y="8" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.5"/><rect x="6" y="3" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.5"/></svg>
-      <span class="mode-tooltip">Bulk Deal — Multi-pack value buys</span>
-    </button>
-    <!-- Fast Delivery -->
-    <button class="mode-spoke" id="spoke-fast" onclick="setMode('fast')">
-      <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M2 9h10M8 5l4 4-4 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 6h1a1 1 0 011 1v4a1 1 0 01-1 1h-1" stroke="currentColor" stroke-width="1.5"/></svg>
-      <span class="mode-tooltip">Fast Delivery — Ships quickly</span>
-    </button>
-    <!-- Beta: Exact Link -->
-    <button class="mode-spoke beta-spoke" id="spoke-beta" onclick="setMode('beta')">
-      <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M7 3H4a1 1 0 00-1 1v10a1 1 0 001 1h10a1 1 0 001-1v-3" stroke="#a78bfa" stroke-width="1.5" stroke-linecap="round"/><path d="M10 3h5v5" stroke="#a78bfa" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M15 3L8 10" stroke="#a78bfa" stroke-width="1.5" stroke-linecap="round"/></svg>
-      <span class="mode-tooltip">Beta — Exact item direct link</span>
-      <span class="beta-badge">BETA</span>
-    </button>
   </div>
 
-  <script>
-    const API_KEY  = "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";
-const MODELS   = ["openrouter/auto","openai/gpt-oss-120b:free","nvidia/llama-nemotron-rerank-vl-1b-v2:free"];
-const ENDPOINT = "https://openrouter.ai/api/v1/chat/completions";
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-// ── MODES ──
-const MODES = {
-  normal:  { label: '◎ Normal',           isBeta: false },
-  quality: { label: '✦ Quality',          isBeta: false },
-  super:   { label: '⚡ Ultra Cheap',     isBeta: false },
-  niche:   { label: '◈ Niche',            isBeta: false },
-  bulk:    { label: '▦ Bulk Deal',        isBeta: false },
-  fast:    { label: '▶ Fast Delivery',    isBeta: false },
-  beta:    { label: '↗ Exact Link · BETA', isBeta: true }
-};
+    const firebaseConfig = {
+      apiKey: "AIzaSyC7BTQubCi89xzYsiw9XzjLlEBfjRE_X4M",
+      authDomain: "chat-3160a.firebaseapp.com",
+      projectId: "chat-3160a",
+      storageBucket: "chat-3160a.firebasestorage.app",
+      messagingSenderId: "246355944987",
+      appId: "1:246355944987:web:f0a831e7f772921354babe",
+      measurementId: "G-6VG6YRLE7Y"
+    };
 
-// Modes that support stacking (beta always shows location instead)
-const STACKABLE_BASE_MODES = ['normal', 'niche'];
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const provider = new GoogleAuthProvider();
 
-let currentMode = 'normal';
-let activeStackMods = new Set(); // e.g. Set{'super','fast'}
+    // DOM Elements
+    const authScreen = document.getElementById("auth-screen");
+    const chatScreen = document.getElementById("chat-screen");
+    const btnLogin = document.getElementById("btn-login");
+    const btnLogout = document.getElementById("btn-logout");
+    const userAvatar = document.getElementById("user-avatar");
+    const userName = document.getElementById("user-name");
+    const chatForm = document.getElementById("chat-form");
+    const messageInput = document.getElementById("message-input");
+    const messagesContainer = document.getElementById("messages-container");
 
-function toggleDial() {
-  const dial = document.getElementById('mode-dial');
-  const btn  = document.getElementById('mode-dial-btn');
-  dial.classList.toggle('open');
-  btn.classList.toggle('open');
-}
+    let currentUser = null;
+    let unsubscribeMessages = null;
 
-function setMode(mode) {
-  currentMode = mode;
-  activeStackMods.clear();
-  // sync spoke highlights
-  Object.keys(MODES).forEach(m => {
-    const spoke = document.getElementById('spoke-' + m);
-    if (spoke) spoke.classList.toggle('active-mode', m === mode);
-  });
-  // header badge
-  const badge = document.getElementById('mode-badge');
-  badge.textContent = MODES[mode].label;
-  const isBeta = mode === 'beta';
-  badge.style.color       = isBeta ? '#a78bfa' : '';
-  badge.style.borderColor = isBeta ? 'rgba(167,139,250,0.3)' : '';
-  badge.style.background  = isBeta ? 'rgba(167,139,250,0.08)' : '';
-  // show/hide stack row & location row
-  const showStack = STACKABLE_BASE_MODES.includes(mode);
-  document.getElementById('mode-stack-row').classList.toggle('visible', showStack);
-  document.getElementById('location-row').classList.toggle('visible', isBeta);
-  // reset stack chips UI
-  document.querySelectorAll('.stack-chip').forEach(c => c.classList.remove('on'));
-  // close dial
-  document.getElementById('mode-dial').classList.remove('open');
-  document.getElementById('mode-dial-btn').classList.remove('open');
-  updateSearchState();
-}
+    // Authentication Listener
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        currentUser = user;
+        userName.textContent = user.displayName || "User";
+        userAvatar.src = user.photoURL || "https://via.placeholder.com/40";
+        authScreen.style.display = "none";
+        chatScreen.style.display = "flex";
+        loadMessages();
+      } else {
+        currentUser = null;
+        if (unsubscribeMessages) unsubscribeMessages();
+        authScreen.style.display = "flex";
+        chatScreen.style.display = "none";
+        messagesContainer.innerHTML = "";
+      }
+    });
 
-function toggleStackMod(mod) {
-  if (activeStackMods.has(mod)) {
-    activeStackMods.delete(mod);
-  } else {
-    activeStackMods.add(mod);
-  }
-  // sync chip UI
-  document.querySelectorAll('.stack-chip').forEach(c => {
-    c.classList.toggle('on', activeStackMods.has(c.dataset.mod));
-  });
-  updateSearchState();
-}
-
-// close dial on outside click
-document.addEventListener('click', e => {
-  const dial = document.getElementById('mode-dial');
-  if (!dial.contains(e.target)) {
-    dial.classList.remove('open');
-    document.getElementById('mode-dial-btn').classList.remove('open');
-  }
-});
-
-// ── KEYBOARD SHORTCUTS ──
-document.addEventListener('keydown', e => {
-  // Enter to search (when textarea not focused or shift not held)
-  if (e.key === 'Enter' && !e.shiftKey && document.activeElement !== document.getElementById('text-input')) {
-    const btn = document.getElementById('search-btn');
-    if (!btn.disabled) runSearch();
-  }
-  // Escape to clear
-  if (e.key === 'Escape') {
-    document.getElementById('text-input').value = '';
-    clearResults();
-    updateSearchState();
-  }
-});
-
-// Also allow Ctrl+Enter / Cmd+Enter from inside textarea
-document.getElementById('text-input').addEventListener('keydown', e => {
-  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-    const btn = document.getElementById('search-btn');
-    if (!btn.disabled) runSearch();
-  }
-});
-
-// init first spoke active
-document.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('spoke-normal').classList.add('active-mode');
-});
-
-function fillChip(el) {
-  document.getElementById('text-input').value = el.textContent;
-  updateSearchState();
-}
-
-document.getElementById('text-input').addEventListener('input', updateSearchState);
-
-function updateSearchState() {
-  const btn  = document.getElementById('search-btn');
-  const hint = document.getElementById('search-hint');
-  const hasText = document.getElementById('text-input').value.trim().length > 2;
-  btn.disabled = !hasText;
-  const stackSuffix = activeStackMods.size > 0 ? ` + ${[...activeStackMods].join(', ')}` : '';
-  const modeHints = {
-    normal:  hasText ? `Ready to search${stackSuffix}` : 'Describe what you want to find',
-    quality: hasText ? 'Finding high quality + cheap picks…' : 'Describe item for quality cheap mode',
-    super:   hasText ? 'Hunting the absolute lowest prices…' : 'Describe item for super cheap mode',
-    niche:   hasText ? `Searching for hidden gems${stackSuffix}` : 'Describe item to find niche products',
-    bulk:    hasText ? 'Finding best bulk deals…' : 'Describe item for bulk deal mode',
-    fast:    hasText ? 'Finding fast-shipping items…' : 'Describe item for fast delivery mode',
-    beta:    hasText ? 'Generating exact item links… (Beta)' : 'Describe item to get exact Temu links'
-  };
-  hint.textContent = modeHints[currentMode] || modeHints.normal;
-  // hint about keyboard shortcut
-  if (hasText && currentMode !== 'beta') {
-    hint.title = 'Tip: Ctrl+Enter to search, Esc to clear';
-  }
-}
-
-function clearResults() {
-  document.getElementById('results-section').classList.remove('visible');
-  document.getElementById('results-grid').innerHTML = '';
-  document.getElementById('raw-section').classList.remove('visible');
-  document.getElementById('raw-content').textContent = '';
-  document.getElementById('raw-content').classList.remove('open');
-  document.getElementById('count-badge').textContent = '0';
-  setStatus(''); setError('');
-}
-
-function setStatus(msg) {
-  const el = document.getElementById('status');
-  el.textContent = msg;
-  el.classList.toggle('visible', !!msg);
-}
-
-function setError(msg) {
-  const el = document.getElementById('error-box');
-  el.textContent = msg;
-  el.classList.toggle('visible', !!msg);
-}
-
-function setLoading(on) {
-  const btn = document.getElementById('search-btn');
-  btn.disabled = on;
-  btn.classList.toggle('loading', on);
-  btn.querySelector('.btn-label').textContent = on ? 'Searching…' : 'Search Temu';
-  document.getElementById('input-card').classList.toggle('searching', on);
-}
-
-function toggleRaw() {
-  document.getElementById('raw-content').classList.toggle('open');
-}
-
-// ── MODE-AWARE SYSTEM PROMPTS ──
-function getSystemPrompt(mode) {
-  const base = `You are a Temu product-finding assistant. Output ONLY a valid JSON array — no markdown, no preamble, no explanation.
-
-Each object must have:
-- "name": short product name
-- "description": 1-sentence visual/functional description
-- "temuQuery": highly specific Temu search string with color, material, style, keywords
-- "googleQuery": "site:temu.com " + best search string
-- "priceHint": short string like "~$2–5" or "under $10" based on the mode
-- "tip": one short shopping tip for this mode`;
-
-  const modeInstructions = {
-    normal: `\n\nMode: NORMAL — find the most relevant and popular matching items on Temu. Return 4–6 items.`,
-
-    quality: `\n\nMode: HIGH QUALITY CHEAP — find items that punch above their price on Temu. Look for things with good ratings potential, decent materials, and reviews-worthy quality but still very affordable (under $15 ideally). Add quality keywords like "high quality", "premium feel", "durable", "well-reviewed" to temuQuery. Return 5–7 items, prioritise variety of great value options. Include a "qualitySignal" field: a 1-phrase signal of why it's good value.`,
-
-    super: `\n\nMode: SUPER CHEAP — find the absolute lowest-priced versions of the item on Temu. Focus on budget, wholesale, clearance-style finds under $5 where possible. Use keywords like "cheap", "budget", "wholesale", "lot", "low price" in temuQuery. Return 5–8 options across different price tiers. Add a "priceRank" field: "cheapest" | "very cheap" | "budget".`,
-
-    niche: `\n\nMode: NICHE HIDDEN GEMS — find unusual, underrated, or barely-known variants of the requested item. These should be products that mainstream shoppers wouldn't think to search for but are surprisingly useful, aesthetic, or interesting. Avoid generic popular results. Add "nicheScore" field: 1–10 rating of how obscure/unique this find is. Return 5–8 items. Use unusual, specific, creative search terms in temuQuery.`,
-
-    bulk: `\n\nMode: BULK DEAL — find multi-pack, bundle, or wholesale versions of the item. Keywords: "pack of", "set of", "bulk", "lot", "multipack", "wholesale", "bundle". Add a "unitCount" field like "10 pack" or "50 pieces". Return 4–6 bulk-focused options with good per-unit value.`,
-
-    fast: `\n\nMode: FAST DELIVERY — find items on Temu that are likely to ship and deliver quickly. Prioritize items that Temu marks as "fast shipping", "ships in 1-3 days", "local warehouse", or "express". Add keywords like "fast shipping", "quick delivery", "in stock", "express" to temuQuery. Add a "deliveryEst" field like "3–5 days" or "1 week". Return 4–6 items likely to arrive fast.`,
-
-    beta: `\n\nMode: EXACT LINK (BETA) — generate the most targeted possible Temu product search for the exact item described, tailored to the user's country/region. CRITICAL RULES: (1) Only include items that are widely listed and in-stock on Temu for that region — do NOT suggest niche items that may be unavailable or region-blocked. (2) Prefer items with high listing volume on Temu (many sellers = less likely to be sold out). (3) Build temuQuery with region-specific availability signals: add "in stock", "available", "ships to [country]" where relevant. (4) For googleQuery use "site:temu.com/[country-subdomain-if-known]" e.g. site:temu.com/ie for Ireland, site:temu.com/uk for UK. (5) Construct an exactUrl using the Temu search URL format: https://www.temu.com/search_result.html?search_key=QUERY&refer_page_name=search — make QUERY very specific to maximise the chance of finding the exact item. (6) Add an "exactUrl" field with this constructed URL. (7) Add a "confidence" field: "high" | "medium" | "low". (8) Add a "regionNote" field: short note about availability in the user's region. Return 4–6 items. Warn in "tip" to verify stock before purchasing.`
-  };
-
-  return base + (modeInstructions[mode] || modeInstructions.normal) + `\n\nExample output shape:\n[{"name":"Item","description":"...","temuQuery":"...","googleQuery":"site:temu.com ...","priceHint":"~$3","tip":"..."}]`;
-}
-
-// ── SKELETON HELPERS ──
-function showSkeletons(count = 5) {
-  const grid = document.getElementById('results-grid');
-  const section = document.getElementById('results-section');
-  grid.innerHTML = '';
-  section.classList.add('visible');
-  for (let i = 0; i < count; i++) {
-    const sk = document.createElement('div');
-    sk.className = 'skeleton-card';
-    sk.innerHTML = `
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
-        <div class="skel skel-title"></div>
-        <div class="skel skel-badge"></div>
-      </div>
-      <div class="skel skel-line w80"></div>
-      <div class="skel skel-line w60"></div>
-      <div class="skel skel-line w80"></div>
-      <div class="skel skel-box"></div>
-      <div class="skel skel-box"></div>
-    `;
-    grid.appendChild(sk);
-  }
-}
-
-function animateCount(target) {
-  const badge = document.getElementById('count-badge');
-  badge.classList.remove('pop');
-  void badge.offsetWidth; // reflow
-  let n = 0;
-  const step = Math.ceil(target / 12);
-  const iv = setInterval(() => {
-    n = Math.min(n + step, target);
-    badge.textContent = n;
-    if (n >= target) {
-      clearInterval(iv);
-      badge.classList.add('pop');
-    }
-  }, 30);
-}
-
-// ── MAIN SEARCH ──
-async function runSearch() {
-  clearResults();
-  setLoading(true);
-
-  const statusMessages = {
-    normal:  'Searching Temu for matches…',
-    quality: 'Finding quality cheap picks…',
-    super:   'Hunting the lowest prices…',
-    niche:   'Digging for hidden gems…',
-    bulk:    'Finding bulk deals…',
-    fast:    'Finding fast-delivery items…',
-    beta:    'Generating exact item links… (Beta)'
-  };
-  setStatus(statusMessages[currentMode] || 'Searching…');
-  showSkeletons(currentMode === 'bulk' ? 4 : currentMode === 'beta' ? 4 : 6);
-
-  const desc = document.getElementById('text-input').value.trim();
-  const location = document.getElementById('location-input')?.value.trim() || '';
-
-  // Build effective mode string including stack mods
-  let effectiveMode = currentMode;
-  let stackNote = '';
-  if (activeStackMods.size > 0) {
-    stackNote = ` Additionally stack these secondary goals: ${[...activeStackMods].map(m => m.toUpperCase()).join(' + ')}.`;
-  }
-
-  const systemPrompt = getSystemPrompt(currentMode);
-  let userContent = `Find Temu products for: "${desc}". Mode: ${currentMode.toUpperCase()}.`;
-  if (stackNote) userContent += stackNote;
-  if (currentMode === 'beta' && location) {
-    userContent += ` The user is located in: ${location}. Only return items available and in-stock in that region. Tailor googleQuery to that region's Temu subdomain if one exists.`;
-  }
-  userContent += ' Return JSON array only.';
-
-  let rawText = '';
-
-  try {
-    let lastError = null;
-    for (const MODEL of MODELS) {
+    // Login Event
+    btnLogin.addEventListener("click", async () => {
       try {
-        const resp = await fetch(ENDPOINT, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${API_KEY}`,
-            'Content-Type': 'application/json',
-            'HTTP-Referer': location.href,
-            'X-Title': 'TemuLens'
-          },
-          body: JSON.stringify({
-            model: MODEL,
-            max_tokens: 1800,
-            messages: [
-              { role: 'system', content: systemPrompt },
-              { role: 'user',   content: userContent }
-            ]
-          })
+        await signInWithPopup(auth, provider);
+      } catch (error) {
+        console.error("Login failed:", error);
+        alert("Authentication failed. Make sure Google Auth is enabled in Firebase Console.");
+      }
+    });
+
+    // Logout Event
+    btnLogout.addEventListener("click", () => signOut(auth));
+
+    // Send Message
+    chatForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const text = messageInput.value.trim();
+      if (!text || !currentUser) return;
+
+      messageInput.value = "";
+
+      try {
+        await addDoc(collection(db, "messages"), {
+          text: text,
+          uid: currentUser.uid,
+          displayName: currentUser.displayName || "Anonymous",
+          createdAt: serverTimestamp()
+        });
+      } catch (error) {
+        console.error("Error sending message:", error);
+      }
+    });
+
+    // Real-Time Messages Listener
+    function loadMessages() {
+      const q = query(collection(db, "messages"), orderBy("createdAt", "asc"));
+      
+      unsubscribeMessages = onSnapshot(q, (snapshot) => {
+        messagesContainer.innerHTML = "";
+        
+        snapshot.forEach((doc) => {
+          const data = doc.data();
+          const isSent = data.uid === currentUser.uid;
+          
+          const messageDiv = document.createElement("div");
+          messageDiv.className = `message ${isSent ? "sent" : "received"}`;
+          
+          const time = data.createdAt ? new Date(data.createdAt.seconds * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "";
+
+          messageDiv.innerHTML = `
+            ${!isSent ? `<div class="sender-name">${escapeHTML(data.displayName)}</div>` : ''}
+            <div>${escapeHTML(data.text)}</div>
+            <div class="message-time">${time}</div>
+          `;
+
+          messagesContainer.appendChild(messageDiv);
         });
 
-        if (!resp.ok) {
-          const errText = await resp.text();
-          if (resp.status === 429 || resp.status === 503 || resp.status === 404) {
-            lastError = `${MODEL} unavailable, trying next…`;
-            setStatus(lastError);
-            continue;
-          }
-          throw new Error(`API error ${resp.status}: ${errText}`);
-        }
-
-        const data = await resp.json();
-        rawText = data.choices?.[0]?.message?.content || '';
-
-        document.getElementById('raw-content').textContent = `[Model: ${MODEL}]\n\n` + rawText;
-        document.getElementById('raw-section').classList.add('visible');
-
-        setStatus('Building links…');
-
-        let jsonStr = rawText.trim().replace(/^```(?:json)?/i, '').replace(/```$/, '').trim();
-        const match = jsonStr.match(/\[[\s\S]*\]/);
-        if (!match) throw new Error('AI returned no JSON array. Try rephrasing your search.');
-
-        const items = JSON.parse(match[0]);
-        if (!Array.isArray(items) || items.length === 0)
-          throw new Error('No items found. Try a more specific description.');
-
-        renderResults(items, currentMode);
-        setStatus('');
-        return;
-
-      } catch (err) {
-        lastError = err.message;
-        if (!err.message.includes('unavailable')) break;
-      }
+        // Auto-scroll to latest message
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      });
     }
 
-    setError((lastError || 'All models failed.') + ' Please try again.');
-    setStatus('');
-    if (rawText) {
-      document.getElementById('raw-content').textContent = rawText;
-      document.getElementById('raw-section').classList.add('visible');
+    // Helper to sanitize HTML inputs
+    function escapeHTML(str) {
+      return str ? str.replace(/[&<>'"]/g, 
+        tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+      ) : '';
     }
-
-  } catch (err) {
-    setError(err.message || 'Something went wrong.');
-    setStatus('');
-  } finally {
-    setLoading(false);
-  }
-}
-
-function renderResults(items, mode) {
-  const grid  = document.getElementById('results-grid');
-  grid.innerHTML = '';
-  animateCount(items.length);
-
-  // mode-specific extras
-  const modeColor = { normal:'#FF6B00', quality:'#f0b429', super:'#3ecf8e', niche:'#a78bfa', bulk:'#60a5fa', fast:'#22d3ee', beta:'#a78bfa' };
-  const accent = modeColor[mode] || modeColor.normal;
-
-  items.forEach(item => {
-    const q       = encodeURIComponent(item.temuQuery || item.name || '');
-    const temuUrl = `https://www.temu.com/search_result.html?search_key=${q}&refer_page_name=search&search_method=user`;
-    const ddgQ    = encodeURIComponent(item.googleQuery || `site:temu.com ${item.temuQuery || item.name}`);
-    const ddgUrl  = `https://duckduckgo.com/?q=${ddgQ}`;
-
-    // build extra badges per mode
-    let extraBadge = '';
-    if (mode === 'quality' && item.qualitySignal)
-      extraBadge = `<div class="item-extra" style="color:${accent}">✦ ${escHtml(item.qualitySignal)}</div>`;
-    if (mode === 'super' && item.priceRank)
-      extraBadge = `<div class="item-extra" style="color:${accent}">💸 ${escHtml(item.priceRank)}</div>`;
-    if (mode === 'niche' && item.nicheScore)
-      extraBadge = `<div class="item-extra" style="color:${accent}">🕵️ Niche score: ${escHtml(String(item.nicheScore))}/10</div>`;
-    if (mode === 'bulk' && item.unitCount)
-      extraBadge = `<div class="item-extra" style="color:${accent}">▦ ${escHtml(item.unitCount)}</div>`;
-    if (mode === 'fast' && item.deliveryEst)
-      extraBadge = `<div class="item-extra" style="color:${accent}">▶ Est. delivery: ${escHtml(item.deliveryEst)}</div>`;
-    if (mode === 'beta' && item.confidence)
-      extraBadge = `<div class="item-extra" style="color:${accent}">↗ Link confidence: ${escHtml(item.confidence)}${item.regionNote ? ' · ' + escHtml(item.regionNote) : ''}</div>`;
-
-    const priceTag = item.priceHint
-      ? `<span class="price-hint" style="background:${accent}22;color:${accent};border-color:${accent}44">${escHtml(item.priceHint)}</span>` : '';
-    const tipTag   = item.tip
-      ? `<div class="item-tip">💡 ${escHtml(item.tip)}</div>` : '';
-
-    const card = document.createElement('div');
-    card.className = 'result-card';
-    card.style.setProperty('--card-accent', accent);
-    card.innerHTML = `
-      <div class="item-name-row">
-        <div class="item-name">${escHtml(item.name || 'Item')}</div>
-        ${priceTag}
-      </div>
-      <div class="item-desc">${escHtml(item.description || '')}</div>
-      ${extraBadge}
-      <div class="item-query">🔍 ${escHtml(item.temuQuery || '')}</div>
-      ${tipTag}
-      <div class="card-links">
-        <a class="temu-link" href="${temuUrl}" target="_blank" rel="noopener" style="background:${accent}">
-          <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2 7h10M7 2l5 5-5 5" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          Search Temu
-        </a>
-        ${mode === 'beta' && item.exactUrl ? `<a class="temu-link" href="${escHtml(item.exactUrl)}" target="_blank" rel="noopener" style="background:#7c3aed">
-          <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M3 7h7M6 4l4 3-4 3" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 2h2v10h-2" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/></svg>
-          Open Direct Link
-        </a>` : ''}
-        <a class="ddg-link" href="${ddgUrl}" target="_blank" rel="noopener" style="color:${accent};border-color:${accent}66">
-          <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2 7h10M7 2l5 5-5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          Find Exact Item
-        </a>
-      </div>
-    `;
-    grid.appendChild(card);
-  });
-
-  document.getElementById('results-section').classList.add('visible');
-}
-
-function escHtml(str) {
-  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-
-// init
-updateSearchState();
   </script>
 </body>
 
