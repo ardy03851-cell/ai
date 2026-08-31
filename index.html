@@ -2446,6 +2446,7 @@
       getFirestore, collection, addDoc, query, orderBy, onSnapshot,
       serverTimestamp, doc, updateDoc, deleteDoc, setDoc, deleteField
     } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-messaging.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyC7BTQubCi89xzYsiw9XzjLlEBfjRE_X4M",
@@ -2461,8 +2462,9 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 const provider = new GoogleAuthProvider();
+const messaging = getMessaging(app);
 
-// Keep live participant count updated for all users
+// Keep live participant count udated for all users
 onSnapshot(collection(db, "public_call_participants"), (snapshot) => {
   const badge = document.getElementById("call-count-badge");
   if (badge) badge.textContent = `(${snapshot.size} online)`;
@@ -2499,6 +2501,47 @@ onSnapshot(collection(db, "public_call_participants"), (snapshot) => {
     const toggleThemeSwitch = document.getElementById("toggle-theme");
     const toggleSound = document.getElementById("toggle-sound");
     const toggleNotifySwitch = document.getElementById("toggle-notify-switch");
+
+// --- Notification Setup ---
+const vapidKey = "BBK0AtjlGGGe9ssB5QmrCETWdujInmTcPOEArIW0e9dDVubQ_HLQS1NidauM-ECKUzbhocF5qel7DYJtDHTxgMQ";
+
+async function requestNotificationPermission() {
+  try {
+    const permission = await Notification.requestPermission();
+    if (permission === 'granted') {
+      const token = await getToken(messaging, { vapidKey });
+      if (token && currentUser) {
+        await setDoc(doc(db, "users", currentUser.uid), { fcmToken: token }, { merge: true });
+        if (typeof showToast === "function") showToast("Notifications enabled!");
+      }
+    } else {
+      if (typeof showToast === "function") showToast("Notification permission denied.");
+      toggleNotifySwitch.checked = false;
+    }
+  } catch (err) {
+    console.error("Error getting notification permission:", err);
+    toggleNotifySwitch.checked = false;
+  }
+}
+
+if (toggleNotifySwitch) {
+  toggleNotifySwitch.addEventListener('change', (e) => {
+    if (e.target.checked) {
+      requestNotificationPermission();
+    }
+  });
+  
+  // Set toggle state based on existing browser permission
+  if (Notification.permission === 'granted') {
+    toggleNotifySwitch.checked = true;
+  }
+}
+
+onMessage(messaging, (payload) => {
+  if (typeof showToast === "function") {
+    showToast(`New Message: ${payload.notification?.title || "New notification"}`);
+  }
+});
 
     const btnOpenDrawer = document.getElementById("btn-open-drawer");
     const btnCloseDrawer = document.getElementById("btn-close-drawer");
@@ -2802,74 +2845,6 @@ onSnapshot(collection(db, "public_call_participants"), (snapshot) => {
       document.getElementById("call-grid").classList.remove("active");
       document.getElementById("call-grid").innerHTML = "";
       document.getElementById("call-count-badge").textContent = "(0 online)";
-    }
-
-    // ---------- Web Notifications System ----------
-    async function requestNotificationPermission() {
-      if (!("Notification" in window)) {
-        showToast("Web Notifications are not supported on this device/browser.");
-        return false;
-      }
-      try {
-        const permission = await Notification.requestPermission();
-        updateNotificationUI();
-        if (permission === "granted") {
-          showToast("Notifications enabled successfully!");
-          sendSystemNotification("Pulse Chat", "Notifications are active. You will receive alerts instantly.");
-          return true;
-        } else if (permission === "denied") {
-          showToast("Notification permission was denied in device settings.");
-          return false;
-        }
-      } catch (err) {
-        console.error("Error requesting notification permission:", err);
-      }
-      return false;
-    }
-
-    function updateNotificationUI() {
-      if (!("Notification" in window)) return;
-      const isGranted = Notification.permission === "granted";
-      if (btnNotify) {
-        btnNotify.style.display = isGranted ? "none" : "inline-flex";
-      }
-      if (toggleNotifySwitch) {
-        toggleNotifySwitch.checked = isGranted;
-      }
-    }
-
-    function sendSystemNotification(title, body, icon) {
-      if (!("Notification" in window) || Notification.permission !== "granted") return;
-      try {
-        const options = {
-          body: body,
-          icon: icon || "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><linearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'><stop offset='0%25' stop-color='%233b82f6'/><stop offset='100%25' stop-color='%231d4ed8'/></linearGradient></defs><rect width='100' height='100' rx='24' fill='url(%23g)'/><path d='M30 32h40c4.4 0 8 3.6 8 8v20c0 4.4-3.6 8-8 8H48L34 78v-10h-4c-4.4 0-8-3.6-8-8V40c0-4.4 3.6-8 8-8z' fill='%23ffffff'/></svg>",
-          badge: icon,
-          renotify: true,
-          tag: "pulse-chat-" + Date.now()
-        };
-        if (navigator.serviceWorker && navigator.serviceWorker.ready) {
-          navigator.serviceWorker.ready.then(reg => reg.showNotification(title, options)).catch(() => {
-            new Notification(title, options);
-          });
-        } else {
-          new Notification(title, options);
-        }
-      } catch (e) {
-        console.error("Failed to send notification:", e);
-      }
-    }
-
-    if (btnNotify) {
-      btnNotify.addEventListener("click", requestNotificationPermission);
-    }
-    if (toggleNotifySwitch) {
-      toggleNotifySwitch.addEventListener("change", (e) => {
-        if (e.target.checked) requestNotificationPermission();
-      });
-    }
-
-    updateNotificationUI();
     }
 
     const REACTION_EMOJIS = ["👍", "❤️", "😂", "😮", "😢", "🔥"];
