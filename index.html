@@ -565,6 +565,404 @@
       border: 1px solid var(--border-color);
     }
 
+
+
+
+    /* Avatar Wrappers & Animated Effects */
+    .msg-avatar-wrap {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 12px;
+      padding: 2px;
+      flex-shrink: 0;
+      transition: all 0.3s ease;
+    }
+
+
+
+
+    /* Animated Profile Pic Effects */
+    .fx-neon {
+      animation: fxNeonPulse 2s infinite alternate ease-in-out;
+      border-radius: 12px;
+    }
+
+    @keyframes fxNeonPulse {
+      0% {
+        box-shadow: 0 0 6px #00f0ff, 0 0 12px #7000ff;
+      }
+
+      100% {
+        box-shadow: 0 0 16px #00f0ff, 0 0 28px #ff007f;
+      }
+    }
+
+
+
+
+    .fx-fire {
+      animation: fxFireAura 1.5s infinite alternate ease-in-out;
+      border-radius: 12px;
+    }
+
+    @keyframes fxFireAura {
+      0% {
+        box-shadow: 0 0 8px #ff4500, 0 0 18px #ff8c00;
+      }
+
+      50% {
+        box-shadow: 0 0 16px #ff0000, 0 0 30px #ffd700;
+      }
+
+      100% {
+        box-shadow: 0 0 10px #ff4500, 0 0 22px #ff8c00;
+      }
+    }
+
+
+
+
+    .fx-glitch {
+      animation: fxGlitch 0.8s infinite steps(2, start);
+      border-radius: 12px;
+    }
+
+    @keyframes fxGlitch {
+      0% {
+        box-shadow: -3px 0 #00ffff, 3px 0 #ff0055;
+      }
+
+      25% {
+        box-shadow: 3px -2px #00ffff, -3px 2px #ff0055;
+      }
+
+      50% {
+        box-shadow: -2px 3px #ff0055, 2px -3px #00ffff;
+      }
+
+      75% {
+        box-shadow: 2px 2px #00ffff, -2px -2px #ff0055;
+      }
+
+      100% {
+        box-shadow: -3px 0 #00ffff, 3px 0 #ff0055;
+      }
+    }
+
+
+
+
+    .fx-cosmic {
+      position: relative;
+      border-radius: 12px;
+      z-index: 1;
+    }
+
+    .fx-cosmic::before {
+      content: "";
+      position: absolute;
+      inset: -3px;
+      border-radius: 14px;
+      background: conic-gradient(from 0deg, #ff007f, #7000ff, #00f0ff, #00ff88, #ff007f);
+      animation: fxRotateCosmic 3s linear infinite;
+      z-index: -1;
+    }
+
+    @keyframes fxRotateCosmic {
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+
+
+
+    .fx-gold {
+      animation: fxGoldShimmer 2s infinite alternate ease-in-out;
+      border-radius: 12px;
+    }
+
+    @keyframes fxGoldShimmer {
+      0% {
+        box-shadow: 0 0 8px rgba(255, 215, 0, 0.8), 0 0 16px rgba(218, 165, 32, 0.5);
+      }
+
+      100% {
+        box-shadow: 0 0 20px rgba(255, 223, 0, 1), 0 0 35px rgba(255, 140, 0, 0.9);
+      }
+    }
+
+
+
+
+    .fx-rainbow {
+      animation: fxRainbowRotate 3s linear infinite;
+      border-radius: 12px;
+    }
+
+    @keyframes fxRainbowRotate {
+      0% {
+        filter: hue-rotate(0deg) drop-shadow(0 0 6px #ff0000);
+      }
+
+      100% {
+        filter: hue-rotate(360deg) drop-shadow(0 0 6px #ff0000);
+      }
+    }
+
+
+
+
+    .fx-water {
+      animation: fxWaterRipple 2s infinite ease-out;
+      border-radius: 12px;
+    }
+
+    @keyframes fxWaterRipple {
+      0% {
+        box-shadow: 0 0 0 0 rgba(14, 165, 233, 0.8);
+      }
+
+      100% {
+        box-shadow: 0 0 0 12px rgba(14, 165, 233, 0);
+      }
+    }
+
+
+
+
+    /* Profile Badges & Status Tags */
+    .profile-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 7px;
+      border-radius: 6px;
+      font-size: 10px;
+      font-weight: 800;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.05));
+      border: 1px solid var(--border-color);
+      margin-left: 6px;
+      vertical-align: middle;
+      letter-spacing: 0.03em;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+    }
+
+
+
+
+    .user-status-tag {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 400;
+      font-style: italic;
+      margin-top: 1px;
+      display: block;
+    }
+
+
+
+
+    .effect-selector-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(75px, 1fr));
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+
+
+
+    .effect-opt {
+      background: var(--surface);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 8px 4px;
+      text-align: center;
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 600;
+      transition: all 0.2s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+
+
+
+
+    .effect-opt:hover,
+    .effect-opt.active {
+      border-color: var(--user-bubble);
+      background: rgba(37, 99, 235, 0.2);
+      transform: translateY(-2px);
+    }
+
+
+
+
+    .effect-preview-avatar {
+      width: 26px;
+      height: 26px;
+      border-radius: 8px;
+      object-fit: cover;
+      display: block;
+    }
+
+    /* Public Voice & Video Call Channel UI */
+    .call-banner {
+      background: linear-gradient(135deg, rgba(37, 99, 235, 0.15), rgba(124, 58, 237, 0.15));
+      border-bottom: 1px solid var(--border-color);
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .call-banner-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .call-indicator {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #22c55e;
+      box-shadow: 0 0 8px #22c55e;
+      animation: pulseDot 1.5s infinite;
+    }
+
+    @keyframes pulseDot {
+      0% {
+        opacity: 0.4;
+        transform: scale(0.9);
+      }
+
+      50% {
+        opacity: 1;
+        transform: scale(1.1);
+      }
+
+      100% {
+        opacity: 0.4;
+        transform: scale(0.9);
+      }
+    }
+
+    .btn-call-action {
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-call-join {
+      background: #22c55e;
+      color: #fff;
+    }
+
+    .btn-call-join:hover {
+      background: #16a34a;
+    }
+
+    .btn-call-leave {
+      background: #ef4444;
+      color: #fff;
+    }
+
+    .btn-call-leave:hover {
+      background: #dc2626;
+    }
+
+    .btn-call-ctrl {
+      background: var(--surface);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 6px 10px;
+    }
+
+    .btn-call-ctrl.off {
+      background: #ef4444;
+      color: #fff;
+      border-color: #ef4444;
+    }
+
+    .call-grid-container {
+      display: none;
+      padding: 12px;
+      background: rgba(15, 23, 42, 0.6);
+      border-bottom: 1px solid var(--border-color);
+      gap: 10px;
+      overflow-x: auto;
+      max-height: 180px;
+    }
+
+    .call-grid-container.active {
+      display: flex;
+    }
+
+    .call-peer-card {
+      position: relative;
+      width: 140px;
+      height: 105px;
+      border-radius: 10px;
+      background: #000;
+      overflow: hidden;
+      flex-shrink: 0;
+      border: 2px solid transparent;
+    }
+
+    .call-peer-video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .call-peer-avatar-fallback {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #1e293b;
+    }
+
+    .call-peer-avatar-fallback img {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+    }
+
+    .call-peer-name {
+      position: absolute;
+      bottom: 4px;
+      left: 6px;
+      right: 6px;
+      font-size: 10px;
+      font-weight: 700;
+      color: #fff;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      background: rgba(0, 0, 0, 0.5);
+      padding: 2px 4px;
+      border-radius: 4px;
+    }
+
     .message-col {
       display: flex;
       flex-direction: column;
@@ -1561,15 +1959,34 @@
     <div id="chat-screen">
       <header>
         <div class="user-profile">
-          <div class="avatar-wrap">
+          <div class="avatar-wrap" id="user-avatar-wrap">
             <img id="user-avatar" src="" alt="Avatar" />
             <span class="status-dot"></span>
           </div>
           <div class="user-info">
-            <span id="user-name">User</span>
+            <div style="display:flex;align-items:center;">
+              <span id="user-name">User</span>
+              <span id="user-badge-display" class="profile-badge" style="display:none;"></span>
+            </div>
+            <span id="user-status-display" class="user-status-tag"></span>
             <button class="btn-nickname" id="btn-edit-nickname">Change Nickname</button>
           </div>
         </div>
+
+        <!-- Public Call Channel Banner -->
+        <div class="call-banner">
+          <div class="call-banner-info">
+            <span class="call-indicator"></span>
+            <span>Public Call Channel</span>
+            <span id="call-count-badge" style="font-size:11px;opacity:0.7;">(0 online)</span>
+          </div>
+          <div style="display:flex;gap:6px;align-items:center;">
+            <button id="btn-toggle-mic" class="btn-call-action btn-call-ctrl" style="display:none;" title="Toggle Mic">🎤</button>
+            <button id="btn-toggle-cam" class="btn-call-action btn-call-ctrl" style="display:none;" title="Toggle Camera">📹</button>
+            <button id="btn-join-call" class="btn-call-action btn-call-join">📞 Join Call</button>
+          </div>
+        </div>
+        <div id="call-grid" class="call-grid-container"></div>
         <div class="header-actions">
           <button class="icon-btn" id="btn-notify" style="display:none;" title="Enable Notifications">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
@@ -1711,6 +2128,73 @@
             </div>
 
             <div id="tab-customise" class="tab-content">
+              <div class="setting-group">
+                <label>Animated Profile Picture Effect</label>
+                <div class="setting-desc">Server-sided: visible on your profile & chat messages</div>
+                <div class="effect-selector-grid" id="effect-selector">
+                  <div class="effect-opt active" data-fx="none">
+                    <div class="msg-avatar-wrap"><img class="effect-preview-avatar" src="https://api.dicebear.com/7.x/initials/svg?seed=P" alt="">
+                    </div>
+                    <span>None</span>
+                  </div>
+                  <div class="effect-opt" data-fx="neon">
+                    <div class="msg-avatar-wrap fx-neon"><img class="effect-preview-avatar" src="https://api.dicebear.com/7.x/initials/svg?seed=P" alt="">
+                    </div>
+                    <span>Neon</span>
+                  </div>
+                  <div class="effect-opt" data-fx="fire">
+                    <div class="msg-avatar-wrap fx-fire"><img class="effect-preview-avatar" src="https://api.dicebear.com/7.x/initials/svg?seed=P" alt="">
+                    </div>
+                    <span>Fiery</span>
+                  </div>
+                  <div class="effect-opt" data-fx="glitch">
+                    <div class="msg-avatar-wrap fx-glitch"><img class="effect-preview-avatar" src="https://api.dicebear.com/7.x/initials/svg?seed=P" alt="">
+                    </div>
+                    <span>Glitch</span>
+                  </div>
+                  <div class="effect-opt" data-fx="cosmic">
+                    <div class="msg-avatar-wrap fx-cosmic"><img class="effect-preview-avatar" src="https://api.dicebear.com/7.x/initials/svg?seed=P" alt="">
+                    </div>
+                    <span>Cosmic</span>
+                  </div>
+                  <div class="effect-opt" data-fx="gold">
+                    <div class="msg-avatar-wrap fx-gold"><img class="effect-preview-avatar" src="https://api.dicebear.com/7.x/initials/svg?seed=P" alt="">
+                    </div>
+                    <span>Golden</span>
+                  </div>
+                  <div class="effect-opt" data-fx="rainbow">
+                    <div class="msg-avatar-wrap fx-rainbow"><img class="effect-preview-avatar" src="https://api.dicebear.com/7.x/initials/svg?seed=P" alt="">
+                    </div>
+                    <span>Rainbow</span>
+                  </div>
+                  <div class="effect-opt" data-fx="water">
+                    <div class="msg-avatar-wrap fx-water"><img class="effect-preview-avatar" src="https://api.dicebear.com/7.x/initials/svg?seed=P" alt="">
+                    </div>
+                    <span>Ripple</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="setting-group">
+                <label>Server Profile Badge</label>
+                <div class="setting-desc">Visible next to your name across all clients</div>
+                <select id="select-user-badge" style="width:100%;padding:10px 14px;border-radius:12px;background:var(--surface);color:var(--text-main);border:1px solid var(--border-color);font-size:13px;outline:none;">
+                  <option value="">No Badge</option>
+                  <option value="👑 VIP">👑 VIP</option>
+                  <option value="⚡ CYBER">⚡ CYBER</option>
+                  <option value="🔥 FLAME">🔥 FLAME</option>
+                  <option value="💎 DIAMOND">💎 DIAMOND</option>
+                  <option value="🚀 PRO">🚀 PRO</option>
+                  <option value="🌟 STAR">🌟 STAR</option>
+                </select>
+              </div>
+
+              <div class="setting-group">
+                <label>Status Tagline</label>
+                <div class="setting-desc">Short status message shown under your name</div>
+                <input type="text" id="input-status-msg" placeholder="e.g. ⚡ Chilling in Pulse" maxlength="40" style="width:100%;padding:10px 14px;border-radius:12px;background:var(--surface);color:var(--text-main);border:1px solid var(--border-color);font-size:13px;outline:none;" />
+              </div>
+
               <div class="setting-group">
                 <label>Bubble Theme Accent</label>
                 <div class="color-presets">
@@ -1909,6 +2393,7 @@
     // ---------- State ----------
     let currentUser = null;
     let unsubscribeMessages = null;
+    let unsubscribeProfile = null;
     let selectedReply = null;
     let isInitialLoad = true;
     let allMessages = [];
@@ -1917,6 +2402,283 @@
     let isNearBottom = true;
     let unreadCount = 0;
     let soundEnabled = true;
+
+    // Profile Customisations (Server-synced)
+    let userAvatarEffect = localStorage.getItem("pulse-avatar-effect") || "none";
+    let userBadge = localStorage.getItem("pulse-user-badge") || "";
+    let userStatusMsg = localStorage.getItem("pulse-status-msg") || "";
+
+    // Public WebRTC Call State
+    let localStream = null;
+    let peerConnections = {};
+    let isInCall = false;
+    let isMicMuted = false;
+    let isCamOff = false;
+    let callUnsubscribers = [];
+    const iceServers = { iceServers: [{ urls: ["stun:stun.l.google.com:19302", "stun:stun1.l.google.com:19302"] }] };
+
+    async function syncUserProfileToServer() {
+      if (!currentUser) return;
+      try {
+        const userRef = doc(db, "users", currentUser.uid);
+        await setDoc(userRef, {
+          uid: currentUser.uid,
+          displayName: currentUser.displayName || "User",
+          photoURL: currentUser.photoURL || "",
+          avatarEffect: userAvatarEffect,
+          badge: userBadge,
+          statusMsg: userStatusMsg,
+          bubbleColor: localStorage.getItem("pulse-accent") || "#2563eb",
+          bubbleColor2: localStorage.getItem("pulse-accent-2") || "#1d4ed8",
+          updatedAt: serverTimestamp()
+        }, { merge: true });
+        updateHeaderProfileUI();
+      } catch (err) {
+        console.error("Error syncing user profile:", err);
+      }
+    }
+
+    function updateHeaderProfileUI() {
+      const avatarWrap = document.getElementById("user-avatar-wrap");
+      if (avatarWrap) {
+        avatarWrap.className = `avatar-wrap ${userAvatarEffect !== 'none' ? 'fx-' + userAvatarEffect : ''}`;
+      }
+      const badgeDisp = document.getElementById("user-badge-display");
+      if (badgeDisp) {
+        if (userBadge) {
+          badgeDisp.textContent = userBadge;
+          badgeDisp.style.display = "inline-flex";
+        } else {
+          badgeDisp.style.display = "none";
+        }
+      }
+      const statusDisp = document.getElementById("user-status-display");
+      if (statusDisp) {
+        statusDisp.textContent = userStatusMsg || "";
+      }
+    }
+
+    function updateCustomiseDrawerInputs() {
+      const effectOpts = document.querySelectorAll("#effect-selector .effect-opt");
+      effectOpts.forEach(opt => {
+        opt.classList.toggle("active", opt.getAttribute("data-fx") === userAvatarEffect);
+      });
+      const badgeSelect = document.getElementById("select-user-badge");
+      if (badgeSelect) badgeSelect.value = userBadge;
+      const statusInput = document.getElementById("input-status-msg");
+      if (statusInput && document.activeElement !== statusInput) statusInput.value = userStatusMsg;
+    }
+
+    // ---------- Public WebRTC Call Channel System ----------
+    async function joinPublicCall() {
+      if (!currentUser) return;
+      try {
+        localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true }).catch(async () => {
+          return await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+        });
+      } catch (err) {
+        showToast("Unable to access microphone or camera.");
+        return;
+      }
+
+      isInCall = true;
+      document.getElementById("btn-join-call").textContent = "❌ Leave Call";
+      document.getElementById("btn-join-call").className = "btn-call-action btn-call-leave";
+      document.getElementById("btn-toggle-mic").style.display = "inline-flex";
+      document.getElementById("btn-toggle-cam").style.display = "inline-flex";
+      document.getElementById("call-grid").classList.add("active");
+
+      addLocalCallCard();
+
+      // Register presence in public_call room
+      const myCallRef = doc(db, "public_call_participants", currentUser.uid);
+      await setDoc(myCallRef, {
+        uid: currentUser.uid,
+        displayName: currentUser.displayName || "User",
+        photoURL: currentUser.photoURL || "",
+        joinedAt: serverTimestamp()
+      });
+
+      // Listen for other participants
+      const participantsRef = collection(db, "public_call_participants");
+      const unsub = onSnapshot(participantsRef, (snapshot) => {
+        const activeUids = [];
+        snapshot.forEach((docSnap) => {
+          const peerData = docSnap.data();
+          activeUids.push(peerData.uid);
+          if (peerData.uid !== currentUser.uid && !peerConnections[peerData.uid]) {
+            initiatePeerConnection(peerData, true);
+          }
+        });
+
+        document.getElementById("call-count-badge").textContent = `(${activeUids.length} online)`;
+
+        // Clean up disconnected peers
+        Object.keys(peerConnections).forEach((peerUid) => {
+          if (!activeUids.includes(peerUid)) {
+            closePeerConnection(peerUid);
+          }
+        });
+      });
+      callUnsubscribers.push(unsub);
+
+      // Listen for incoming signaling offers/answers/ICE candidates
+      const signalingRef = collection(db, "public_call_signals", currentUser.uid, "signal_box");
+      const unsubSig = onSnapshot(signalingRef, (snapshot) => {
+        snapshot.docChanges().forEach(async (change) => {
+          if (change.type === "added") {
+            const sig = change.data();
+            const fromUid = sig.fromUid;
+            if (sig.type === "offer") {
+              await handleIncomingOffer(fromUid, sig.offer, sig.fromData);
+            } else if (sig.type === "answer" && peerConnections[fromUid]) {
+              await peerConnections[fromUid].pc.setRemoteDescription(new RTCSessionDescription(sig.answer));
+            } else if (sig.type === "candidate" && peerConnections[fromUid]) {
+              try {
+                await peerConnections[fromUid].pc.addIceCandidate(new RTCIceCandidate(sig.candidate));
+              } catch (e) {}
+            }
+            await deleteDoc(change.doc.ref);
+          }
+        });
+      });
+      callUnsubscribers.push(unsubSig);
+    }
+
+    async function initiatePeerConnection(peerData, isInitiator) {
+      if (peerConnections[peerData.uid]) return;
+      const pc = new RTCPeerConnection(iceServers);
+      
+      peerConnections[peerData.uid] = { pc, data: peerData };
+
+      localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
+
+      pc.ontrack = (event) => {
+        renderRemoteStream(peerData, event.streams[0]);
+      };
+
+      pc.onicecandidate = async (event) => {
+        if (event.candidate) {
+          await addDoc(collection(db, "public_call_signals", peerData.uid, "signal_box"), {
+            fromUid: currentUser.uid,
+            type: "candidate",
+            candidate: event.candidate.toJSON()
+          });
+        }
+      };
+
+      if (isInitiator) {
+        const offer = await pc.createOffer();
+        await pc.setLocalDescription(offer);
+        await addDoc(collection(db, "public_call_signals", peerData.uid, "signal_box"), {
+          fromUid: currentUser.uid,
+          fromData: {
+            displayName: currentUser.displayName || "User",
+            photoURL: currentUser.photoURL || ""
+          },
+          type: "offer",
+          offer: { type: offer.type, sdp: offer.sdp }
+        });
+      }
+    }
+
+    async function handleIncomingOffer(fromUid, offer, fromData) {
+      if (!peerConnections[fromUid]) {
+        await initiatePeerConnection({ uid: fromUid, ...fromData }, false);
+      }
+      const pc = peerConnections[fromUid].pc;
+      await pc.setRemoteDescription(new RTCSessionDescription(offer));
+      const answer = await pc.createAnswer();
+      await pc.setLocalDescription(answer);
+      await addDoc(collection(db, "public_call_signals", fromUid, "signal_box"), {
+        fromUid: currentUser.uid,
+        type: "answer",
+        answer: { type: answer.type, sdp: answer.sdp }
+      });
+    }
+
+    function addLocalCallCard() {
+      const grid = document.getElementById("call-grid");
+      let card = document.getElementById("call-card-local");
+      if (!card) {
+        card = document.createElement("div");
+        card.id = "call-card-local";
+        card.className = "call-peer-card";
+        grid.appendChild(card);
+      }
+      card.innerHTML = `
+        <video id="local-video" class="call-peer-video" autoplay playsinline muted></video>
+        <div class="call-peer-avatar-fallback" id="local-avatar-fallback" style="display:none;">
+          <img src="${escapeHTML(currentUser.photoURL || 'https://api.dicebear.com/7.x/initials/svg?seed=' + encodeURIComponent(currentUser.displayName || 'Me'))}" />
+        </div>
+        <div class="call-peer-name">You</div>
+      `;
+      const videoEl = card.querySelector("#local-video");
+      videoEl.srcObject = localStream;
+      if (!localStream.getVideoTracks().length || !localStream.getVideoTracks()[0].enabled) {
+        card.querySelector("#local-avatar-fallback").style.display = "flex";
+      }
+    }
+
+    function renderRemoteStream(peerData, stream) {
+      const grid = document.getElementById("call-grid");
+      let card = document.getElementById(`call-card-${peerData.uid}`);
+      if (!card) {
+        card = document.createElement("div");
+        card.id = `call-card-${peerData.uid}`;
+        card.className = "call-peer-card";
+        grid.appendChild(card);
+      }
+      card.innerHTML = `
+        <video id="video-${peerData.uid}" class="call-peer-video" autoplay playsinline></video>
+        <div class="call-peer-avatar-fallback" id="fallback-${peerData.uid}" style="display:none;">
+          <img src="${escapeHTML(peerData.photoURL || 'https://api.dicebear.com/7.x/initials/svg?seed=' + encodeURIComponent(peerData.displayName || 'User'))}" />
+        </div>
+        <div class="call-peer-name">${escapeHTML(peerData.displayName || "User")}</div>
+      `;
+      const videoEl = card.querySelector(`#video-${peerData.uid}`);
+      videoEl.srcObject = stream;
+      
+      const hasVideo = stream.getVideoTracks().length > 0 && stream.getVideoTracks()[0].enabled;
+      if (!hasVideo) {
+        card.querySelector(`#fallback-${peerData.uid}`).style.display = "flex";
+      }
+    }
+
+    function closePeerConnection(uid) {
+      if (peerConnections[uid]) {
+        peerConnections[uid].pc.close();
+        delete peerConnections[uid];
+      }
+      const card = document.getElementById(`call-card-${uid}`);
+      if (card) card.remove();
+    }
+
+    async function leavePublicCall() {
+      isInCall = false;
+      if (localStream) {
+        localStream.getTracks().forEach(t => t.stop());
+        localStream = null;
+      }
+      Object.keys(peerConnections).forEach(uid => closePeerConnection(uid));
+      
+      callUnsubscribers.forEach(unsub => unsub());
+      callUnsubscribers = [];
+
+      if (currentUser) {
+        try {
+          await deleteDoc(doc(db, "public_call_participants", currentUser.uid));
+        } catch (e) {}
+      }
+
+      document.getElementById("btn-join-call").textContent = "📞 Join Call";
+      document.getElementById("btn-join-call").className = "btn-call-action btn-call-join";
+      document.getElementById("btn-toggle-mic").style.display = "none";
+      document.getElementById("btn-toggle-cam").style.display = "none";
+      document.getElementById("call-grid").classList.remove("active");
+      document.getElementById("call-grid").innerHTML = "";
+      document.getElementById("call-count-badge").textContent = "(0 online)";
+    }
 
     const REACTION_EMOJIS = ["👍", "❤️", "😂", "😮", "😢", "🔥"];
     const PROFANITY_REGEX = /\b(shit|fuck|bitch|ass|asshole|bastard|crap|damn|dick|pussy|cock|cunt|slut|whore|piss|fag|nigger|retard)\b/i;
@@ -2006,7 +2768,75 @@
         document.documentElement.style.setProperty("--glow-accent", hexToRgba(color, 0.35));
         localStorage.setItem("pulse-accent", color);
         localStorage.setItem("pulse-accent-2", color2);
+        syncUserProfileToServer();
       });
+    });
+
+    // Profile Effect Selector Event Listeners
+    document.querySelectorAll("#effect-selector .effect-opt").forEach(opt => {
+      opt.addEventListener("click", () => {
+        document.querySelectorAll("#effect-selector .effect-opt").forEach(o => o.classList.remove("active"));
+        opt.classList.add("active");
+        userAvatarEffect = opt.getAttribute("data-fx") || "none";
+        localStorage.setItem("pulse-avatar-effect", userAvatarEffect);
+        syncUserProfileToServer();
+        showToast(`Avatar Effect set to: ${opt.querySelector("span")?.textContent}`);
+      });
+    });
+
+    // Badge Selector Event Listener
+    const badgeSelectEl = document.getElementById("select-user-badge");
+    badgeSelectEl?.addEventListener("change", () => {
+      userBadge = badgeSelectEl.value;
+      localStorage.setItem("pulse-user-badge", userBadge);
+      syncUserProfileToServer();
+      showToast(userBadge ? `Badge set to ${userBadge}` : "Badge removed");
+    });
+
+    // Status Tagline Event Listener
+    const statusInputEl = document.getElementById("input-status-msg");
+    statusInputEl?.addEventListener("change", () => {
+      userStatusMsg = statusInputEl.value.trim();
+      localStorage.setItem("pulse-status-msg", userStatusMsg);
+      syncUserProfileToServer();
+      showToast("Status updated");
+    });
+
+    // Public Call Event Handlers
+    document.getElementById("btn-join-call")?.addEventListener("click", () => {
+      if (!isInCall) {
+        joinPublicCall();
+      } else {
+        leavePublicCall();
+      }
+    });
+
+    document.getElementById("btn-toggle-mic")?.addEventListener("click", () => {
+      if (localStream && localStream.getAudioTracks().length) {
+        isMicMuted = !isMicMuted;
+        localStream.getAudioTracks()[0].enabled = !isMicMuted;
+        const btn = document.getElementById("btn-toggle-mic");
+        btn.classList.toggle("off", isMicMuted);
+        btn.textContent = isMicMuted ? "🎙️" : "🎤";
+        showToast(isMicMuted ? "Microphone Muted" : "Microphone Unmuted");
+      }
+    });
+
+    document.getElementById("btn-toggle-cam")?.addEventListener("click", () => {
+      if (localStream && localStream.getVideoTracks().length) {
+        isCamOff = !isCamOff;
+        localStream.getVideoTracks()[0].enabled = !isCamOff;
+        const btn = document.getElementById("btn-toggle-cam");
+        btn.classList.toggle("off", isCamOff);
+        btn.textContent = isCamOff ? "📷" : "📹";
+        const fallback = document.querySelector("#call-card-local #local-avatar-fallback");
+        if (fallback) fallback.style.display = isCamOff ? "flex" : "none";
+        showToast(isCamOff ? "Camera Off" : "Camera On");
+      }
+    });
+
+    window.addEventListener("beforeunload", () => {
+      if (isInCall) leavePublicCall();
     });
 
     // ---------- Sound toggle ----------
@@ -2084,10 +2914,27 @@
         authScreen.style.display = "none";
         chatScreen.style.display = "flex";
         setupNotifications();
+
+        // Listen for user profile customizations on server
+        if (unsubscribeProfile) unsubscribeProfile();
+        unsubscribeProfile = onSnapshot(doc(db, "users", user.uid), (snap) => {
+          if (snap.exists()) {
+            const p = snap.data();
+            if (p.avatarEffect !== undefined) userAvatarEffect = p.avatarEffect;
+            if (p.badge !== undefined) userBadge = p.badge;
+            if (p.statusMsg !== undefined) userStatusMsg = p.statusMsg;
+            updateCustomiseDrawerInputs();
+            updateHeaderProfileUI();
+          } else {
+            syncUserProfileToServer();
+          }
+        });
+
         loadMessages();
       } else {
         currentUser = null;
         if (unsubscribeMessages) unsubscribeMessages();
+        if (unsubscribeProfile) unsubscribeProfile();
         authScreen.style.display = "flex";
         chatScreen.style.display = "none";
         messagesContainer.innerHTML = "";
@@ -2262,7 +3109,12 @@
         displayName: currentUser.displayName || (currentUser.isAnonymous ? "Guest User" : "Anonymous"),
         photoURL: currentUser.photoURL || "https://api.dicebear.com/7.x/initials/svg?seed=" + encodeURIComponent(currentUser.displayName || "User"),
         createdAt: serverTimestamp(),
-        reactions: {}
+        reactions: {},
+        avatarEffect: userAvatarEffect,
+        badge: userBadge,
+        statusMsg: userStatusMsg,
+        bubbleColor: localStorage.getItem("pulse-accent") || "#2563eb",
+        bubbleColor2: localStorage.getItem("pulse-accent-2") || "#1d4ed8"
       };
 
       if (selectedReply) msgPayload.replyTo = selectedReply;
@@ -2403,7 +3255,8 @@
         rowDiv.dataset.id = data.id;
 
         const time = data.createdAt ? msgDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "sending…";
-        const avatarImg = `<img class="msg-avatar" src="${escapeHTML(data.photoURL || "https://api.dicebear.com/7.x/initials/svg?seed=U")}" alt="" />`;
+        const fxClass = data.avatarEffect && data.avatarEffect !== 'none' ? ` fx-${escapeHTML(data.avatarEffect)}` : '';
+        const avatarImg = `<div class="msg-avatar-wrap${fxClass}"><img class="msg-avatar" src="${escapeHTML(data.photoURL || "https://api.dicebear.com/7.x/initials/svg?seed=U")}" alt="" /></div>`;
 
         let replyHTML = "";
         if (data.replyTo) {
@@ -2439,12 +3292,21 @@
         const messageCol = document.createElement("div");
         messageCol.className = "message-col";
 
+        const badgeSpan = data.badge ? `<span class="profile-badge">${escapeHTML(data.badge)}</span>` : '';
+        const statusSpan = data.statusMsg ? `<span class="user-status-tag">${escapeHTML(data.statusMsg)}</span>` : '';
+        const senderHeader = !grouped ? `<div class="sender-name">${escapeHTML(data.displayName)}${badgeSpan}${statusSpan}</div>` : '';
+
+        const bubbleCustomStyle = (isSent && data.bubbleColor)
+          ? ` style="background: linear-gradient(135deg, ${escapeHTML(data.bubbleColor)} 0%, ${escapeHTML(data.bubbleColor2 || data.bubbleColor)} 100%);"`
+          : '';
+
         const bubble = document.createElement("div");
         bubble.className = `message ${isSent ? "sent" : "received"}${data.deleted ? " deleted" : ""}`;
+        if (bubbleCustomStyle) bubble.setAttribute("style", `background: linear-gradient(135deg, ${escapeHTML(data.bubbleColor)} 0%, ${escapeHTML(data.bubbleColor2 || data.bubbleColor)} 100%);`);
         bubble.innerHTML = `
           ${pickerHTML}
           ${replyHTML}
-          ${!isSent && !grouped ? `<div class="sender-name">${escapeHTML(data.displayName)}</div>` : ''}
+          ${senderHeader}
           <div class="msg-text">${escapeHTML(data.text)}</div>
         `;
 
