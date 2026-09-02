@@ -358,7 +358,13 @@
 
     .avatar-wrap {
       position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 12px;
+      padding: 2px;
       flex-shrink: 0;
+      transition: all 0.3s ease;
     }
 
     .user-profile img {
@@ -3023,7 +3029,7 @@ onSnapshot(collection(db, "public_call_participants"), (snapshot) => {
     document.getElementById("btn-toggle-cam")?.addEventListener("click", () => {
       if (localStream && localStream.getVideoTracks().length) {
         isCamOff = !isCamOff;
-        localStream.getVideoTracks()[0].enabled = !isCamOff;
+        localStream.getVideoTracks()[0].enabled = !isCamOff;CamOff;
         const btn = document.getElementById("btn-toggle-cam");
         btn.classList.toggle("off", isCamOff);
         btn.textContent = isCamOff ? "📷" : "📹";
