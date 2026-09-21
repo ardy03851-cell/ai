@@ -208,6 +208,201 @@
     var ARC_LEN    = 377;              /* 270° arc, r = 80  →  80 · 1.5π */
 
     /* ---------------------------------------------------------
+       Canvas scene renderer
+       The original page only supplied a CSS sky; the canvas had
+       no rendering path. Keep the world on one GPU-backed canvas
+       and cache everything that does not need to be rebuilt per frame.
+       --------------------------------------------------------- */
+    var ctx = canvas.getContext('2d', { alpha: false, desynchronized: true });
+    var sceneDpr = 1;
+    var sceneBg = null;
+    var resizeQueued = false;
+    var sceneWidth = 0, sceneHeight = 0;
+
+    function rebuildSceneBackground() {
+      sceneWidth = vw;
+      sceneHeight = vh;
+      sceneDpr = Math.min(window.devicePixelRatio || 1, 1.5);
+
+      canvas.width = Math.max(1, Math.round(sceneWidth * sceneDpr));
+      canvas.height = Math.max(1, Math.round(sceneHeight * sceneDpr));
+      canvas.style.width = sceneWidth + 'px';
+      canvas.style.height = sceneHeight + 'px';
+
+      ctx.setTransform(sceneDpr, 0, 0, sceneDpr, 0, 0);
+
+      sceneBg = document.createElement('canvas');
+      sceneBg.width = Math.max(1, Math.round(sceneWidth * sceneDpr));
+      sceneBg.height = Math.max(1, Math.round(sceneHeight * sceneDpr));
+
+      var bg = sceneBg.getContext('2d', { alpha: false });
+      bg.setTransform(sceneDpr, 0, 0, sceneDpr, 0, 0);
+
+      var sky = bg.createLinearGradient(0, 0, 0, sceneHeight);
+      sky.addColorStop(0, '#0d2740');
+      sky.addColorStop(0.45, '#1b4a74');
+      sky.addColorStop(0.72, '#7f7c72');
+      sky.addColorStop(1, '#18271e');
+      bg.fillStyle = sky;
+      bg.fillRect(0, 0, sceneWidth, sceneHeight);
+
+      var sun = bg.createRadialGradient(
+        sceneWidth * 0.5, sceneHeight * 0.48, 0,
+        sceneWidth * 0.5, sceneHeight * 0.48, sceneHeight * 0.42
+      );
+      sun.addColorStop(0, 'rgba(255,235,190,0.24)');
+      sun.addColorStop(0.35, 'rgba(255,205,155,0.08)');
+      sun.addColorStop(1, 'rgba(255,205,155,0)');
+      bg.fillStyle = sun;
+      bg.fillRect(0, 0, sceneWidth, sceneHeight);
+    }
+
+    function queueSceneResize() {
+      if (resizeQueued) return;
+      resizeQueued = true;
+      requestAnimationFrame(function () {
+        resizeQueued = false;
+        rebuildSceneBackground();
+      });
+    }
+
+    function drawCloud(x, y, size, alpha) {
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(x, y, size, 0, Math.PI * 2);
+      ctx.arc(x + size * 0.9, y - size * 0.22, size * 0.72, 0, Math.PI * 2);
+      ctx.arc(x + size * 1.5, y, size * 0.58, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function drawAircraft() {
+      var cx = vw * 0.5;
+      var cy = vh * 0.58;
+      var scale = Math.max(0.72, Math.min(vw, vh) / 900);
+
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(state.roll * Math.PI / 180);
+      ctx.lineJoin = 'round';
+      ctx.shadowColor = 'rgba(90, 220, 255, 0.45)';
+      ctx.shadowBlur = 12;
+
+      var body = ctx.createLinearGradient(0, -105 * scale, 0, 105 * scale);
+      body.addColorStop(0, '#f4fbff');
+      body.addColorStop(0.42, '#91aab7');
+      body.addColorStop(0.72, '#405866');
+      body.addColorStop(1, '#15242c');
+      ctx.fillStyle = body;
+      ctx.beginPath();
+      ctx.moveTo(0, -105 * scale);
+      ctx.lineTo(12 * scale, -35 * scale);
+      ctx.lineTo(16 * scale, 62 * scale);
+      ctx.lineTo(7 * scale, 92 * scale);
+      ctx.lineTo(0, 105 * scale);
+      ctx.lineTo(-7 * scale, 92 * scale);
+      ctx.lineTo(-16 * scale, 62 * scale);
+      ctx.lineTo(-12 * scale, -35 * scale);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.shadowBlur = 8;
+      ctx.fillStyle = '#a9bdc7';
+      ctx.beginPath();
+      ctx.moveTo(-10 * scale, 8 * scale);
+      ctx.lineTo(-145 * scale, 48 * scale);
+      ctx.lineTo(-118 * scale, 66 * scale);
+      ctx.lineTo(-8 * scale, 38 * scale);
+      ctx.closePath();
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(10 * scale, 8 * scale);
+      ctx.lineTo(145 * scale, 48 * scale);
+      ctx.lineTo(118 * scale, 66 * scale);
+      ctx.lineTo(8 * scale, 38 * scale);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.fillStyle = '#6f8792';
+      ctx.beginPath();
+      ctx.moveTo(-8 * scale, 58 * scale);
+      ctx.lineTo(-58 * scale, 92 * scale);
+      ctx.lineTo(-48 * scale, 104 * scale);
+      ctx.lineTo(-5 * scale, 83 * scale);
+      ctx.closePath();
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(8 * scale, 58 * scale);
+      ctx.lineTo(58 * scale, 92 * scale);
+      ctx.lineTo(48 * scale, 104 * scale);
+      ctx.lineTo(5 * scale, 83 * scale);
+      ctx.closePath();
+      ctx.fill();
+
+      var cockpit = ctx.createLinearGradient(0, -82 * scale, 0, -28 * scale);
+      cockpit.addColorStop(0, '#e7fbff');
+      cockpit.addColorStop(0.25, '#4cc8ed');
+      cockpit.addColorStop(1, '#12384b');
+      ctx.fillStyle = cockpit;
+      ctx.beginPath();
+      ctx.ellipse(0, -58 * scale, 9 * scale, 27 * scale, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      if (state.boost > 0.15) {
+        var flame = ctx.createLinearGradient(0, 82 * scale, 0, 150 * scale);
+        flame.addColorStop(0, 'rgba(255,245,190,0.95)');
+        flame.addColorStop(0.35, 'rgba(255,155,55,0.8)');
+        flame.addColorStop(1, 'rgba(255,70,20,0)');
+        ctx.fillStyle = flame;
+        ctx.beginPath();
+        ctx.moveTo(-6 * scale, 78 * scale);
+        ctx.lineTo(0, (125 + Math.sin(elapsed * 28) * 10) * scale);
+        ctx.lineTo(6 * scale, 78 * scale);
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      ctx.restore();
+    }
+
+    function drawScene() {
+      if (!sceneBg || sceneWidth !== vw || sceneHeight !== vh) rebuildSceneBackground();
+
+      ctx.setTransform(sceneDpr, 0, 0, sceneDpr, 0, 0);
+      ctx.drawImage(sceneBg, 0, 0, sceneWidth, sceneHeight);
+
+      var horizon = vh * 0.50 + state.pitch * vh * 0.012;
+
+      /* moving clouds give the sky depth without creating DOM work */
+      for (var c = 0; c < 9; c++) {
+        var speed = 5 + (c % 3) * 3;
+        var x = ((c * 313 + elapsed * speed) % (vw + 260)) - 130;
+        var y = vh * (0.16 + (c % 5) * 0.065) + state.pitch * 1.8;
+        drawCloud(x, y, 18 + (c % 4) * 7, 0.08 + (c % 3) * 0.018);
+      }
+
+      /* parallax terrain */
+      ctx.save();
+      ctx.fillStyle = 'rgba(24, 43, 31, 0.42)';
+      ctx.beginPath();
+      ctx.moveTo(0, horizon + vh * 0.03);
+      for (var x2 = 0; x2 <= vw + 80; x2 += 70) {
+        var m = Math.sin(x2 * 0.006 + state.heading * 0.002) * vh * 0.035 +
+                Math.sin(x2 * 0.019) * vh * 0.018;
+        ctx.lineTo(x2, horizon + vh * 0.025 - m);
+      }
+      ctx.lineTo(vw, vh);
+      ctx.lineTo(0, vh);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+
+      drawAircraft();
+    }
+
+    /* ---------------------------------------------------------
        Build the tapes once, off-document (single reflow)
        --------------------------------------------------------- */
     (function buildAltitudeTape() {
@@ -268,6 +463,7 @@
       vw = window.innerWidth;
       vh = window.innerHeight;
       measure();
+      queueSceneResize();
     }
 
     window.addEventListener('resize', onResize, { passive: true });
@@ -278,6 +474,7 @@
       new ResizeObserver(measure).observe(attitude);
     }
     measure();
+    rebuildSceneBackground();
 
     /* ---------------------------------------------------------
        Input
@@ -387,6 +584,9 @@
       state.alt = clamp(state.alt + state.vs * dt, ALT_MIN + 100, ALT_MAX - 100);
       state.g = lerp(state.g, 1 + Math.abs(state.roll) / 45 * 1.6 + state.boost * 1.2,
                      1 - Math.exp(-dt * 3));
+
+      /* ============ WORLD RENDER ============ */
+      drawScene();
 
       /* ============ SPEEDOMETER ============ */
       var sn = clamp((state.speed - SPEED_MIN) / (SPEED_MAX - SPEED_MIN), 0, 1);
