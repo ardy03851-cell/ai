@@ -1,574 +1,708 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pixel Dungeon Tactics - iPad Edition</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Pixel Vault: Gacha Odyssey</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
-        .pixel-font {
+        body {
             font-family: 'Press Start 2P', monospace;
+            background-color: #0f051d;
+            color: #f3f4f6;
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
+            overflow-x: hidden;
         }
+
+        /* Robust Pixel Borders for Retro Indie Aesthetic */
         .pixel-border {
-            box-shadow: inset -4px -4px 0px 0px rgba(0,0,0,0.5), inset 4px 4px 0px 0px rgba(255,255,255,0.3);
+            box-shadow:
+                -4px 0 0 0 #4c1d95,
+                4px 0 0 0 #4c1d95,
+                0 -4px 0 0 #4c1d95,
+                0 4px 0 0 #4c1d95,
+                -8px 0 0 0 #1e1b4b,
+                8px 0 0 0 #1e1b4b,
+                0 -8px 0 0 #1e1b4b,
+                0 8px 0 0 #1e1b4b;
         }
-        .pixel-button {
-            box-shadow: inset -4px -4px 0px 0px rgba(0,0,0,0.6), inset 4px 4px 0px 0px rgba(255,255,255,0.4);
-            transition: transform 0.05s ease, filter 0.1s ease;
+
+        .pixel-card-border {
+            box-shadow:
+                -3px 0 0 0 #f59e0b,
+                3px 0 0 0 #f59e0b,
+                0 -3px 0 0 #f59e0b,
+                0 3px 0 0 #f59e0b;
         }
-        .pixel-button:active {
-            transform: translateY(3px);
-            box-shadow: inset -2px -2px 0px 0px rgba(0,0,0,0.6), inset 2px 2px 0px 0px rgba(255,255,255,0.4);
+
+        .pixel-common-border {
+            box-shadow:
+                -3px 0 0 0 #7c3aed,
+                3px 0 0 0 #7c3aed,
+                0 -3px 0 0 #7c3aed,
+                0 3px 0 0 #7c3aed;
         }
-        .pixel-img {
+
+        .pixel-btn {
+            position: relative;
+            transition: transform 0.1s ease;
+        }
+
+        .pixel-btn:active {
+            transform: translateY(4px);
+        }
+
+        .pixel-card {
             image-rendering: pixelated;
+            image-rendering: crisp-edges;
         }
-        /* CRT Scanline overlay effect */
-        .crt-scanlines::after {
-            content: " ";
-            display: block;
-            position: absolute;
-            top: 0; left: 0; bottom: 0; right: 0;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.3) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.04), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.04));
-            z-index: 40;
-            background-size: 100% 4px, 6px 100%;
-            pointer-events: none;
+
+        @keyframes shake {
+            0% {
+                transform: translate(1px, 1px) rotate(0deg);
+            }
+
+            20% {
+                transform: translate(-3px, 0px) rotate(-1deg);
+            }
+
+            40% {
+                transform: translate(1px, -1px) rotate(1deg);
+            }
+
+            60% {
+                transform: translate(-1px, 2px) rotate(0deg);
+            }
+
+            80% {
+                transform: translate(3px, 1px) rotate(-1deg);
+            }
+
+            100% {
+                transform: translate(0, 0) rotate(0deg);
+            }
         }
+
+        .screen-shake {
+            animation: shake 0.5s cubic-bezier(.36, .07, .19, .97) both;
+        }
+
+        @keyframes pulse-gold {
+
+            0%,
+            100% {
+                filter: drop-shadow(0 0 12px #f59e0b);
+            }
+
+            50% {
+                filter: drop-shadow(0 0 28px #fbbf24);
+            }
+        }
+
+        .gold-glow {
+            animation: pulse-gold 1.5s infinite;
+        }
+
         ::-webkit-scrollbar {
             width: 8px;
         }
+
         ::-webkit-scrollbar-track {
             background: #1e1b4b;
         }
+
         ::-webkit-scrollbar-thumb {
-            background: #4f46e5;
-            border-radius: 2px;
+            background: #7c3aed;
         }
     </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen flex items-center justify-center p-2 md:p-6 select-none">
 
-    <div id="ipad-container" class="relative w-full max-w-5xl h-[820px] bg-slate-900 border-[12px] border-amber-900 rounded-[3rem] shadow-2xl flex flex-col overflow-hidden crt-scanlines">
-        
-        <!-- Top Bezel / Header Status Bar -->
-        <div class="bg-slate-950 px-6 py-3 border-b-4 border-amber-900/80 flex items-center justify-between z-30">
-            <div class="flex items-center space-x-3">
-                <div class="w-3 h-3 rounded-full bg-red-500 animate-pulse"></div>
-                <h1 class="pixel-font text-xs md:text-sm text-amber-400 tracking-wider">PIXEL DUNGEON TACTICS</h1>
+<body class="min-h-screen flex flex-col justify-between items-center p-4 sm:p-6 select-none relative">
+
+    <header
+        class="w-full max-w-4xl flex justify-between items-center bg-purple-950 p-4 sm:p-6 rounded-none pixel-border mb-6 z-10">
+        <div class="flex items-center space-x-3">
+            <span class="text-yellow-400 text-xl">🕹️</span>
+            <div>
+                <h1 class="text-xs sm:text-sm text-yellow-400 tracking-wider">PIXEL VAULT</h1>
+                <p class="text-[9px] text-purple-300 mt-1">iPad Indie Edition</p>
             </div>
-            
-            <div class="flex items-center space-x-4">
-                <button id="audio-toggle" onclick="toggleAudio()" class="pixel-button px-3 py-1 bg-indigo-800 hover:bg-indigo-700 text-xs pixel-font rounded border border-indigo-500">
-                    SOUND: ON
+        </div>
+        <div class="flex space-x-4 text-xs sm:text-sm">
+            <div class="bg-black/60 px-3 py-2 pixel-border flex items-center space-x-2">
+                <span class="text-yellow-400">🪙</span>
+                <span id="header-coins" class="text-yellow-300 font-bold">500</span>
+            </div>
+            <div class="bg-black/60 px-3 py-2 pixel-border flex items-center space-x-2">
+                <span class="text-purple-400">📦</span>
+                <span id="header-unique" class="text-purple-200 font-bold">0/14</span>
+            </div>
+        </div>
+    </header>
+
+    <main id="app-container"
+        class="w-full max-w-4xl flex-1 flex flex-col justify-center items-center relative z-10 mb-6">
+
+        <!-- HOME / SUMMON HALL VIEW -->
+        <div id="view-home" class="w-full flex flex-col items-center justify-center space-y-8 py-6">
+            <div class="text-center space-y-4">
+                <div
+                    class="inline-block bg-purple-900/90 px-6 py-3 pixel-border text-xs sm:text-sm text-yellow-300 animate-bounce">
+                    ✨ READY TO ROLL RARITIES! ✨
+                </div>
+                <p class="text-[10px] sm:text-xs text-purple-200 max-w-md mx-auto leading-relaxed">
+                    Test your luck in the arcade vault! Collect Common gear (80%) and Legendary Gold artifacts (20%).
+                </p>
+            </div>
+
+            <!-- Central Portal / Banner -->
+            <div
+                class="relative w-64 h-64 sm:w-80 sm:h-80 bg-slate-900 pixel-border flex flex-col items-center justify-center p-4 overflow-hidden group">
+                <div
+                    class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-purple-900/40 via-black to-black">
+                </div>
+                <div class="relative z-10 flex flex-col items-center space-y-4">
+                    <div class="text-6xl sm:text-7xl animate-pulse">🔮</div>
+                    <div class="text-center">
+                        <h2 class="text-xs sm:text-sm text-yellow-400 mb-1">ARCADE SUMMON</h2>
+                        <p class="text-[9px] text-purple-400">Cost: 50 Coins per Roll</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Action Buttons -->
+            <div class="flex flex-col sm:flex-row gap-4 w-full max-w-md px-4">
+                <button onclick="startRoll()" class="pixel-btn flex-1 bg-yellow-500 hover:bg-yellow-400 text-black font-bold py-4 px-6 text-xs sm:text-sm pixel-border flex items-center justify-center space-x-2">
+                    <span>⚡</span>
+                    <span>ROLL (50 🪙)</span>
                 </button>
-                <button id="crt-toggle" onclick="toggleCRT()" class="pixel-button px-3 py-1 bg-indigo-800 hover:bg-indigo-700 text-xs pixel-font rounded border border-indigo-500">
-                    CRT: ON
+                <button onclick="switchView('inventory')" class="pixel-btn flex-1 bg-purple-700 hover:bg-purple-600 text-white font-bold py-4 px-6 text-xs sm:text-sm pixel-border flex items-center justify-center space-x-2">
+                    <span>📦</span>
+                    <span>CARD BOX</span>
                 </button>
-                <button onclick="restartGame()" class="pixel-button px-3 py-1 bg-red-900 hover:bg-red-800 text-xs pixel-font rounded border border-red-500 text-red-200">
-                    RESET
+            </div>
+
+            <div class="flex gap-4">
+                <button onclick="earnCoins()" class="pixel-btn bg-emerald-700 hover:bg-emerald-600 text-white text-[10px] py-3 px-5 pixel-border">
+                    +100 FREE COINS 🪙
+                </button>
+                <button onclick="toggleAudio()" id="audio-toggle-btn" class="pixel-btn bg-slate-700 hover:bg-slate-600 text-white text-[10px] py-3 px-5 pixel-border">
+                    🔊 SOUND: ON
                 </button>
             </div>
         </div>
 
-        <!-- Main Game Area -->
-        <div class="flex-1 flex flex-col justify-between p-4 md:p-6 relative overflow-hidden bg-gradient-to-b from-slate-900 via-indigo-950/40 to-slate-900">
-            
-            <!-- Combat Stats / Arena Header -->
-            <div class="grid grid-cols-2 gap-4 z-20">
-                <!-- Player Status Card -->
-                <div class="bg-slate-900/90 border-4 border-emerald-600 p-3 rounded-xl pixel-border flex items-center justify-between">
-                    <div>
-                        <div class="pixel-font text-xs text-emerald-400 mb-1">HERO (LVL 1)</div>
-                        <div class="text-xs text-slate-300 font-bold mb-1">HP: <span id="player-hp" class="text-emerald-300">50</span>/<span id="player-max-hp">50</span></div>
-                        <div class="w-32 md:w-48 bg-slate-800 h-3 rounded border border-slate-600 overflow-hidden">
-                            <div id="player-hp-bar" class="bg-emerald-500 h-full transition-all duration-300" style="width: 100%;"></div>
-                        </div>
-                    </div>
-                    <div class="text-right">
-                        <div class="pixel-font text-[10px] text-amber-300 mb-1">SHIELD: <span id="player-shield">0</span></div>
-                        <div class="pixel-font text-[10px] text-cyan-300">ENERGY: <span id="player-energy">3</span>/<span id="player-max-energy">3</span></div>
-                    </div>
+        <!-- ROLLING REEL ANIMATION VIEW -->
+        <div id="view-roll" class="hidden w-full flex flex-col items-center justify-center space-y-8 py-8">
+            <div class="text-center space-y-2">
+                <h2 class="text-sm sm:text-base text-yellow-400 animate-pulse">SUMMONING IN PROGRESS...</h2>
+                <p class="text-[10px] text-purple-300">Shuffling the arcade deck!</p>
+            </div>
+
+            <!-- Reel Window with generous height & spacing -->
+            <div class="w-full max-w-2xl h-72 bg-black pixel-border relative overflow-hidden flex items-center">
+                <!-- Center Drop Line Indicator -->
+                <div class="absolute inset-y-0 left-1/2 -translate-x-1/2 w-1 bg-red-500 z-30 shadow-[0_0_12px_#ef4444]">
+                </div>
+                <div
+                    class="absolute top-2 left-1/2 -translate-x-1/2 bg-red-500 text-black text-[8px] px-2 py-0.5 font-bold z-30 pixel-border">
+                    DROP ZONE
                 </div>
 
-                <!-- Boss Status Card -->
-                <div class="bg-slate-900/90 border-4 border-rose-600 p-3 rounded-xl pixel-border flex items-center justify-between">
-                    <div class="text-left">
-                        <div class="pixel-font text-xs text-rose-400 mb-1">DUNGEON LORD</div>
-                        <div class="text-xs text-slate-300 font-bold mb-1">HP: <span id="enemy-hp" class="text-rose-300">80</span>/<span id="enemy-max-hp">80</span></div>
-                        <div class="w-32 md:w-48 bg-slate-800 h-3 rounded border border-slate-600 overflow-hidden">
-                            <div id="enemy-hp-bar" class="bg-rose-500 h-full transition-all duration-300" style="width: 100%;"></div>
-                        </div>
-                    </div>
-                    <div class="text-right">
-                        <div class="pixel-font text-[10px] text-rose-300 mb-1">INTENT</div>
-                        <div id="enemy-intent" class="pixel-font text-xs text-amber-300 bg-rose-950/80 px-2 py-1 rounded border border-rose-700 inline-block">
-                            ⚔️ ATTACK (8)
-                        </div>
-                        <div class="pixel-font text-[10px] text-slate-400 mt-1">SHIELD: <span id="enemy-shield">0</span></div>
-                    </div>
+                <!-- Sliding Track -->
+                <div id="reel-track" class="flex absolute left-0 transition-all ease-out"
+                    style="transition-duration: 4000ms; transform: translateX(0px);">
+                    <!-- Dynamically populated reel items -->
                 </div>
             </div>
 
-            <!-- Central Battle Arena (Sprites & Log) -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 my-2 items-center z-20 flex-1">
-                <!-- Hero Sprite Area -->
-                <div class="flex flex-col items-center justify-center relative">
-                    <div id="hero-sprite" class="w-24 h-24 md:w-32 md:h-32 bg-indigo-900/60 border-4 border-indigo-600 rounded-2xl flex items-center justify-center pixel-border shadow-lg relative">
-                        <span class="text-4xl md:text-5xl animate-bounce">🛡️</span>
-                        <div id="hero-floating-text" class="absolute -top-6 pixel-font text-xs text-emerald-400 font-bold opacity-0 transition-all"></div>
-                    </div>
-                    <span class="pixel-font text-[10px] text-indigo-300 mt-2">PLAYER CHARACTER</span>
+            <div id="roll-result-actions" class="hidden flex flex-col items-center space-y-4">
+                <div id="roll-result-banner" class="bg-purple-950 p-5 pixel-border text-center max-w-md">
+                    <p id="roll-result-text" class="text-xs sm:text-sm text-yellow-300 mb-2"></p>
+                    <p id="roll-result-sub" class="text-[10px] text-purple-300"></p>
                 </div>
-
-                <!-- Battle Log & Turn Indicator -->
-                <div class="flex flex-col h-full justify-between bg-slate-950/80 border-2 border-slate-700 rounded-xl p-3">
-                    <div class="flex justify-between items-center mb-2 border-b border-slate-800 pb-1">
-                        <span class="pixel-font text-[10px] text-amber-400">COMBAT LOG</span>
-                        <span id="turn-indicator" class="pixel-font text-[10px] text-cyan-300">PLAYER TURN</span>
-                    </div>
-                    <div id="battle-log" class="flex-1 overflow-y-auto text-xs text-slate-300 space-y-1 font-mono pr-1 max-h-28">
-                        <div>[System] Dungeon battle started! Defeat the Dungeon Lord.</div>
-                    </div>
-                    <div class="mt-2 pt-2 border-t border-slate-800 flex justify-between items-center text-[10px] pixel-font">
-                        <span class="text-slate-400">DECK: <span id="deck-count">10</span></span>
-                        <span class="text-slate-400">DISCARD: <span id="discard-count">0</span></span>
-                    </div>
-                </div>
-
-                <!-- Boss Sprite Area -->
-                <div class="flex flex-col items-center justify-center relative">
-                    <div id="boss-sprite" class="w-24 h-24 md:w-32 md:h-32 bg-rose-950/60 border-4 border-rose-600 rounded-2xl flex items-center justify-center pixel-border shadow-lg relative">
-                        <span class="text-4xl md:text-5xl animate-pulse">👹</span>
-                        <div id="boss-floating-text" class="absolute -top-6 pixel-font text-xs text-rose-400 font-bold opacity-0 transition-all"></div>
-                    </div>
-                    <span class="pixel-font text-[10px] text-rose-300 mt-2">DUNGEON LORD</span>
-                </div>
-            </div>
-
-            <!-- Player Hand & Action Controls -->
-            <div class="z-20 bg-slate-950/90 border-4 border-indigo-900/80 rounded-2xl p-4 flex flex-col md:flex-row items-center justify-between gap-4">
-                
-                <!-- Cards Hand Container -->
-                <div id="cards-container" class="flex flex-wrap items-center justify-center gap-4 min-h-[160px] flex-1">
-                    <!-- Dynamically populated cards go here -->
-                </div>
-
-                <!-- End Turn / Action Panel -->
-                <div class="flex flex-col justify-center items-center gap-2 min-w-[150px]">
-                    <button id="end-turn-btn" onclick="endPlayerTurn()" class="pixel-button w-full px-4 py-3 bg-amber-600 hover:bg-amber-500 text-amber-950 font-bold pixel-font text-xs rounded-xl border-2 border-amber-400 shadow-lg">
-                        END TURN
+                <div class="flex gap-4">
+                    <button onclick="startRoll()" class="pixel-btn bg-yellow-500 hover:bg-yellow-400 text-black font-bold py-3 px-6 text-xs pixel-border">
+                        ROLL AGAIN ⚡
                     </button>
-                    <div class="pixel-font text-[9px] text-slate-400 text-center">
-                        Click card to play
-                    </div>
+                    <button onclick="switchView('home')" class="pixel-btn bg-purple-700 hover:bg-purple-600 text-white font-bold py-3 px-6 text-xs pixel-border">
+                        MAIN MENU 🏠
+                    </button>
                 </div>
-
             </div>
-
         </div>
 
-    </div>
+        <!-- CARD BOX (INVENTORY) VIEW WITH SPACIOUS GRID -->
+        <div id="view-inventory" class="hidden w-full flex flex-col items-center justify-center space-y-6 py-4">
+            <div class="w-full flex justify-between items-center bg-purple-950 p-4 pixel-border">
+                <div class="flex items-center space-x-2">
+                    <span class="text-yellow-400">📦</span>
+                    <h2 class="text-xs sm:text-sm text-yellow-300">CARD BOX INVENTORY</h2>
+                </div>
+                <button onclick="switchView('home')" class="pixel-btn bg-red-700 hover:bg-red-600 text-white text-[10px] py-2 px-4 pixel-border">
+                    BACK 🏠
+                </button>
+            </div>
 
-    <!-- Victory / Defeat Modal Overlay -->
-    <div id="game-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center hidden">
-        <div class="bg-slate-900 border-4 border-amber-500 p-8 rounded-3xl max-w-md w-full text-center pixel-border shadow-2xl">
-            <h2 id="modal-title" class="pixel-font text-lg text-amber-400 mb-4">VICTORY!</h2>
-            <p id="modal-desc" class="text-xs text-slate-300 mb-6 font-mono leading-relaxed">You have vanquished the Dungeon Lord and claimed eternal glory!</p>
-            <button onclick="restartGame()" class="pixel-button px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white pixel-font text-xs rounded-xl border-2 border-emerald-400">
-                PLAY AGAIN
+            <!-- Stats Summary -->
+            <div class="w-full grid grid-cols-2 sm:grid-cols-4 gap-3 text-center text-[10px]">
+                <div class="bg-purple-950/90 p-3 pixel-border">
+                    <span class="text-purple-400 block mb-1">TOTAL ROLLS</span>
+                    <span id="stat-total-rolls" class="text-white font-bold">0</span>
+                </div>
+                <div class="bg-purple-950/90 p-3 pixel-border">
+                    <span class="text-slate-400 block mb-1">COMMONS</span>
+                    <span id="stat-common-count" class="text-slate-200 font-bold">0</span>
+                </div>
+                <div class="bg-purple-950/90 p-3 pixel-border">
+                    <span class="text-yellow-400 block mb-1">GOLDS</span>
+                    <span id="stat-gold-count" class="text-yellow-300 font-bold">0</span>
+                </div>
+                <div class="bg-purple-950/90 p-3 pixel-border">
+                    <span class="text-emerald-400 block mb-1">LUCK RATE</span>
+                    <span id="stat-luck-rate" class="text-emerald-300 font-bold">0%</span>
+                </div>
+            </div>
+
+            <!-- Spacious Cards Grid -->
+            <div id="inventory-grid"
+                class="w-full grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 max-h-[55vh] overflow-y-auto p-4 bg-black/50 pixel-border">
+                <!-- Cards injected via JS -->
+            </div>
+        </div>
+
+    </main>
+
+    <div id="card-modal" class="fixed inset-0 bg-black/85 z-50 hidden flex items-center justify-center p-4">
+        <div
+            class="bg-purple-950 p-6 sm:p-8 pixel-border max-w-sm w-full flex flex-col items-center space-y-5 relative">
+            <button onclick="closeModal()" class="absolute top-3 right-3 text-red-400 hover:text-red-300 text-sm font-bold px-3 py-1">✕</button>
+            <div id="modal-card-container"
+                class="w-36 h-52 bg-slate-900 pixel-border flex items-center justify-center relative overflow-hidden">
+                <!-- Modal card image / fallback -->
+            </div>
+            <div class="text-center space-y-2">
+                <h3 id="modal-card-name" class="text-xs sm:text-sm text-yellow-400">Card Name</h3>
+                <p id="modal-card-rarity" class="text-[10px] text-purple-300 uppercase">Common</p>
+                <p id="modal-card-desc" class="text-[9px] text-slate-300 leading-relaxed px-2">Card description goes
+                    here.</p>
+                <div class="bg-black/60 p-2.5 pixel-border text-[10px] mt-3">
+                    <span>Collected: </span><span id="modal-card-count" class="text-yellow-300 font-bold">0</span>
+                </div>
+            </div>
+            <button onclick="closeModal()" class="pixel-btn bg-purple-700 hover:bg-purple-600 text-white text-[10px] py-3 px-6 pixel-border w-full">
+                CLOSE
             </button>
         </div>
     </div>
 
+    <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col space-y-2 pointer-events-none"></div>
+
+    <footer class="w-full max-w-4xl text-center text-[8px] text-purple-400/60 py-2 z-10">
+        PIXEL VAULT INDIE ARCADE • OPTIMIZED FOR IPAD & TOUCH DEVICES
+    </footer>
+
     <script>
-        let audioCtx = null;
-        let soundEnabled = true;
-        let crtEnabled = true;
+        class SoundEngine {
+            constructor() {
+                this.ctx = null;
+                this.enabled = true;
+            }
 
-        function initAudio() {
-            if (!audioCtx) {
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            init() {
+                if (!this.ctx) {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    this.ctx = new AudioContext();
+                }
+                if (this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            }
+
+            playTick() {
+                if (!this.enabled) return;
+                this.init();
+                try {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(400, this.ctx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(800, this.ctx.currentTime + 0.05);
+                    gain.gain.setValueAtTime(0.05, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.05);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + 0.05);
+                } catch(e) {}
+            }
+
+            playCommonDrop() {
+                if (!this.enabled) return;
+                this.init();
+                try {
+                    const now = this.ctx.currentTime;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(220, now);
+                    osc.frequency.setValueAtTime(330, now + 0.1);
+                    gain.gain.setValueAtTime(0.1, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.3);
+                } catch(e) {}
+            }
+
+            playGoldFanfare() {
+                if (!this.enabled) return;
+                this.init();
+                try {
+                    const now = this.ctx.currentTime;
+                    const notes = [523.25, 659.25, 783.99, 1046.50];
+                    notes.forEach((freq, idx) => {
+                        const osc = this.ctx.createOscillator();
+                        const gain = this.ctx.createGain();
+                        osc.type = 'sawtooth';
+                        osc.frequency.setValueAtTime(freq, now + (idx * 0.12));
+                        gain.gain.setValueAtTime(0.15, now + (idx * 0.12));
+                        gain.gain.exponentialRampToValueAtTime(0.001, now + (idx * 0.12) + 0.4);
+                        osc.connect(gain);
+                        gain.connect(this.ctx.destination);
+                        osc.start(now + (idx * 0.12));
+                        osc.stop(now + (idx * 0.12) + 0.4);
+                    });
+                } catch(e) {}
             }
         }
 
-        function playSound(type) {
-            if (!soundEnabled) return;
-            initAudio();
-            if (!audioCtx) return;
-
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-
-            const now = audioCtx.currentTime;
-
-            if (type === 'card_play') {
-                osc.type = 'triangle';
-                osc.frequency.setValueAtTime(300, now);
-                osc.frequency.exponentialRampToValueAtTime(600, now + 0.15);
-                gain.gain.setValueAtTime(0.15, now);
-                gain.gain.linearRampToValueAtTime(0.01, now + 0.15);
-                osc.start(now);
-                osc.stop(now + 0.15);
-            } else if (type === 'attack') {
-                osc.type = 'sawtooth';
-                osc.frequency.setValueAtTime(150, now);
-                osc.frequency.exponentialRampToValueAtTime(40, now + 0.2);
-                gain.gain.setValueAtTime(0.25, now);
-                gain.gain.linearRampToValueAtTime(0.01, now + 0.2);
-                osc.start(now);
-                osc.stop(now + 0.2);
-            } else if (type === 'shield') {
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(400, now);
-                osc.frequency.exponentialRampToValueAtTime(800, now + 0.25);
-                gain.gain.setValueAtTime(0.2, now);
-                gain.gain.linearRampToValueAtTime(0.01, now + 0.25);
-                osc.start(now);
-                osc.stop(now + 0.25);
-            } else if (type === 'heal') {
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(250, now);
-                osc.frequency.setValueAtTime(350, now + 0.1);
-                osc.frequency.setValueAtTime(500, now + 0.2);
-                gain.gain.setValueAtTime(0.2, now);
-                gain.gain.linearRampToValueAtTime(0.01, now + 0.3);
-                osc.start(now);
-                osc.stop(now + 0.3);
-            } else if (type === 'win') {
-                osc.type = 'square';
-                osc.frequency.setValueAtTime(261.63, now);
-                osc.frequency.setValueAtTime(329.63, now + 0.15);
-                osc.frequency.setValueAtTime(392.00, now + 0.3);
-                osc.frequency.setValueAtTime(523.25, now + 0.45);
-                gain.gain.setValueAtTime(0.2, now);
-                gain.gain.linearRampToValueAtTime(0.01, now + 0.7);
-                osc.start(now);
-                osc.stop(now + 0.7);
-            } else if (type === 'lose') {
-                osc.type = 'sawtooth';
-                osc.frequency.setValueAtTime(300, now);
-                osc.frequency.linearRampToValueAtTime(100, now + 0.5);
-                gain.gain.setValueAtTime(0.25, now);
-                gain.gain.linearRampToValueAtTime(0.01, now + 0.5);
-                osc.start(now);
-                osc.stop(now + 0.5);
-            }
-        }
+        const soundSystem = new SoundEngine();
 
         function toggleAudio() {
-            soundEnabled = !soundEnabled;
-            document.getElementById('audio-toggle').innerText = `SOUND: ${soundEnabled ? 'ON' : 'OFF'}`;
-        }
-
-        function toggleCRT() {
-            crtEnabled = !crtEnabled;
-            const container = document.getElementById('ipad-container');
-            if (crtEnabled) {
-                container.classList.add('crt-scanlines');
-                document.getElementById('crt-toggle').innerText = 'CRT: ON';
-            } else {
-                container.classList.remove('crt-scanlines');
-                document.getElementById('crt-toggle').innerText = 'CRT: OFF';
-            }
+            soundSystem.enabled = !soundSystem.enabled;
+            const btn = document.getElementById('audio-toggle-btn');
+            btn.innerText = soundSystem.enabled ? "🔊 SOUND: ON" : "🔇 SOUND: OFF";
+            btn.className = soundSystem.enabled ? "pixel-btn bg-slate-700 hover:bg-slate-600 text-white text-[10px] py-3 px-5 pixel-border" : "pixel-btn bg-red-900 hover:bg-red-800 text-white text-[10px] py-3 px-5 pixel-border";
+            showToast(soundSystem.enabled ? "Sound Enabled" : "Sound Muted");
         }
     </script>
 
     <script>
-        const ALL_CARDS = [
-            { id: 'strike', name: 'PIXEL STRIKE', type: 'attack', cost: 1, value: 6, desc: 'Deal 6 damage to enemy.', isGold: false },
-            { id: 'strike', name: 'PIXEL STRIKE', type: 'attack', cost: 1, value: 6, desc: 'Deal 6 damage to enemy.', isGold: false },
-            { id: 'strike', name: 'PIXEL STRIKE', type: 'attack', cost: 1, value: 6, desc: 'Deal 6 damage to enemy.', isGold: false },
-            { id: 'defend', name: 'CHUNKY SHIELD', type: 'skill', cost: 1, value: 5, desc: 'Gain 5 armor shield.', isGold: false },
-            { id: 'defend', name: 'CHUNKY SHIELD', type: 'skill', cost: 1, value: 5, desc: 'Gain 5 armor shield.', isGold: false },
-            { id: 'defend', name: 'CHUNKY SHIELD', type: 'skill', cost: 1, value: 5, desc: 'Gain 5 armor shield.', isGold: false },
-            { id: 'heal', name: 'MINOR POTION', type: 'skill', cost: 1, value: 4, desc: 'Restore 4 HP.', isGold: false },
-            { id: 'heavy', name: 'HEAVY SLASH', type: 'attack', cost: 2, value: 12, desc: 'Deal 12 heavy damage.', isGold: false },
-            { id: 'gold_strike', name: 'GOLDEN BLADE', type: 'attack', cost: 1, value: 14, desc: 'Deal 14 damage with gold power.', isGold: true },
-            { id: 'gold_shield', name: 'AEGIS SHIELD', type: 'skill', cost: 2, value: 12, desc: 'Gain 12 heavy armor shield.', isGold: true }
+        const CARD_DATABASE = [
+            // Common Cards
+            { id: 'c_rusty_sword', name: 'Rusty Sword', rarity: 'common', asset: 'assets/card.png', desc: 'A worn blade from ancient battles. Reliable enough.' },
+            { id: 'c_wooden_shield', name: 'Wooden Shield', rarity: 'common', asset: 'assets/card.png', desc: 'Sturdy oak plank bound with rusted iron bands.' },
+            { id: 'c_slime_jelly', name: 'Slime Jelly', rarity: 'common', asset: 'assets/card.png', desc: 'Squishy green ooze harvested from dungeon floors.' },
+            { id: 'c_leather_cap', name: 'Leather Cap', rarity: 'common', asset: 'assets/card.png', desc: 'Simple headgear offering minimal protection.' },
+            { id: 'c_copper_coin', name: 'Copper Coin', rarity: 'common', asset: 'assets/card.png', desc: 'Small denomination currency found in piles.' },
+            { id: 'c_broken_wand', name: 'Broken Wand', rarity: 'common', asset: 'assets/card.png', desc: 'Sparks occasionally, mostly useless now.' },
+            { id: 'c_apple_core', name: 'Apple Core', rarity: 'common', asset: 'assets/card.png', desc: 'A snack left behind by a previous adventurer.' },
+            { id: 'c_stone_pebble', name: 'Stone Pebble', rarity: 'common', asset: 'assets/card.png', desc: 'A heavy rock. Good for throwing at goblins.' },
+
+            // Gold / Rare Cards
+            { id: 'g_golden_crown', name: 'Golden Crown', rarity: 'gold', asset: 'assets/gold.png', desc: 'Fit for an arcade king. Radiates pure wealth.' },
+            { id: 'g_dragon_scale', name: 'Dragon Scale', rarity: 'gold', asset: 'assets/gold.png', desc: 'Impenetrable scale shimmering with fiery hues.' },
+            { id: 'g_excalibur', name: 'Excalibur', rarity: 'gold', asset: 'assets/gold.png', desc: 'Legendary sacred blade of the pixel realm.' },
+            { id: 'g_philosopher_stone', name: 'Philosophers Stone', rarity: 'gold', asset: 'assets/gold.png', desc: 'Alchemical wonder pulsating with endless energy.' },
+            { id: 'g_royal_chalice', name: 'Royal Chalice', rarity: 'gold', asset: 'assets/gold.png', desc: 'Jewel-encrusted cup used in royal banquets.' },
+            { id: 'g_diamond_ring', name: 'Diamond Ring', rarity: 'gold', asset: 'assets/gold.png', desc: 'Flawless gemstone catching the arcade lights.' }
         ];
 
         let gameState = {
-            playerHP: 50,
-            playerMaxHP: 50,
-            playerShield: 0,
-            playerEnergy: 3,
-            playerMaxEnergy: 3,
-            enemyHP: 80,
-            enemyMaxHP: 80,
-            enemyShield: 0,
-            enemyIntentType: 'attack',
-            enemyIntentValue: 8,
-            deck: [],
-            hand: [],
-            discard: [],
-            isPlayerTurn: true
+            coins: 500,
+            totalRolls: 0,
+            commonCount: 0,
+            goldCount: 0,
+            inventory: {}
         };
 
-        function shuffle(array) {
-            for (let i = array.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [array[i], array[j]] = [array[j], array[i]];
+        function loadGame() {
+            const saved = localStorage.getItem('pixel_vault_save');
+            if (saved) {
+                try {
+                    gameState = JSON.parse(saved);
+                } catch(e) {
+                    console.error("Failed to load save", e);
+                }
             }
-            return array;
+            updateHeaderStats();
         }
 
-        function initGame() {
-            gameState.playerHP = gameState.playerMaxHP;
-            gameState.playerShield = 0;
-            gameState.playerEnergy = gameState.playerMaxEnergy;
-            gameState.enemyHP = gameState.enemyMaxHP;
-            gameState.enemyShield = 0;
-            gameState.isPlayerTurn = true;
-
-            gameState.deck = shuffle(JSON.parse(JSON.stringify(ALL_CARDS)));
-            gameState.hand = [];
-            gameState.discard = [];
-
-            document.getElementById('game-modal').classList.add('hidden');
-            logMessage('[System] New dungeon run initiated.');
-            
-            drawCards(4);
-            updateUI();
+        function saveGame() {
+            localStorage.setItem('pixel_vault_save', JSON.stringify(gameState));
+            updateHeaderStats();
         }
 
-        function restartGame() {
-            initGame();
+        function updateHeaderStats() {
+            document.getElementById('header-coins').innerText = gameState.coins;
+            const uniqueCollected = Object.keys(gameState.inventory).filter(id => gameState.inventory[id] > 0).length;
+            document.getElementById('header-unique').innerText = `${uniqueCollected}/${CARD_DATABASE.length}`;
         }
 
-        function logMessage(msg) {
-            const logContainer = document.getElementById('battle-log');
-            const div = document.createElement('div');
-            div.textContent = msg;
-            logContainer.appendChild(div);
-            logContainer.scrollTop = logContainer.scrollHeight;
+        function earnCoins() {
+            soundSystem.init();
+            gameState.coins += 100;
+            saveGame();
+            showToast("+100 Coins Claimed! 🪙", "emerald");
         }
     </script>
 
     <script>
-        function drawCards(amount) {
-            for (let i = 0; i < amount; i++) {
-                if (gameState.deck.length === 0) {
-                    if (gameState.discard.length === 0) break;
-                    gameState.deck = shuffle(gameState.discard);
-                    gameState.discard = [];
-                    logMessage('[System] Deck reshuffled from discard pile.');
-                }
-                const card = gameState.deck.pop();
-                gameState.hand.push(card);
-            }
-            updateUI();
+        function createCardImageElement(card) {
+            const container = document.createElement('div');
+            container.className = "w-full h-full relative flex items-center justify-center pixel-card bg-black";
+            
+            const img = document.createElement('img');
+            img.src = card.asset;
+            img.className = "w-full h-full object-cover pixel-card";
+            
+            // Fallback if card.png or gold.png are missing from assets folder
+            img.onerror = function() {
+                this.style.display = 'none';
+                const fallbackDiv = document.createElement('div');
+                fallbackDiv.className = `w-full h-full flex flex-col items-center justify-center p-2 text-center ${card.rarity === 'gold' ? 'bg-amber-950 text-yellow-300 gold-glow' : 'bg-slate-900 text-slate-300'}`;
+                
+                const icon = document.createElement('span');
+                icon.className = "text-4xl";
+                icon.innerText = card.rarity === 'gold' ? '👑' : '🛡️';
+
+                fallbackDiv.appendChild(icon);
+                container.appendChild(fallbackDiv);
+            };
+
+            container.appendChild(img);
+            return container;
         }
 
-        function playCard(index) {
-            if (!gameState.isPlayerTurn) return;
-            const card = gameState.hand[index];
+        function showToast(message, type = "yellow") {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `bg-purple-950 text-${type === 'emerald' ? 'emerald-300' : 'yellow-300'} text-[10px] px-4 py-2 pixel-border shadow-lg animate-bounce`;
+            toast.innerText = message;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.remove();
+            }, 2500);
+        }
 
-            if (gameState.playerEnergy < card.cost) {
-                logMessage('[Warning] Not enough energy to play card!');
+        function switchView(viewName) {
+            soundSystem.init();
+            document.getElementById('view-home').classList.add('hidden');
+            document.getElementById('view-roll').classList.add('hidden');
+            document.getElementById('view-inventory').classList.add('hidden');
+
+            if (viewName === 'home') {
+                document.getElementById('view-home').classList.remove('hidden');
+                updateHeaderStats();
+            } else if (viewName === 'roll') {
+                document.getElementById('view-roll').classList.remove('hidden');
+            } else if (viewName === 'inventory') {
+                document.getElementById('view-inventory').classList.remove('hidden');
+                renderInventory();
+            }
+        }
+    </script>
+
+    <script>
+        function startRoll() {
+            if (gameState.coins < 50) {
+                showToast("Not enough coins! Earn free coins below.", "yellow");
                 return;
             }
 
-            playSound('card_play');
-            gameState.playerEnergy -= card.cost;
-            gameState.hand.splice(index, 1);
-            gameState.discard.push(card);
+            gameState.coins -= 50;
+            saveGame();
+            switchView('roll');
 
-            if (card.type === 'attack') {
-                let damage = card.value;
-                if (gameState.enemyShield > 0) {
-                    if (gameState.enemyShield >= damage) {
-                        gameState.enemyShield -= damage;
-                        damage = 0;
-                    } else {
-                        damage -= gameState.enemyShield;
-                        gameState.enemyShield = 0;
-                    }
-                }
-                if (damage > 0) {
-                    gameState.enemyHP = Math.max(0, gameState.enemyHP - damage);
-                }
-                playSound('attack');
-                showFloatingText('boss-sprite', `-${card.value}`, 'text-rose-400');
-                logMessage(`[Player] Played ${card.name} for ${card.value} damage!`);
-            } else if (card.type === 'skill') {
-                if (card.id === 'defend' || card.id === 'gold_shield') {
-                    gameState.playerShield += card.value;
-                    playSound('shield');
-                    showFloatingText('hero-floating-text', `+${card.value} SHIELD`, 'text-cyan-300');
-                    logMessage(`[Player] Played ${card.name}, gaining ${card.value} shield.`);
-                } else if (card.id === 'heal') {
-                    gameState.playerHP = Math.min(gameState.playerMaxHP, gameState.playerHP + card.value);
-                    playSound('heal');
-                    showFloatingText('hero-floating-text', `+${card.value} HP`, 'text-emerald-400');
-                    logMessage(`[Player] Played ${card.name}, healing ${card.value} HP.`);
+            const track = document.getElementById('reel-track');
+            track.innerHTML = '';
+            document.getElementById('roll-result-actions').classList.add('hidden');
+            track.style.transition = 'none';
+            track.style.transform = 'translateX(0px)';
+
+            // 80% Common, 20% Gold drop rates
+            const isGold = Math.random() < 0.20;
+            const commonCards = CARD_DATABASE.filter(c => c.rarity === 'common');
+            const goldCards = CARD_DATABASE.filter(c => c.rarity === 'gold');
+
+            const winningCard = isGold 
+                ? goldCards[Math.floor(Math.random() * goldCards.length)]
+                : commonCards[Math.floor(Math.random() * commonCards.length)];
+
+            const totalItems = 30;
+            const winningIndex = 25;
+            const reelCards = [];
+
+            for (let i = 0; i < totalItems; i++) {
+                if (i === winningIndex) {
+                    reelCards.push(winningCard);
+                } else {
+                    const pool = Math.random() < 0.8 ? commonCards : goldCards;
+                    reelCards.push(pool[Math.floor(Math.random() * pool.length)]);
                 }
             }
 
-            updateUI();
-            checkWinCondition();
-        }
+            // Render reel items with generous spacing and distinct outlines
+            reelCards.forEach((card) => {
+                const itemWrapper = document.createElement('div');
+                itemWrapper.className = `w-36 h-52 mx-3 bg-slate-950 p-2.5 flex flex-col items-center justify-between flex-shrink-0 ${card.rarity === 'gold' ? 'pixel-card-border gold-glow bg-amber-950/40' : 'pixel-common-border bg-slate-900'}`;
+                
+                const cardImgContainer = document.createElement('div');
+                cardImgContainer.className = "w-full h-38 bg-black overflow-hidden relative border-2 border-purple-900";
+                cardImgContainer.appendChild(createCardImageElement(card));
+                
+                const label = document.createElement('span');
+                label.className = `text-[9px] font-bold text-center truncate w-full mt-2 ${card.rarity === 'gold' ? 'text-yellow-400' : 'text-slate-300'}`;
+                label.innerText = card.name;
 
-        function endPlayerTurn() {
-            if (!gameState.isPlayerTurn) return;
-            gameState.isPlayerTurn = false;
-            document.getElementById('turn-indicator').innerText = 'ENEMY TURN';
-            logMessage('[System] Player ended turn.');
+                itemWrapper.appendChild(cardImgContainer);
+                itemWrapper.appendChild(label);
+                track.appendChild(itemWrapper);
+            });
 
-            gameState.discard.push(...gameState.hand);
-            gameState.hand = [];
-            updateUI();
+            // Card width (144px + 24px total margins = 168px per step)
+            const cardWidthWithMargin = 168;
+            const containerWidth = track.parentElement.clientWidth;
+            const targetTranslateX = -1 * (winningIndex * cardWidthWithMargin - (containerWidth / 2) + (cardWidthWithMargin / 2));
 
-            setTimeout(enemyTurn, 800);
-        }
-
-        function enemyTurn() {
-            if (gameState.enemyHP <= 0) return;
-
-            logMessage(`[Enemy] Dungeon Lord performs ${gameState.enemyIntentType.toUpperCase()}!`);
-
-            if (gameState.enemyIntentType === 'attack') {
-                let incomingDamage = gameState.enemyIntentValue;
-                if (gameState.playerShield > 0) {
-                    if (gameState.playerShield >= incomingDamage) {
-                        gameState.playerShield -= incomingDamage;
-                        incomingDamage = 0;
-                    } else {
-                        incomingDamage -= gameState.playerShield;
-                        gameState.playerShield = 0;
-                    }
-                }
-                if (incomingDamage > 0) {
-                    gameState.playerHP = Math.max(0, gameState.playerHP - incomingDamage);
-                }
-                playSound('attack');
-                showFloatingText('hero-floating-text', `-${gameState.enemyIntentValue}`, 'text-rose-400');
-            } else if (gameState.enemyIntentType === 'defend') {
-                gameState.enemyShield += 6;
-                playSound('shield');
-                showFloatingText('boss-sprite', `+6 SHIELD`, 'text-cyan-300');
-            }
-
-            const intents = [
-                { type: 'attack', val: 7 },
-                { type: 'attack', val: 11 },
-                { type: 'defend', val: 6 }
-            ];
-            const nextIntent = intents[Math.floor(Math.random() * intents.length)];
-            gameState.enemyIntentType = nextIntent.type;
-            gameState.enemyIntentValue = nextIntent.val;
+            let tickCount = 0;
+            const tickInterval = setInterval(() => {
+                soundSystem.playTick();
+                tickCount++;
+                if (tickCount > 25) clearInterval(tickInterval);
+            }, 120);
 
             setTimeout(() => {
-                gameState.isPlayerTurn = true;
-                gameState.playerEnergy = gameState.playerMaxEnergy;
-                gameState.playerShield = 0;
-                document.getElementById('turn-indicator').innerText = 'PLAYER TURN';
-                logMessage('[System] Player turn started. Draw 4 cards.');
-                drawCards(4);
-                updateUI();
-                checkWinCondition();
-            }, 800);
-        }
+                track.style.transition = 'transform 3.5s cubic-bezier(0.15, 0.85, 0.25, 1)';
+                track.style.transform = `translateX(${targetTranslateX}px)`;
+            }, 50);
 
-        function checkWinCondition() {
-            if (gameState.enemyHP <= 0) {
-                playSound('win');
-                showModal('VICTORY!', 'You defeated the Dungeon Lord and conquered the pixel dungeon!');
-            } else if (gameState.playerHP <= 0) {
-                playSound('lose');
-                showModal('DEFEAT', 'You were overwhelmed by the Dungeon Lord. Try again!');
-            }
-        }
-
-        function showModal(title, desc) {
-            document.getElementById('modal-title').innerText = title;
-            document.getElementById('modal-desc').innerText = desc;
-            document.getElementById('game-modal').classList.remove('hidden');
-        }
-
-        function showFloatingText(elementId, text, colorClass) {
-            const el = document.getElementById(elementId);
-            if (!el) return;
-            el.innerText = text;
-            el.className = `absolute -top-8 pixel-font text-xs font-bold transition-all duration-500 opacity-100 ${colorClass}`;
             setTimeout(() => {
-                el.className = 'absolute -top-6 pixel-font text-xs font-bold opacity-0 transition-all';
-            }, 700);
+                clearInterval(tickInterval);
+                recordRollResult(winningCard);
+            }, 3600);
+        }
+
+        function recordRollResult(card) {
+            gameState.totalRolls++;
+            if (card.rarity === 'gold') {
+                gameState.goldCount++;
+                soundSystem.playGoldFanfare();
+                document.body.classList.add('screen-shake');
+                setTimeout(() => document.body.classList.remove('screen-shake'), 500);
+                showToast("✨ LEGENDARY GOLD DROP! ✨", "yellow");
+            } else {
+                gameState.commonCount++;
+                soundSystem.playCommonDrop();
+                showToast("Common Card Acquired", "yellow");
+            }
+
+            if (!gameState.inventory[card.id]) {
+                gameState.inventory[card.id] = 0;
+            }
+            gameState.inventory[card.id]++;
+            saveGame();
+
+            const resultActions = document.getElementById('roll-result-actions');
+            const resultText = document.getElementById('roll-result-text');
+            const resultSub = document.getElementById('roll-result-sub');
+
+            resultText.innerText = `YOU WON: ${card.name.toUpperCase()} (${card.rarity.toUpperCase()})`;
+            resultSub.innerText = card.desc;
+            resultActions.classList.remove('hidden');
         }
     </script>
 
     <script>
-        function updateUI() {
-            document.getElementById('player-hp').innerText = gameState.playerHP;
-            document.getElementById('player-max-hp').innerText = gameState.playerMaxHP;
-            document.getElementById('player-hp-bar').style.width = `${(gameState.playerHP / gameState.playerMaxHP) * 100}%`;
-            document.getElementById('player-shield').innerText = gameState.playerShield;
-            document.getElementById('player-energy').innerText = gameState.playerEnergy;
+        function renderInventory() {
+            const grid = document.getElementById('inventory-grid');
+            grid.innerHTML = '';
 
-            document.getElementById('enemy-hp').innerText = gameState.enemyHP;
-            document.getElementById('enemy-max-hp').innerText = gameState.enemyMaxHP;
-            document.getElementById('enemy-hp-bar').style.width = `${(gameState.enemyHP / gameState.enemyMaxHP) * 100}%`;
-            document.getElementById('enemy-shield').innerText = gameState.enemyShield;
+            document.getElementById('stat-total-rolls').innerText = gameState.totalRolls;
+            document.getElementById('stat-common-count').innerText = gameState.commonCount;
+            document.getElementById('stat-gold-count').innerText = gameState.goldCount;
+            
+            const luckRate = gameState.totalRolls > 0 ? ((gameState.goldCount / gameState.totalRolls) * 100).toFixed(1) : 0;
+            document.getElementById('stat-luck-rate').innerText = `${luckRate}%`;
 
-            const intentEl = document.getElementById('enemy-intent');
-            if (gameState.enemyIntentType === 'attack') {
-                intentEl.innerHTML = `⚔️ ATTACK (${gameState.enemyIntentValue})`;
-            } else {
-                intentEl.innerHTML = `🛡️ DEFEND (${gameState.enemyIntentValue})`;
-            }
+            CARD_DATABASE.forEach(card => {
+                const count = gameState.inventory[card.id] || 0;
+                const isUnlocked = count > 0;
 
-            document.getElementById('deck-count').innerText = gameState.deck.length;
-            document.getElementById('discard-count').innerText = gameState.discard.length;
+                const cardBoxItem = document.createElement('div');
+                cardBoxItem.className = `p-4 flex flex-col items-center justify-between relative cursor-pointer transition-transform hover:scale-105 ${isUnlocked ? (card.rarity === 'gold' ? 'pixel-card-border bg-amber-950/50 gold-glow' : 'pixel-common-border bg-slate-900') : 'pixel-border bg-black/80 opacity-50'}`;
+                cardBoxItem.onclick = () => openCardModal(card, count);
 
-            const container = document.getElementById('cards-container');
-            container.innerHTML = '';
-
-            gameState.hand.forEach((card, index) => {
-                const cardDiv = document.createElement('div');
+                const cardImgContainer = document.createElement('div');
+                cardImgContainer.className = "w-24 h-36 bg-black overflow-hidden mb-3 border-2 border-purple-900 relative flex items-center justify-center";
                 
-                // Asset path: assets/card.png for common, assets/goldcard.png for rare gold
-                const assetPath = card.isGold ? 'assets/goldcard.png' : 'assets/card.png';
+                if (isUnlocked) {
+                    cardImgContainer.appendChild(createCardImageElement(card));
+                } else {
+                    const lockedSpan = document.createElement('span');
+                    lockedSpan.className = "text-xl text-slate-600";
+                    lockedSpan.innerText = "🔒";
+                    cardImgContainer.appendChild(lockedSpan);
+                }
+
+                const infoDiv = document.createElement('div');
+                infoDiv.className = "w-full text-center";
                 
-                // Hollow outline frame fallback SVG (transparent inside so text is displayed inside)
-                const fallbackImg = card.isGold 
-                    ? "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='160' viewBox='0 0 120 160'%3E%3Crect x='2' y='2' width='116' height='156' rx='8' fill='none' stroke='%23f59e0b' stroke-width='6'/%3E%3Crect x='6' y='6' width='108' height='148' rx='6' fill='none' stroke='%23b45309' stroke-width='2'/%3E%3C/svg%3E"
-                    : "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='160' viewBox='0 0 120 160'%3E%3Crect x='2' y='2' width='116' height='156' rx='8' fill='none' stroke='%236366f1' stroke-width='6'/%3E%3Crect x='6' y='6' width='108' height='148' rx='6' fill='none' stroke='%23312e81' stroke-width='2'/%3E%3C/svg%3E";
+                const nameEl = document.createElement('p');
+                nameEl.className = `text-[9px] font-bold truncate w-full ${card.rarity === 'gold' ? 'text-yellow-400' : 'text-slate-200'}`;
+                nameEl.innerText = isUnlocked ? card.name : '???';
 
-                // Card container fully takes up space with card frame stretching to edges (object-fill)
-                cardDiv.className = `relative w-28 h-36 md:w-32 md:h-40 rounded-xl cursor-pointer transition-transform hover:-translate-y-3 flex flex-col justify-between p-3 select-none shadow-xl bg-slate-900/40`;
-                
-                cardDiv.onclick = () => playCard(index);
+                const countEl = document.createElement('p');
+                countEl.className = "text-[8px] text-purple-300 mt-1";
+                countEl.innerText = `Owned: ${count}`;
 
-                cardDiv.innerHTML = `
-                    <!-- Background Card Frame PNG (Stretches across entire card space, hollow center for text) -->
-                    <img src="${assetPath}" onerror="this.onerror=null; this.src='${fallbackImg}';" class="absolute inset-0 w-full h-full rounded-xl pixel-img z-0 object-fill pointer-events-none" alt="Card Frame" />
-                    
-                    <!-- Card Header / Title & Cost (Positioned inside the transparent frame) -->
-                    <div class="relative z-10 flex justify-between items-center px-1 pt-1">
-                        <span class="pixel-font text-[8px] md:text-[9px] ${card.isGold ? 'text-amber-200 bg-amber-950/90 px-1.5 py-0.5 rounded border border-amber-600' : 'text-indigo-200 bg-indigo-950/90 px-1.5 py-0.5 rounded border border-indigo-700'}">${card.name}</span>
-                        <span class="pixel-font text-[10px] md:text-xs bg-amber-500 text-slate-950 px-1.5 py-0.5 rounded-full font-bold">${card.cost}⚡</span>
-                    </div>
+                infoDiv.appendChild(nameEl);
+                infoDiv.appendChild(countEl);
 
-                    <!-- Card Body Icon / Art -->
-                    <div class="relative z-10 flex items-center justify-center my-auto">
-                        <span class="text-2xl md:text-3xl drop-shadow-md">${card.type === 'attack' ? '⚔️' : (card.id === 'heal' ? '🧪' : '🛡️')}</span>
-                    </div>
-
-                    <!-- Card Footer Description (Positioned inside the frame bottom) -->
-                    <div class="relative z-10 bg-slate-950/90 p-1.5 rounded border border-slate-700 mb-1">
-                        <p class="text-[8px] md:text-[9px] font-mono text-slate-200 text-center leading-tight">${card.desc}</p>
-                    </div>
-                `;
-
-                container.appendChild(cardDiv);
+                cardBoxItem.appendChild(cardImgContainer);
+                cardBoxItem.appendChild(infoDiv);
+                grid.appendChild(cardBoxItem);
             });
         }
 
+        function openCardModal(card, count) {
+            soundSystem.init();
+            const modal = document.getElementById('card-modal');
+            const container = document.getElementById('modal-card-container');
+            container.innerHTML = '';
+
+            const isUnlocked = count > 0;
+            if (isUnlocked) {
+                container.appendChild(createCardImageElement(card));
+                document.getElementById('modal-card-name').innerText = card.name;
+                document.getElementById('modal-card-rarity').innerText = `Rarity: ${card.rarity.toUpperCase()}`;
+                document.getElementById('modal-card-desc').innerText = card.desc;
+                document.getElementById('modal-card-count').innerText = count;
+            } else {
+                container.innerHTML = `<span class="text-4xl">🔒</span>`;
+                document.getElementById('modal-card-name').innerText = "LOCKED ARTIFACT";
+                document.getElementById('modal-card-rarity').innerText = `Rarity: ${card.rarity.toUpperCase()}`;
+                document.getElementById('modal-card-desc').innerText = "Roll in the Summon Hall to discover this card!";
+                document.getElementById('modal-card-count').innerText = "0";
+            }
+
+            modal.classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('card-modal').classList.add('hidden');
+        }
+
         window.onload = function() {
-            initGame();
+            loadGame();
         };
     </script>
 </body>
+
 </html>
