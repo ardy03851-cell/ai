@@ -2,697 +2,624 @@
 <html lang="en">
 
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport"
-    content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="theme-color" content="#05090d">
-  <meta name="color-scheme" content="dark">
-  <title>Sky Drift</title>
-  <link rel="stylesheet" href="styles.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pixel Dungeon Tactics - iPad Edition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        .pixel-font {
+            font-family: 'Press Start 2P', monospace;
+        }
+
+        .pixel-border {
+            box-shadow: inset -4px -4px 0px 0px rgba(0, 0, 0, 0.5), inset 4px 4px 0px 0px rgba(255, 255, 255, 0.3);
+        }
+
+        .pixel-button {
+            box-shadow: inset -4px -4px 0px 0px rgba(0, 0, 0, 0.6), inset 4px 4px 0px 0px rgba(255, 255, 255, 0.4);
+            transition: transform 0.05s ease, filter 0.1s ease;
+        }
+
+        .pixel-button:active {
+            transform: translateY(3px);
+            box-shadow: inset -2px -2px 0px 0px rgba(0, 0, 0, 0.6), inset 2px 2px 0px 0px rgba(255, 255, 255, 0.4);
+        }
+
+        .pixel-img {
+            image-rendering: pixelated;
+            object-fit: contain;
+        }
+
+        /* CRT Scanline overlay effect */
+        .crt-scanlines::after {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.3) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.04), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.04));
+            z-index: 40;
+            background-size: 100% 4px, 6px 100%;
+            pointer-events: none;
+        }
+
+        /* Custom scrollbar for battle log */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #1e1b4b;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #4f46e5;
+            border-radius: 2px;
+        }
+    </style>
 </head>
 
-<body>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex items-center justify-center p-2 md:p-6 select-none">
 
-  <canvas id="scene" style="touch-action:none" aria-hidden="true"></canvas>
+    <div id="ipad-container"
+        class="relative w-full max-w-5xl h-[820px] bg-slate-900 border-[12px] border-amber-900 rounded-[3rem] shadow-2xl flex flex-col overflow-hidden crt-scanlines">
 
-  <!-- ============================================================
-       HUD  —  all shapes drawn with CSS gradients, masks,
-       conic wedges, clip-paths and a small SVG gauge.
-       ============================================================ -->
-  <div id="hud">
+        <!-- Top Bezel / Header Status Bar -->
+        <div class="bg-slate-950 px-6 py-3 border-b-4 border-amber-900/80 flex items-center justify-between z-30">
+            <div class="flex items-center space-x-3">
+                <div class="w-3 h-3 rounded-full bg-red-500 animate-pulse"></div>
+                <h1 class="pixel-font text-xs md:text-sm text-amber-400 tracking-wider">PIXEL DUNGEON TACTICS</h1>
+            </div>
 
-    <!-- ambient overlays -->
-    <div class="fx fx-vignette" aria-hidden="true"></div>
-    <div class="fx fx-scanlines" aria-hidden="true"></div>
-
-    <div class="fx-lens" id="lensflare" aria-hidden="true">
-      <i class="lens-core"></i>
-      <i class="lens-halo"></i>
-      <i class="lens-ghost g1"></i>
-      <i class="lens-ghost g2"></i>
-      <i class="lens-ghost g3"></i>
-      <i class="lens-streak"></i>
-    </div>
-
-    <!-- corner brackets -->
-    <span class="bracket tl" aria-hidden="true"></span>
-    <span class="bracket tr" aria-hidden="true"></span>
-    <span class="bracket bl" aria-hidden="true"></span>
-    <span class="bracket br" aria-hidden="true"></span>
-
-    <!-- ==================== AIRSPEED GAUGE ==================== -->
-    <section class="gauge speedo" id="speedo">
-      <span class="ring ring-a"></span>
-      <span class="ring ring-b"></span>
-      <span class="ring ring-c"></span>
-
-      <svg class="dial" viewBox="0 0 200 200" aria-hidden="true">
-        <defs>
-          <linearGradient id="gradSpeed" x1="0" y1="1" x2="1" y2="0">
-            <stop offset="0%" stop-color="#3ce9ff"/>
-            <stop offset="55%" stop-color="#a6f7ff"/>
-            <stop offset="100%" stop-color="#ffb547"/>
-          </linearGradient>
-          <linearGradient id="gradRed" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stop-color="#ff6a3a"/>
-            <stop offset="100%" stop-color="#ff2a2a"/>
-          </linearGradient>
-          <filter id="glow" x="-80%" y="-80%" width="260%" height="260%">
-            <feGaussianBlur stdDeviation="3.2" result="b"/>
-            <feMerge>
-              <feMergeNode in="b"/>
-              <feMergeNode in="SourceGraphic"/>
-            </feMerge>
-          </filter>
-        </defs>
-
-        <!-- 270° arc from 135° → 45°, r = 80, centre (100,100) -->
-        <path class="arc-bg" d="M 43.43 156.57 A 80 80 0 1 1 156.57 156.57"/>
-        <!-- redline: same radius as the track, ends at the top of the scale -->
-        <path class="arc-red" d="M 130.77 26.15 A 80 80 0 0 1 156.57 156.57"/>
-        <path class="arc-fill" id="arcFill" stroke-dasharray="377"
-              d="M 43.43 156.57 A 80 80 0 1 1 156.57 156.57"/>
-      </svg>
-
-      <span class="ticks ticks-minor" aria-hidden="true"></span>
-      <span class="ticks ticks-major" aria-hidden="true"></span>
-
-      <span class="needle" id="needle" aria-hidden="true"><i></i></span>
-      <span class="hub" aria-hidden="true"></span>
-
-      <div class="readout">
-        <span class="value" id="speedValue">0</span>
-        <span class="unit">KTS</span>
-      </div>
-      <div class="mach">MACH <b id="machValue">0.00</b></div>
-      <div class="caption">AIRSPEED</div>
-    </section>
-
-    <!-- ==================== ALTITUDE TAPE ==================== -->
-    <section class="alt">
-      <div class="alt-window">
-        <div class="alt-strip" id="altStrip"></div>
-      </div>
-      <span class="alt-pointer" aria-hidden="true"></span>
-      <div class="alt-num">
-        <span id="altValue">0</span><i>FT</i>
-      </div>
-      <div class="alt-vs"><span id="vsValue">+0</span><i>FPM</i></div>
-      <div class="caption v">ALT</div>
-    </section>
-
-    <!-- ==================== ATTITUDE BALL ==================== -->
-    <section class="attitude" id="attitude">
-      <div class="att-sphere" id="attSphere">
-        <div class="att-sky"></div>
-        <div class="att-ground"></div>
-        <div class="att-ladder">
-          <i></i><i></i><i></i><i></i><i></i>
+            <div class="flex items-center space-x-4">
+                <button id="audio-toggle" onclick="toggleAudio()" class="pixel-button px-3 py-1 bg-indigo-800 hover:bg-indigo-700 text-xs pixel-font rounded border border-indigo-500">
+                    SOUND: ON
+                </button>
+                <button id="crt-toggle" onclick="toggleCRT()" class="pixel-button px-3 py-1 bg-indigo-800 hover:bg-indigo-700 text-xs pixel-font rounded border border-indigo-500">
+                    CRT: ON
+                </button>
+                <button onclick="restartGame()" class="pixel-button px-3 py-1 bg-red-900 hover:bg-red-800 text-xs pixel-font rounded border border-red-500 text-red-200">
+                    RESET
+                </button>
+            </div>
         </div>
-        <div class="att-glow"></div>
-      </div>
-      <span class="att-frame" aria-hidden="true"></span>
-      <span class="att-wing" aria-hidden="true"></span>
-      <span class="att-dot" aria-hidden="true"></span>
-      <div class="caption v">ATTITUDE</div>
-    </section>
 
-    <!-- ==================== COMPASS RIBBON ==================== -->
-    <section class="compass">
-      <div class="compass-window">
-        <div class="compass-strip" id="compassStrip"></div>
-      </div>
-      <span class="compass-mark" aria-hidden="true"></span>
-      <div class="compass-num"><span id="hdgValue">000</span>°</div>
-    </section>
+        <!-- Main Game Area -->
+        <div
+            class="flex-1 flex flex-col justify-between p-4 md:p-6 relative overflow-hidden bg-gradient-to-b from-slate-900 via-indigo-950/40 to-slate-900">
 
-    <!-- ==================== THROTTLE / BOOST ==================== -->
-    <section class="power">
-      <div class="pwr-head">
-        <span class="pwr-cap">THROTTLE</span>
-        <span class="pwr-num" id="thrValue">0%</span>
-      </div>
-      <div class="pwr-bar">
-        <span class="pwr-fill" id="thrFill"></span>
-        <span class="pwr-notches" aria-hidden="true"></span>
-      </div>
-      <div class="hex-row" id="hexRow" aria-hidden="true">
-        <span class="hex"></span><span class="hex"></span><span class="hex"></span>
-        <span class="hex"></span><span class="hex"></span><span class="hex"></span>
-      </div>
-      <div class="pwr-cap small">AFTERBURNER</div>
-    </section>
+            <!-- Combat Stats / Arena Header -->
+            <div class="grid grid-cols-2 gap-4 z-20">
+                <!-- Player Status Card -->
+                <div
+                    class="bg-slate-900/90 border-4 border-emerald-600 p-3 rounded-xl pixel-border flex items-center justify-between">
+                    <div>
+                        <div class="pixel-font text-xs text-emerald-400 mb-1">HERO (LVL 1)</div>
+                        <div class="text-xs text-slate-300 font-bold mb-1">HP:
+                            <span id="player-hp" class="text-emerald-300">50</span>/<span id="player-max-hp">50</span>
+                        </div>
+                        <div class="w-32 md:w-48 bg-slate-800 h-3 rounded border border-slate-600 overflow-hidden">
+                            <div id="player-hp-bar" class="bg-emerald-500 h-full transition-all duration-300"
+                                style="width: 100%;"></div>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="pixel-font text-[10px] text-amber-300 mb-1">SHIELD:
+                            <span id="player-shield">0</span></div>
+                        <div class="pixel-font text-[10px] text-cyan-300">ENERGY:
+                            <span id="player-energy">3</span>/<span id="player-max-energy">3</span></div>
+                    </div>
+                </div>
 
-    <!-- ==================== STATUS ==================== -->
-    <section class="status">
-      <div class="st-line"><b>SYS</b><span class="ok" id="sysState">NOMINAL</span></div>
-      <div class="st-line"><b>G</b><span id="gValue">1.0</span></div>
-      <div class="st-line"><b>V/S</b><span id="vsValue2">+0</span></div>
-      <div class="st-line"><b>TIME</b><span id="timeValue">00:00</span></div>
-    </section>
+                <!-- Boss Status Card -->
+                <div
+                    class="bg-slate-900/90 border-4 border-rose-600 p-3 rounded-xl pixel-border flex items-center justify-between">
+                    <div class="text-left">
+                        <div class="pixel-font text-xs text-rose-400 mb-1">DUNGEON LORD</div>
+                        <div class="text-xs text-slate-300 font-bold mb-1">HP:
+                            <span id="enemy-hp" class="text-rose-300">80</span>/<span id="enemy-max-hp">80</span></div>
+                        <div class="w-32 md:w-48 bg-slate-800 h-3 rounded border border-slate-600 overflow-hidden">
+                            <div id="enemy-hp-bar" class="bg-rose-500 h-full transition-all duration-300"
+                                style="width: 100%;"></div>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="pixel-font text-[10px] text-rose-300 mb-1">INTENT</div>
+                        <div id="enemy-intent"
+                            class="pixel-font text-xs text-amber-300 bg-rose-950/80 px-2 py-1 rounded border border-rose-700 inline-block">
+                            ⚔️ ATTACK (8)
+                        </div>
+                        <div class="pixel-font text-[10px] text-slate-400 mt-1">SHIELD: <span id="enemy-shield">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-    <!-- ==================== HINT ==================== -->
-    <div id="hint">
-      <span class="hint-main">DRAG TO FLY</span>
-      <span class="hint-sub">HOLD <b>SHIFT</b> / <b>TWO FINGERS</b> FOR AFTERBURNER</span>
+            <!-- Central Battle Arena (Sprites & Log) -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 my-2 items-center z-20 flex-1">
+                <!-- Hero Sprite Area -->
+                <div class="flex flex-col items-center justify-center relative">
+                    <div id="hero-sprite"
+                        class="w-24 h-24 md:w-32 md:h-32 bg-indigo-900/60 border-4 border-indigo-600 rounded-2xl flex items-center justify-center pixel-border shadow-lg relative">
+                        <span class="text-4xl md:text-5xl animate-bounce">🛡️</span>
+                        <div id="hero-floating-text"
+                            class="absolute -top-6 pixel-font text-xs text-emerald-400 font-bold opacity-0 transition-all">
+                        </div>
+                    </div>
+                    <span class="pixel-font text-[10px] text-indigo-300 mt-2">PLAYER CHARACTER</span>
+                </div>
+
+                <!-- Battle Log & Turn Indicator -->
+                <div
+                    class="flex flex-col h-full justify-between bg-slate-950/80 border-2 border-slate-700 rounded-xl p-3">
+                    <div class="flex justify-between items-center mb-2 border-b border-slate-800 pb-1">
+                        <span class="pixel-font text-[10px] text-amber-400">COMBAT LOG</span>
+                        <span id="turn-indicator" class="pixel-font text-[10px] text-cyan-300">PLAYER TURN</span>
+                    </div>
+                    <div id="battle-log"
+                        class="flex-1 overflow-y-auto text-xs text-slate-300 space-y-1 font-mono pr-1 max-h-28">
+                        <div>[System] Dungeon battle started! Defeat the Dungeon Lord.</div>
+                    </div>
+                    <div
+                        class="mt-2 pt-2 border-t border-slate-800 flex justify-between items-center text-[10px] pixel-font">
+                        <span class="text-slate-400">DECK: <span id="deck-count">10</span></span>
+                        <span class="text-slate-400">DISCARD: <span id="discard-count">0</span></span>
+                    </div>
+                </div>
+
+                <!-- Boss Sprite Area -->
+                <div class="flex flex-col items-center justify-center relative">
+                    <div id="boss-sprite"
+                        class="w-24 h-24 md:w-32 md:h-32 bg-rose-950/60 border-4 border-rose-600 rounded-2xl flex items-center justify-center pixel-border shadow-lg relative">
+                        <span class="text-4xl md:text-5xl animate-pulse">👹</span>
+                        <div id="boss-floating-text"
+                            class="absolute -top-6 pixel-font text-xs text-rose-400 font-bold opacity-0 transition-all">
+                        </div>
+                    </div>
+                    <span class="pixel-font text-[10px] text-rose-300 mt-2">DUNGEON LORD</span>
+                </div>
+            </div>
+
+            <!-- Player Hand & Action Controls -->
+            <div
+                class="z-20 bg-slate-950/90 border-4 border-indigo-900/80 rounded-2xl p-4 flex flex-col md:flex-row items-center justify-between gap-4">
+
+                <!-- Cards Hand Container -->
+                <div id="cards-container" class="flex flex-wrap items-center justify-center gap-3 min-h-[140px] flex-1">
+                    <!-- Dynamically populated cards go here -->
+                </div>
+
+                <!-- End Turn / Action Panel -->
+                <div class="flex flex-col justify-center items-center gap-2 min-w-[150px]">
+                    <button id="end-turn-btn" onclick="endPlayerTurn()" class="pixel-button w-full px-4 py-3 bg-amber-600 hover:bg-amber-500 text-amber-950 font-bold pixel-font text-xs rounded-xl border-2 border-amber-400 shadow-lg">
+                        END TURN
+                    </button>
+                    <div class="pixel-font text-[9px] text-slate-400 text-center">
+                        Click card to play
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
     </div>
 
-  </div>
+    <!-- Victory / Defeat Modal Overlay -->
+    <div id="game-modal"
+        class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center hidden">
+        <div
+            class="bg-slate-900 border-4 border-amber-500 p-8 rounded-3xl max-w-md w-full text-center pixel-border shadow-2xl">
+            <h2 id="modal-title" class="pixel-font text-lg text-amber-400 mb-4">VICTORY!</h2>
+            <p id="modal-desc" class="text-xs text-slate-300 mb-6 font-mono leading-relaxed">You have vanquished the
+                Dungeon Lord and claimed eternal glory!</p>
+            <button onclick="restartGame()" class="pixel-button px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white pixel-font text-xs rounded-xl border-2 border-emerald-400">
+                PLAY AGAIN
+            </button>
+        </div>
+    </div>
 
-  <!-- ============================================================
-       DEMO DRIVER  —  replace with your own game.js later.
-       Wires up the HUD so all animations come alive immediately.
-       ============================================================ -->
-  <script>
-  (function () {
-    "use strict";
+    <script>
+        // Web Audio API Sound Synthesizer
+        let audioCtx = null;
+        let soundEnabled = true;
+        let crtEnabled = true;
 
-    /* ---------------------------------------------------------
-       Element cache (looked up once, never per frame)
-       --------------------------------------------------------- */
-    var $ = function (id) { return document.getElementById(id); };
-
-    var canvas       = $('scene'),
-        hud          = $('hud'),
-        lens         = $('lensflare'),
-        hint         = $('hint'),
-        altStrip     = $('altStrip'),
-        compassStrip = $('compassStrip'),
-        needle       = $('needle'),
-        arcFill      = $('arcFill'),
-        speedValue   = $('speedValue'),
-        machValue    = $('machValue'),
-        altValue     = $('altValue'),
-        vsValue      = $('vsValue'),
-        vsValue2     = $('vsValue2'),
-        hdgValue     = $('hdgValue'),
-        attSphere    = $('attSphere'),
-        attitude     = $('attitude'),
-        thrFill      = $('thrFill'),
-        thrValue     = $('thrValue'),
-        gValue       = $('gValue'),
-        timeValue    = $('timeValue'),
-        sysState     = $('sysState');
-
-    var hexes = Array.prototype.slice.call(document.querySelectorAll('#hexRow .hex'));
-
-    /* ---------------------------------------------------------
-       Constants
-       --------------------------------------------------------- */
-    var PX_PER_FT  = 0.22;
-    var ALT_MIN    = -1000, ALT_MAX = 30000, ALT_STEP = 100;
-    var PX_PER_DEG = 4;
-    var SPEED_MIN  = 60, SPEED_MAX = 420;
-    var ARC_LEN    = 377;              /* 270° arc, r = 80  →  80 · 1.5π */
-
-    /* ---------------------------------------------------------
-       Canvas scene renderer
-       The original page only supplied a CSS sky; the canvas had
-       no rendering path. Keep the world on one GPU-backed canvas
-       and cache everything that does not need to be rebuilt per frame.
-       --------------------------------------------------------- */
-    var ctx = canvas.getContext('2d', { alpha: false, desynchronized: true });
-    var sceneDpr = 1;
-    var sceneBg = null;
-    var resizeQueued = false;
-    var sceneWidth = 0, sceneHeight = 0;
-
-    function rebuildSceneBackground() {
-      sceneWidth = vw;
-      sceneHeight = vh;
-      sceneDpr = Math.min(window.devicePixelRatio || 1, 1.5);
-
-      canvas.width = Math.max(1, Math.round(sceneWidth * sceneDpr));
-      canvas.height = Math.max(1, Math.round(sceneHeight * sceneDpr));
-      canvas.style.width = sceneWidth + 'px';
-      canvas.style.height = sceneHeight + 'px';
-
-      ctx.setTransform(sceneDpr, 0, 0, sceneDpr, 0, 0);
-
-      sceneBg = document.createElement('canvas');
-      sceneBg.width = Math.max(1, Math.round(sceneWidth * sceneDpr));
-      sceneBg.height = Math.max(1, Math.round(sceneHeight * sceneDpr));
-
-      var bg = sceneBg.getContext('2d', { alpha: false });
-      bg.setTransform(sceneDpr, 0, 0, sceneDpr, 0, 0);
-
-      var sky = bg.createLinearGradient(0, 0, 0, sceneHeight);
-      sky.addColorStop(0, '#0d2740');
-      sky.addColorStop(0.45, '#1b4a74');
-      sky.addColorStop(0.72, '#7f7c72');
-      sky.addColorStop(1, '#18271e');
-      bg.fillStyle = sky;
-      bg.fillRect(0, 0, sceneWidth, sceneHeight);
-
-      var sun = bg.createRadialGradient(
-        sceneWidth * 0.5, sceneHeight * 0.48, 0,
-        sceneWidth * 0.5, sceneHeight * 0.48, sceneHeight * 0.42
-      );
-      sun.addColorStop(0, 'rgba(255,235,190,0.24)');
-      sun.addColorStop(0.35, 'rgba(255,205,155,0.08)');
-      sun.addColorStop(1, 'rgba(255,205,155,0)');
-      bg.fillStyle = sun;
-      bg.fillRect(0, 0, sceneWidth, sceneHeight);
-    }
-
-    function queueSceneResize() {
-      if (resizeQueued) return;
-      resizeQueued = true;
-      requestAnimationFrame(function () {
-        resizeQueued = false;
-        rebuildSceneBackground();
-      });
-    }
-
-    function drawCloud(x, y, size, alpha) {
-      ctx.save();
-      ctx.globalAlpha = alpha;
-      ctx.fillStyle = '#ffffff';
-      ctx.beginPath();
-      ctx.arc(x, y, size, 0, Math.PI * 2);
-      ctx.arc(x + size * 0.9, y - size * 0.22, size * 0.72, 0, Math.PI * 2);
-      ctx.arc(x + size * 1.5, y, size * 0.58, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
-    }
-
-    function drawAircraft() {
-      var cx = vw * 0.5;
-      var cy = vh * 0.58;
-      var scale = Math.max(0.72, Math.min(vw, vh) / 900);
-
-      ctx.save();
-      ctx.translate(cx, cy);
-      ctx.rotate(state.roll * Math.PI / 180);
-      ctx.lineJoin = 'round';
-      ctx.shadowColor = 'rgba(90, 220, 255, 0.45)';
-      ctx.shadowBlur = 12;
-
-      var body = ctx.createLinearGradient(0, -105 * scale, 0, 105 * scale);
-      body.addColorStop(0, '#f4fbff');
-      body.addColorStop(0.42, '#91aab7');
-      body.addColorStop(0.72, '#405866');
-      body.addColorStop(1, '#15242c');
-      ctx.fillStyle = body;
-      ctx.beginPath();
-      ctx.moveTo(0, -105 * scale);
-      ctx.lineTo(12 * scale, -35 * scale);
-      ctx.lineTo(16 * scale, 62 * scale);
-      ctx.lineTo(7 * scale, 92 * scale);
-      ctx.lineTo(0, 105 * scale);
-      ctx.lineTo(-7 * scale, 92 * scale);
-      ctx.lineTo(-16 * scale, 62 * scale);
-      ctx.lineTo(-12 * scale, -35 * scale);
-      ctx.closePath();
-      ctx.fill();
-
-      ctx.shadowBlur = 8;
-      ctx.fillStyle = '#a9bdc7';
-      ctx.beginPath();
-      ctx.moveTo(-10 * scale, 8 * scale);
-      ctx.lineTo(-145 * scale, 48 * scale);
-      ctx.lineTo(-118 * scale, 66 * scale);
-      ctx.lineTo(-8 * scale, 38 * scale);
-      ctx.closePath();
-      ctx.fill();
-      ctx.beginPath();
-      ctx.moveTo(10 * scale, 8 * scale);
-      ctx.lineTo(145 * scale, 48 * scale);
-      ctx.lineTo(118 * scale, 66 * scale);
-      ctx.lineTo(8 * scale, 38 * scale);
-      ctx.closePath();
-      ctx.fill();
-
-      ctx.fillStyle = '#6f8792';
-      ctx.beginPath();
-      ctx.moveTo(-8 * scale, 58 * scale);
-      ctx.lineTo(-58 * scale, 92 * scale);
-      ctx.lineTo(-48 * scale, 104 * scale);
-      ctx.lineTo(-5 * scale, 83 * scale);
-      ctx.closePath();
-      ctx.fill();
-      ctx.beginPath();
-      ctx.moveTo(8 * scale, 58 * scale);
-      ctx.lineTo(58 * scale, 92 * scale);
-      ctx.lineTo(48 * scale, 104 * scale);
-      ctx.lineTo(5 * scale, 83 * scale);
-      ctx.closePath();
-      ctx.fill();
-
-      var cockpit = ctx.createLinearGradient(0, -82 * scale, 0, -28 * scale);
-      cockpit.addColorStop(0, '#e7fbff');
-      cockpit.addColorStop(0.25, '#4cc8ed');
-      cockpit.addColorStop(1, '#12384b');
-      ctx.fillStyle = cockpit;
-      ctx.beginPath();
-      ctx.ellipse(0, -58 * scale, 9 * scale, 27 * scale, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      if (state.boost > 0.15) {
-        var flame = ctx.createLinearGradient(0, 82 * scale, 0, 150 * scale);
-        flame.addColorStop(0, 'rgba(255,245,190,0.95)');
-        flame.addColorStop(0.35, 'rgba(255,155,55,0.8)');
-        flame.addColorStop(1, 'rgba(255,70,20,0)');
-        ctx.fillStyle = flame;
-        ctx.beginPath();
-        ctx.moveTo(-6 * scale, 78 * scale);
-        ctx.lineTo(0, (125 + Math.sin(elapsed * 28) * 10) * scale);
-        ctx.lineTo(6 * scale, 78 * scale);
-        ctx.closePath();
-        ctx.fill();
-      }
-
-      ctx.restore();
-    }
-
-    function drawScene() {
-      if (!sceneBg || sceneWidth !== vw || sceneHeight !== vh) rebuildSceneBackground();
-
-      ctx.setTransform(sceneDpr, 0, 0, sceneDpr, 0, 0);
-      ctx.drawImage(sceneBg, 0, 0, sceneWidth, sceneHeight);
-
-      var horizon = vh * 0.50 + state.pitch * vh * 0.012;
-
-      /* moving clouds give the sky depth without creating DOM work */
-      for (var c = 0; c < 9; c++) {
-        var speed = 5 + (c % 3) * 3;
-        var x = ((c * 313 + elapsed * speed) % (vw + 260)) - 130;
-        var y = vh * (0.16 + (c % 5) * 0.065) + state.pitch * 1.8;
-        drawCloud(x, y, 18 + (c % 4) * 7, 0.08 + (c % 3) * 0.018);
-      }
-
-      /* parallax terrain */
-      ctx.save();
-      ctx.fillStyle = 'rgba(24, 43, 31, 0.42)';
-      ctx.beginPath();
-      ctx.moveTo(0, horizon + vh * 0.03);
-      for (var x2 = 0; x2 <= vw + 80; x2 += 70) {
-        var m = Math.sin(x2 * 0.006 + state.heading * 0.002) * vh * 0.035 +
-                Math.sin(x2 * 0.019) * vh * 0.018;
-        ctx.lineTo(x2, horizon + vh * 0.025 - m);
-      }
-      ctx.lineTo(vw, vh);
-      ctx.lineTo(0, vh);
-      ctx.closePath();
-      ctx.fill();
-      ctx.restore();
-
-      drawAircraft();
-    }
-
-    /* ---------------------------------------------------------
-       Build the tapes once, off-document (single reflow)
-       --------------------------------------------------------- */
-    (function buildAltitudeTape() {
-      var frag = document.createDocumentFragment();
-      for (var a = ALT_MIN; a <= ALT_MAX; a += ALT_STEP) {
-        var maj = (a % 500 === 0);
-        var el = document.createElement('div');
-        el.className = 'tick ' + (maj ? 'maj' : 'min');
-        el.style.top = (-a * PX_PER_FT).toFixed(1) + 'px';
-        if (maj) el.textContent = a;
-        frag.appendChild(el);
-      }
-      altStrip.appendChild(frag);
-    })();
-
-    (function buildCompassRibbon() {
-      var frag = document.createDocumentFragment();
-      for (var h = -360; h <= 720; h += 5) {
-        var maj = (h % 30 === 0);
-        var el = document.createElement('div');
-        el.className = 'card ' + (maj ? 'maj' : 'min');
-        el.style.left = (h * PX_PER_DEG) + 'px';
-        if (maj) {
-          var n = ((h % 360) + 360) % 360;
-          el.textContent = n === 0 ? 'N' : n === 90 ? 'E' : n === 180 ? 'S' : n === 270 ? 'W'
-                          : (n / 10 | 0);
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
         }
-        frag.appendChild(el);
-      }
-      compassStrip.appendChild(frag);
-    })();
 
-    /* ---------------------------------------------------------
-       Helpers
-       --------------------------------------------------------- */
-    function lerp(a, b, t) { return a + (b - a) * t; }
-    function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
+        function playSound(type) {
+            if (!soundEnabled) return;
+            initAudio();
+            if (!audioCtx) return;
 
-    /* write text only when it actually changed */
-    function setText(el, txt) {
-      if (el._t !== txt) { el._t = txt; el.textContent = txt; }
-    }
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
 
-    var nf = (typeof Intl !== 'undefined' && Intl.NumberFormat)
-      ? new Intl.NumberFormat('en-US')
-      : { format: function (n) { return String(n); } };
+            const now = audioCtx.currentTime;
 
-    /* ---------------------------------------------------------
-       Cached viewport metrics (no layout reads inside the loop)
-       --------------------------------------------------------- */
-    var vw = window.innerWidth,
-        vh = window.innerHeight,
-        attH = 120;
-
-    function measure() { attH = attitude.clientHeight || 120; }
-
-    function onResize() {
-      vw = window.innerWidth;
-      vh = window.innerHeight;
-      measure();
-      queueSceneResize();
-    }
-
-    window.addEventListener('resize', onResize, { passive: true });
-    window.addEventListener('orientationchange', onResize, { passive: true });
-    window.addEventListener('load', measure);
-
-    if (typeof ResizeObserver === 'function') {
-      new ResizeObserver(measure).observe(attitude);
-    }
-    measure();
-    rebuildSceneBackground();
-
-    /* ---------------------------------------------------------
-       Input
-       --------------------------------------------------------- */
-    var pointerId = null, originX = 0, originY = 0;
-    var activePointers = 0;
-    var inputX = 0, inputY = 0;
-    var boostHeld = false;
-
-    canvas.addEventListener('pointerdown', function (e) {
-      activePointers++;
-      if (pointerId !== null) return;          /* first finger drives, extras boost */
-      pointerId = e.pointerId;
-      originX = e.clientX;
-      originY = e.clientY;
-      if (canvas.setPointerCapture) canvas.setPointerCapture(e.pointerId);
-      hideHint();
-    }, { passive: true });
-
-    canvas.addEventListener('pointermove', function (e) {
-      if (e.pointerId !== pointerId) return;
-      inputX = clamp((e.clientX - originX) / (vw * 0.24), -1, 1);
-      inputY = clamp((e.clientY - originY) / (vh * 0.24), -1, 1);
-    }, { passive: true });
-
-    function endPointer(e) {
-      if (e.pointerId === pointerId) pointerId = null;
-      if (activePointers > 0) activePointers--;
-    }
-    canvas.addEventListener('pointerup', endPointer);
-    canvas.addEventListener('pointercancel', endPointer);
-
-    window.addEventListener('keydown', function (e) {
-      if (e.key === 'Shift') boostHeld = true;
-    });
-    window.addEventListener('keyup', function (e) {
-      if (e.key === 'Shift') boostHeld = false;
-    });
-    window.addEventListener('blur', function () {
-      pointerId = null;
-      activePointers = 0;
-      boostHeld = false;
-    });
-
-    var hintTimer = 0, hintHidden = false;
-    function hideHint() {
-      if (hintHidden) return;
-      hintHidden = true;
-      clearTimeout(hintTimer);
-      hint.classList.add('gone');
-    }
-    hintTimer = setTimeout(hideHint, 7000);
-
-    /* ---------------------------------------------------------
-       Flight state (demo)
-       --------------------------------------------------------- */
-    var state = {
-      speed: 180, alt: 5200, vs: 0, heading: 45,
-      pitch: 0, roll: 0, throttle: 0.35, boost: 0, g: 1
-    };
-
-    /* ---------------------------------------------------------
-       Main loop
-       --------------------------------------------------------- */
-    var rafId = 0, last = 0, elapsed = 0;
-
-    var lastAltTxt = null, lastLit = -1, lastHot = null, lastPct = -1;
-    var lastSys = '', lastWarm = -1, lastNorm = -1;
-
-    /* lens flare lives at the centre and is moved purely by transform */
-    lens.style.left = '50%';
-    lens.style.top = '50%';
-    lens.style.willChange = 'transform, opacity';
-
-    function frame(now) {
-      rafId = requestAnimationFrame(frame);
-
-      var dt = last ? (now - last) / 1000 : 0;
-      last = now;
-      if (dt > 0.05) dt = 0.05;
-      else if (dt < 0) dt = 0;
-      elapsed += dt;
-
-      /* --- decay input when released --- */
-      if (pointerId === null) {
-        var decay = Math.exp(-dt * 6);
-        inputX *= decay;
-        inputY *= decay;
-        if (inputX < 0.002 && inputX > -0.002) inputX = 0;
-        if (inputY < 0.002 && inputY > -0.002) inputY = 0;
-      }
-
-      /* --- simulate aircraft --- */
-      var k = 1 - Math.exp(-dt * 3.5);
-      state.roll  = lerp(state.roll,  inputX * 45, k);
-      state.pitch = lerp(state.pitch, -inputY * 30, k);
-      state.heading = (state.heading + inputX * 40 * dt + 360) % 360;
-
-      var boosting = boostHeld || activePointers >= 2 || inputY < -0.85;
-      state.boost = lerp(state.boost, boosting ? 1 : 0, 1 - Math.exp(-dt * 4));
-      state.throttle = clamp(0.35 + state.boost * 0.65 - inputY * 0.25, 0, 1);
-
-      var targetSpeed = SPEED_MIN + state.throttle * (SPEED_MAX - SPEED_MIN);
-      state.speed = lerp(state.speed, targetSpeed, 1 - Math.exp(-dt * 1.6));
-
-      state.vs = lerp(state.vs, -state.pitch * 60, 1 - Math.exp(-dt * 2));
-      state.alt = clamp(state.alt + state.vs * dt, ALT_MIN + 100, ALT_MAX - 100);
-      state.g = lerp(state.g, 1 + Math.abs(state.roll) / 45 * 1.6 + state.boost * 1.2,
-                     1 - Math.exp(-dt * 3));
-
-      /* ============ WORLD RENDER ============ */
-      drawScene();
-
-      /* ============ SPEEDOMETER ============ */
-      var sn = clamp((state.speed - SPEED_MIN) / (SPEED_MAX - SPEED_MIN), 0, 1);
-      needle.style.transform = 'rotate(' + (-135 + sn * 270).toFixed(2) + 'deg)';
-      arcFill.style.strokeDashoffset = (ARC_LEN * (1 - sn)).toFixed(1);
-      setText(speedValue, Math.round(state.speed));
-      setText(machValue, (state.speed / 660).toFixed(2));
-
-      /* ============ ALTITUDE TAPE ============ */
-      altStrip.style.transform =
-        'translate3d(0,' + (state.alt * PX_PER_FT).toFixed(1) + 'px,0)';
-
-      var altR = Math.round(state.alt);
-      if (altR !== lastAltTxt) {
-        lastAltTxt = altR;
-        setText(altValue, nf.format(altR));
-      }
-
-      var vsR = Math.round(state.vs);
-      var vsStr = (vsR >= 0 ? '+' : '') + vsR;
-      setText(vsValue, vsStr);
-      setText(vsValue2, vsStr);
-
-      /* ============ ATTITUDE BALL ============ */
-      var ppd = attH / 90;                     /* 90° of pitch fills the ball */
-      attSphere.style.transform =
-        'rotate(' + state.roll.toFixed(2) + 'deg) translateY(' +
-        (state.pitch * ppd).toFixed(1) + 'px)';
-
-      /* ============ COMPASS ============ */
-      compassStrip.style.transform =
-        'translate3d(' + (-state.heading * PX_PER_DEG).toFixed(1) + 'px,0,0)';
-      var hdg = Math.round(state.heading) % 360;
-      setText(hdgValue, ('00' + hdg).slice(-3));
-
-      /* ============ POWER ============ */
-      var pct = Math.round(state.throttle * 100);
-      if (pct !== lastPct) {
-        lastPct = pct;
-        thrFill.style.width = pct + '%';
-        setText(thrValue, pct + '%');
-      }
-
-      var lit = Math.round(state.throttle * hexes.length);
-      var hot = state.boost > 0.4;
-      if (lit !== lastLit || hot !== lastHot) {
-        for (var i = 0; i < hexes.length; i++) {
-          var on = i < lit;
-          hexes[i].classList.toggle('on', on);
-          hexes[i].classList.toggle('hot', on && hot);
+            if (type === 'card_play') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(300, now);
+                osc.frequency.exponentialRampToValueAtTime(600, now + 0.15);
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.15);
+                osc.start(now);
+                osc.stop(now + 0.15);
+            } else if (type === 'attack') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(150, now);
+                osc.frequency.exponentialRampToValueAtTime(40, now + 0.2);
+                gain.gain.setValueAtTime(0.25, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.2);
+                osc.start(now);
+                osc.stop(now + 0.2);
+            } else if (type === 'shield') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(400, now);
+                osc.frequency.exponentialRampToValueAtTime(800, now + 0.25);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.25);
+                osc.start(now);
+                osc.stop(now + 0.25);
+            } else if (type === 'heal') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(250, now);
+                osc.frequency.setValueAtTime(350, now + 0.1);
+                osc.frequency.setValueAtTime(500, now + 0.2);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.3);
+                osc.start(now);
+                osc.stop(now + 0.3);
+            } else if (type === 'win') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(261.63, now); // C4
+                osc.frequency.setValueAtTime(329.63, now + 0.15); // E4
+                osc.frequency.setValueAtTime(392.00, now + 0.3); // G4
+                osc.frequency.setValueAtTime(523.25, now + 0.45); // C5
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.7);
+                osc.start(now);
+                osc.stop(now + 0.7);
+            } else if (type === 'lose') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(300, now);
+                osc.frequency.linearRampToValueAtTime(100, now + 0.5);
+                gain.gain.setValueAtTime(0.25, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.5);
+                osc.start(now);
+                osc.stop(now + 0.5);
+            }
         }
-        lastLit = lit;
-        lastHot = hot;
-      }
 
-      /* ============ STATUS ============ */
-      setText(gValue, state.g.toFixed(1));
+        function toggleAudio() {
+            soundEnabled = !soundEnabled;
+            document.getElementById('audio-toggle').innerText = `SOUND: ${soundEnabled ? 'ON' : 'OFF'}`;
+        }
 
-      var mins = (elapsed / 60) | 0;
-      var secs = (elapsed % 60) | 0;
-      setText(timeValue, (mins < 10 ? '0' : '') + mins + ':' + (secs < 10 ? '0' : '') + secs);
+        function toggleCRT() {
+            crtEnabled = !crtEnabled;
+            const container = document.getElementById('ipad-container');
+            if (crtEnabled) {
+                container.classList.add('crt-scanlines');
+                document.getElementById('crt-toggle').innerText = 'CRT: ON';
+            } else {
+                container.classList.remove('crt-scanlines');
+                document.getElementById('crt-toggle').innerText = 'CRT: OFF';
+            }
+        }
+    </script>
 
-      var sys = state.boost > 0.5 ? 'AFTERBURN' : 'NOMINAL';
-      if (sys !== lastSys) {
-        lastSys = sys;
-        sysState.textContent = sys;
-        sysState.style.color = sys === 'AFTERBURN' ? '#ffb547' : '';
-      }
+    <script>
+        // Card Master List
+        // Common cards use assets/card.png, Gold rare cards use assets/goldcard.png
+        const ALL_CARDS = [
+            { id: 'strike', name: 'PIXEL STRIKE', type: 'attack', cost: 1, value: 6, desc: 'Deal 6 damage to enemy.', isGold: false },
+            { id: 'strike', name: 'PIXEL STRIKE', type: 'attack', cost: 1, value: 6, desc: 'Deal 6 damage to enemy.', isGold: false },
+            { id: 'strike', name: 'PIXEL STRIKE', type: 'attack', cost: 1, value: 6, desc: 'Deal 6 damage to enemy.', isGold: false },
+            { id: 'defend', name: 'CHUNKY SHIELD', type: 'skill', cost: 1, value: 5, desc: 'Gain 5 armor shield.', isGold: false },
+            { id: 'defend', name: 'CHUNKY SHIELD', type: 'skill', cost: 1, value: 5, desc: 'Gain 5 armor shield.', isGold: false },
+            { id: 'defend', name: 'CHUNKY SHIELD', type: 'skill', cost: 1, value: 5, desc: 'Gain 5 armor shield.', isGold: false },
+            { id: 'heal', name: 'MINOR POTION', type: 'skill', cost: 1, value: 4, desc: 'Restore 4 HP.', isGold: false },
+            { id: 'heavy', name: 'HEAVY SLASH', type: 'attack', cost: 2, value: 12, desc: 'Deal 12 heavy damage.', isGold: false },
+            // Rare Gold Cards
+            { id: 'gold_strike', name: 'GOLDEN BLADE', type: 'attack', cost: 1, value: 14, desc: 'Deal 14 damage with gold power.', isGold: true },
+            { id: 'gold_shield', name: 'AEGIS SHIELD', type: 'skill', cost: 2, value: 12, desc: 'Gain 12 heavy armor shield.', isGold: true }
+        ];
 
-      /* ============ LENS FLARE (transform/opacity only) ============ */
-      var lf = state.speed / SPEED_MAX;
-      lens.style.transform =
-        'translate3d(' + ((0.05 + Math.sin(elapsed * 0.12) * 0.12) * vw).toFixed(1) + 'px,' +
-                          ((-0.26 + Math.cos(elapsed * 0.10) * 0.06) * vh).toFixed(1) + 'px,0) ' +
-        'translate(-50%,-50%) scale(' + (0.8 + lf * 0.5).toFixed(3) + ')';
-      lens.style.opacity = ((0.5 + lf * 0.5) * (0.85 + state.boost * 0.15)).toFixed(3);
+        let gameState = {
+            playerHP: 50,
+            playerMaxHP: 50,
+            playerShield: 0,
+            playerEnergy: 3,
+            playerMaxEnergy: 3,
+            enemyHP: 80,
+            enemyMaxHP: 80,
+            enemyShield: 0,
+            enemyIntentType: 'attack',
+            enemyIntentValue: 8,
+            deck: [],
+            hand: [],
+            discard: [],
+            isPlayerTurn: true
+        };
 
-      /* ============ HUD TINT VARS (only when they change) ============ */
-      var warm = Math.round(state.boost * 100) / 100;
-      if (warm !== lastWarm) {
-        lastWarm = warm;
-        hud.style.setProperty('--warm', warm.toFixed(2));
-      }
-      var norm = Math.round(sn * 100) / 100;
-      if (norm !== lastNorm) {
-        lastNorm = norm;
-        hud.style.setProperty('--speed-norm', norm.toFixed(2));
-      }
-    }
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
 
-    /* ---------------------------------------------------------
-       Pause when hidden, resume cleanly
-       --------------------------------------------------------- */
-    document.addEventListener('visibilitychange', function () {
-      if (document.hidden) {
-        if (rafId) { cancelAnimationFrame(rafId); rafId = 0; }
-      } else if (!rafId) {
-        last = 0;
-        rafId = requestAnimationFrame(frame);
-      }
-    });
+        function initGame() {
+            gameState.playerHP = gameState.playerMaxHP;
+            gameState.playerShield = 0;
+            gameState.playerEnergy = gameState.playerMaxEnergy;
+            gameState.enemyHP = gameState.enemyMaxHP;
+            gameState.enemyShield = 0;
+            gameState.isPlayerTurn = true;
 
-    rafId = requestAnimationFrame(frame);
-  })();
-  </script>
+            // Clone and shuffle deck
+            gameState.deck = shuffle(JSON.parse(JSON.stringify(ALL_CARDS)));
+            gameState.hand = [];
+            gameState.discard = [];
 
+            document.getElementById('game-modal').classList.add('hidden');
+            logMessage('[System] New dungeon run initiated.');
+            
+            drawCards(4);
+            updateUI();
+        }
+
+        function logMessage(msg) {
+            const logContainer = document.getElementById('battle-log');
+            const div = document.createElement('div');
+            div.textContent = msg;
+            logContainer.appendChild(div);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+    </script>
+
+    <script>
+        function drawCards(amount) {
+            for (let i = 0; i < amount; i++) {
+                if (gameState.deck.length === 0) {
+                    if (gameState.discard.length === 0) break;
+                    gameState.deck = shuffle(gameState.discard);
+                    gameState.discard = [];
+                    logMessage('[System] Deck reshuffled from discard pile.');
+                }
+                const card = gameState.deck.pop();
+                gameState.hand.push(card);
+            }
+            updateUI();
+        }
+
+        function playCard(index) {
+            if (!gameState.isPlayerTurn) return;
+            const card = gameState.hand[index];
+
+            if (gameState.playerEnergy < card.cost) {
+                logMessage('[Warning] Not enough energy to play card!');
+                return;
+            }
+
+            playSound('card_play');
+            gameState.playerEnergy -= card.cost;
+            gameState.hand.splice(index, 1);
+            gameState.discard.push(card);
+
+            // Execute card effect
+            if (card.type === 'attack') {
+                let damage = card.value;
+                // Deal damage to enemy shield first, then HP
+                if (gameState.enemyShield > 0) {
+                    if (gameState.enemyShield >= damage) {
+                        gameState.enemyShield -= damage;
+                        damage = 0;
+                    } else {
+                        damage -= gameState.enemyShield;
+                        gameState.enemyShield = 0;
+                    }
+                }
+                if (damage > 0) {
+                    gameState.enemyHP = Math.max(0, gameState.enemyHP - damage);
+                }
+                playSound('attack');
+                showFloatingText('boss-sprite', `-${card.value}`, 'text-rose-400');
+                logMessage(`[Player] Played ${card.name} for ${card.value} damage!`);
+            } else if (card.type === 'skill') {
+                if (card.id === 'defend' || card.id === 'gold_shield') {
+                    gameState.playerShield += card.value;
+                    playSound('shield');
+                    showFloatingText('hero-floating-text', `+${card.value} SHIELD`, 'text-cyan-300');
+                    logMessage(`[Player] Played ${card.name}, gaining ${card.value} shield.`);
+                } else if (card.id === 'heal') {
+                    gameState.playerHP = Math.min(gameState.playerMaxHP, gameState.playerHP + card.value);
+                    playSound('heal');
+                    showFloatingText('hero-floating-text', `+${card.value} HP`, 'text-emerald-400');
+                    logMessage(`[Player] Played ${card.name}, healing ${card.value} HP.`);
+                }
+            }
+
+            updateUI();
+            checkWinCondition();
+        }
+
+        function endPlayerTurn() {
+            if (!gameState.isPlayerTurn) return;
+            gameState.isPlayerTurn = false;
+            document.getElementById('turn-indicator').innerText = 'ENEMY TURN';
+            logMessage('[System] Player ended turn.');
+
+            // Discard remaining hand
+            gameState.discard.push(...gameState.hand);
+            gameState.hand = [];
+            updateUI();
+
+            setTimeout(enemyTurn, 800);
+        }
+
+        function enemyTurn() {
+            if (gameState.enemyHP <= 0) return;
+
+            logMessage(`[Enemy] Dungeon Lord performs ${gameState.enemyIntentType.toUpperCase()}!`);
+
+            if (gameState.enemyIntentType === 'attack') {
+                let incomingDamage = gameState.enemyIntentValue;
+                if (gameState.playerShield > 0) {
+                    if (gameState.playerShield >= incomingDamage) {
+                        gameState.playerShield -= incomingDamage;
+                        incomingDamage = 0;
+                    } else {
+                        incomingDamage -= gameState.playerShield;
+                        gameState.playerShield = 0;
+                    }
+                }
+                if (incomingDamage > 0) {
+                    gameState.playerHP = Math.max(0, gameState.playerHP - incomingDamage);
+                }
+                playSound('attack');
+                showFloatingText('hero-floating-text', `-${gameState.enemyIntentValue}`, 'text-rose-400');
+            } else if (gameState.enemyIntentType === 'defend') {
+                gameState.enemyShield += 6;
+                playSound('shield');
+                showFloatingText('boss-floating-text', `+6 SHIELD`, 'text-cyan-300');
+            }
+
+            // Determine next intent
+            const intents = [
+                { type: 'attack', val: 7 },
+                { type: 'attack', val: 11 },
+                { type: 'defend', val: 6 }
+            ];
+            const nextIntent = intents[Math.floor(Math.random() * intents.length)];
+            gameState.enemyIntentType = nextIntent.type;
+            gameState.enemyIntentValue = nextIntent.val;
+
+            // Start new player turn
+            setTimeout(() => {
+                gameState.isPlayerTurn = true;
+                gameState.playerEnergy = gameState.playerMaxEnergy;
+                gameState.playerShield = 0; // Reset shield at start of turn
+                document.getElementById('turn-indicator').innerText = 'PLAYER TURN';
+                logMessage('[System] Player turn started. Draw 4 cards.');
+                drawCards(4);
+                updateUI();
+                checkWinCondition();
+            }, 800);
+        }
+
+        function checkWinCondition() {
+            if (gameState.enemyHP <= 0) {
+                playSound('win');
+                showModal('VICTORY!', 'You defeated the Dungeon Lord and conquered the pixel dungeon!');
+            } else if (gameState.playerHP <= 0) {
+                playSound('lose');
+                showModal('DEFEAT', 'You were overwhelmed by the Dungeon Lord. Try again!');
+            }
+        }
+
+        function showModal(title, desc) {
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-desc').innerText = desc;
+            document.getElementById('game-modal').classList.remove('hidden');
+        }
+
+        function showFloatingText(elementId, text, colorClass) {
+            const el = document.getElementById(elementId);
+            if (!el) return;
+            el.innerText = text;
+            el.className = `absolute -top-8 pixel-font text-xs font-bold transition-all duration-500 opacity-100 ${colorClass}`;
+            setTimeout(() => {
+                el.className = 'absolute -top-6 pixel-font text-xs font-bold opacity-0 transition-all';
+            }, 700);
+        }
+    </script>
+
+    <script>
+        function updateUI() {
+            // HP Bars & Stats
+            document.getElementById('player-hp').innerText = gameState.playerHP;
+            document.getElementById('player-max-hp').innerText = gameState.playerMaxHP;
+            document.getElementById('player-hp-bar').style.width = `${(gameState.playerHP / gameState.playerMaxHP) * 100}%`;
+            document.getElementById('player-shield').innerText = gameState.playerShield;
+            document.getElementById('player-energy').innerText = gameState.playerEnergy;
+
+            document.getElementById('enemy-hp').innerText = gameState.enemyHP;
+            document.getElementById('enemy-max-hp').innerText = gameState.enemyMaxHP;
+            document.getElementById('enemy-hp-bar').style.width = `${(gameState.enemyHP / gameState.enemyMaxHP) * 100}%`;
+            document.getElementById('enemy-shield').innerText = gameState.enemyShield;
+
+            // Intent
+            const intentEl = document.getElementById('enemy-intent');
+            if (gameState.enemyIntentType === 'attack') {
+                intentEl.innerHTML = `⚔️ ATTACK (${gameState.enemyIntentValue})`;
+            } else {
+                intentEl.innerHTML = `🛡️ DEFEND (${gameState.enemyIntentValue})`;
+            }
+
+            // Deck counts
+            document.getElementById('deck-count').innerText = gameState.deck.length;
+            document.getElementById('discard-count').innerText = gameState.discard.length;
+
+            // Render Hand Cards
+            const container = document.getElementById('cards-container');
+            container.innerHTML = '';
+
+            gameState.hand.forEach((card, index) => {
+                const cardDiv = document.createElement('div');
+                // Appropriate card asset path as requested: assets/card.png for common, assets/goldcard.png for rare gold
+                const assetPath = card.isGold ? 'assets/goldcard.png' : 'assets/card.png';
+                
+                // Fallback SVG data URI in case local asset file is not found in sandbox preview
+                const fallbackImg = card.isGold 
+                    ? "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='160' viewBox='0 0 120 160'%3E%3Crect width='120' height='160' rx='8' fill='%23b45309' stroke='%23f59e0b' stroke-width='4'/%3E%3Crect x='10' y='10' width='100' height='140' rx='4' fill='%2378350f'/%3E%3C/svg%3E"
+                    : "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='160' viewBox='0 0 120 160'%3E%3Crect width='120' height='160' rx='8' fill='%231e293b' stroke='%234f46e5' stroke-width='4'/%3E%3Crect x='10' y='10' width='100' height='140' rx='4' fill='%230f172a'/%3E%3C/svg%3E";
+
+                cardDiv.className = `relative w-28 h-36 md:w-32 md:h-40 rounded-xl cursor-pointer transition-transform hover:-translate-y-3 flex flex-col justify-between p-2 select-none shadow-xl ${card.isGold ? 'border-2 border-amber-400' : 'border-2 border-indigo-500'}`;
+                
+                cardDiv.onclick = () => playCard(index);
+
+                cardDiv.innerHTML = `
+                    <!-- Background card image with correct pixelated rendering and transparent scaling -->
+                    <img src="${assetPath}" onerror="this.onerror=null; this.src='${fallbackImg}';" class="absolute inset-0 w-full h-full rounded-xl pixel-img z-0" alt="Card Background" />
+                    
+                    <!-- Card Header / Cost -->
+                    <div class="relative z-10 flex justify-between items-center">
+                        <span class="pixel-font text-[9px] ${card.isGold ? 'text-amber-200 bg-amber-950/80 px-1.5 py-0.5 rounded border border-amber-600' : 'text-indigo-200 bg-indigo-950/80 px-1.5 py-0.5 rounded border border-indigo-700'}">${card.name}</span>
+                        <span class="pixel-font text-xs bg-amber-500 text-slate-950 px-1.5 py-0.5 rounded-full font-bold">${card.cost}⚡</span>
+                    </div>
+
+                    <!-- Card Body Icon / Art -->
+                    <div class="relative z-10 flex items-center justify-center my-auto">
+                        <span class="text-2xl md:text-3xl drop-shadow">${card.type === 'attack' ? '⚔️' : (card.id === 'heal' ? '🧪' : '🛡️')}</span>
+                    </div>
+
+                    <!-- Card Footer Description -->
+                    <div class="relative z-10 bg-slate-950/80 p-1.5 rounded border border-slate-700">
+                        <p class="text-[9px] font-mono text-slate-200 text-center leading-tight">${card.desc}</p>
+                    </div>
+                `;
+
+                container.appendChild(cardDiv);
+            });
+        }
+
+        // Initialize game on load
+        window.onload = function() {
+            initGame();
+        };
+    </script>
 </body>
 
 </html>
