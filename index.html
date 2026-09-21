@@ -6,14 +6,16 @@
   <meta name="viewport"
     content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
   <meta name="theme-color" content="#05090d">
+  <meta name="color-scheme" content="dark">
   <title>Sky Drift</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 
 <body>
 
-  <canvas id="scene"></canvas>
+  <canvas id="scene" style="touch-action:none" aria-hidden="true"></canvas>
 
   <!-- ============================================================
        HUD  —  all shapes drawn with CSS gradients, masks,
@@ -22,8 +24,8 @@
   <div id="hud">
 
     <!-- ambient overlays -->
-    <div class="fx fx-vignette"></div>
-    <div class="fx fx-scanlines"></div>
+    <div class="fx fx-vignette" aria-hidden="true"></div>
+    <div class="fx fx-scanlines" aria-hidden="true"></div>
 
     <div class="fx-lens" id="lensflare" aria-hidden="true">
       <i class="lens-core"></i>
@@ -35,10 +37,10 @@
     </div>
 
     <!-- corner brackets -->
-    <span class="bracket tl"></span>
-    <span class="bracket tr"></span>
-    <span class="bracket bl"></span>
-    <span class="bracket br"></span>
+    <span class="bracket tl" aria-hidden="true"></span>
+    <span class="bracket tr" aria-hidden="true"></span>
+    <span class="bracket bl" aria-hidden="true"></span>
+    <span class="bracket br" aria-hidden="true"></span>
 
     <!-- ==================== AIRSPEED GAUGE ==================== -->
     <section class="gauge speedo" id="speedo">
@@ -49,12 +51,12 @@
       <svg class="dial" viewBox="0 0 200 200" aria-hidden="true">
         <defs>
           <linearGradient id="gradSpeed" x1="0" y1="1" x2="1" y2="0">
-            <stop offset="0%"   stop-color="#3ce9ff"/>
-            <stop offset="55%"  stop-color="#a6f7ff"/>
+            <stop offset="0%" stop-color="#3ce9ff"/>
+            <stop offset="55%" stop-color="#a6f7ff"/>
             <stop offset="100%" stop-color="#ffb547"/>
           </linearGradient>
           <linearGradient id="gradRed" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%"   stop-color="#ff6a3a"/>
+            <stop offset="0%" stop-color="#ff6a3a"/>
             <stop offset="100%" stop-color="#ff2a2a"/>
           </linearGradient>
           <filter id="glow" x="-80%" y="-80%" width="260%" height="260%">
@@ -67,17 +69,18 @@
         </defs>
 
         <!-- 270° arc from 135° → 45°, r = 80, centre (100,100) -->
-        <path class="arc-bg"   d="M 43.43 156.57 A 80 80 0 1 1 156.57 156.57"/>
-        <path class="arc-red"  d="M 127.92 33.02 A 80 80 0 0 1 156.57 156.57"/>
-        <path class="arc-fill" id="arcFill"
+        <path class="arc-bg" d="M 43.43 156.57 A 80 80 0 1 1 156.57 156.57"/>
+        <!-- redline: same radius as the track, ends at the top of the scale -->
+        <path class="arc-red" d="M 130.77 26.15 A 80 80 0 0 1 156.57 156.57"/>
+        <path class="arc-fill" id="arcFill" stroke-dasharray="377"
               d="M 43.43 156.57 A 80 80 0 1 1 156.57 156.57"/>
       </svg>
 
-      <span class="ticks ticks-minor"></span>
-      <span class="ticks ticks-major"></span>
+      <span class="ticks ticks-minor" aria-hidden="true"></span>
+      <span class="ticks ticks-major" aria-hidden="true"></span>
 
-      <span class="needle" id="needle"><i></i></span>
-      <span class="hub"></span>
+      <span class="needle" id="needle" aria-hidden="true"><i></i></span>
+      <span class="hub" aria-hidden="true"></span>
 
       <div class="readout">
         <span class="value" id="speedValue">0</span>
@@ -92,7 +95,7 @@
       <div class="alt-window">
         <div class="alt-strip" id="altStrip"></div>
       </div>
-      <span class="alt-pointer"></span>
+      <span class="alt-pointer" aria-hidden="true"></span>
       <div class="alt-num">
         <span id="altValue">0</span><i>FT</i>
       </div>
@@ -110,9 +113,9 @@
         </div>
         <div class="att-glow"></div>
       </div>
-      <span class="att-frame"></span>
-      <span class="att-wing"></span>
-      <span class="att-dot"></span>
+      <span class="att-frame" aria-hidden="true"></span>
+      <span class="att-wing" aria-hidden="true"></span>
+      <span class="att-dot" aria-hidden="true"></span>
       <div class="caption v">ATTITUDE</div>
     </section>
 
@@ -121,7 +124,7 @@
       <div class="compass-window">
         <div class="compass-strip" id="compassStrip"></div>
       </div>
-      <span class="compass-mark"></span>
+      <span class="compass-mark" aria-hidden="true"></span>
       <div class="compass-num"><span id="hdgValue">000</span>°</div>
     </section>
 
@@ -133,9 +136,9 @@
       </div>
       <div class="pwr-bar">
         <span class="pwr-fill" id="thrFill"></span>
-        <span class="pwr-notches"></span>
+        <span class="pwr-notches" aria-hidden="true"></span>
       </div>
-      <div class="hex-row" id="hexRow">
+      <div class="hex-row" id="hexRow" aria-hidden="true">
         <span class="hex"></span><span class="hex"></span><span class="hex"></span>
         <span class="hex"></span><span class="hex"></span><span class="hex"></span>
       </div>
@@ -166,99 +169,146 @@
   (function () {
     "use strict";
 
-    /* ---------- build altitude tape ---------- */
-    var altStrip = document.getElementById('altStrip');
-    var PX_PER_FT = 0.22;
-    var ALT_MIN = -1000, ALT_MAX = 30000, ALT_STEP = 100;
-    var frag = document.createDocumentFragment();
-    for (var a = ALT_MIN; a <= ALT_MAX; a += ALT_STEP) {
-      var t = document.createElement('div');
-      t.className = 'tick ' + (a % 500 === 0 ? 'maj' : 'min');
-      t.style.top = (-a * PX_PER_FT) + 'px';
-      t.textContent = (a % 500 === 0) ? a : '';
-      frag.appendChild(t);
-    }
-    altStrip.appendChild(frag);
+    /* ---------------------------------------------------------
+       Element cache (looked up once, never per frame)
+       --------------------------------------------------------- */
+    var $ = function (id) { return document.getElementById(id); };
 
-    /* ---------- build compass ribbon ---------- */
-    var compassStrip = document.getElementById('compassStrip');
+    var canvas       = $('scene'),
+        hud          = $('hud'),
+        lens         = $('lensflare'),
+        hint         = $('hint'),
+        altStrip     = $('altStrip'),
+        compassStrip = $('compassStrip'),
+        needle       = $('needle'),
+        arcFill      = $('arcFill'),
+        speedValue   = $('speedValue'),
+        machValue    = $('machValue'),
+        altValue     = $('altValue'),
+        vsValue      = $('vsValue'),
+        vsValue2     = $('vsValue2'),
+        hdgValue     = $('hdgValue'),
+        attSphere    = $('attSphere'),
+        attitude     = $('attitude'),
+        thrFill      = $('thrFill'),
+        thrValue     = $('thrValue'),
+        gValue       = $('gValue'),
+        timeValue    = $('timeValue'),
+        sysState     = $('sysState');
+
+    var hexes = Array.prototype.slice.call(document.querySelectorAll('#hexRow .hex'));
+
+    /* ---------------------------------------------------------
+       Constants
+       --------------------------------------------------------- */
+    var PX_PER_FT  = 0.22;
+    var ALT_MIN    = -1000, ALT_MAX = 30000, ALT_STEP = 100;
     var PX_PER_DEG = 4;
-    frag = document.createDocumentFragment();
-    for (var h = -360; h <= 720; h += 5) {
-      var c = document.createElement('div');
-      var maj = (h % 30 === 0);
-      c.className = 'card ' + (maj ? 'maj' : 'min');
-      c.style.left = (h * PX_PER_DEG) + 'px';
-      if (maj) {
-        var norm = ((h % 360) + 360) % 360;
-        var lbl = norm === 0 ? 'N' : norm === 90 ? 'E' : norm === 180 ? 'S' : norm === 270 ? 'W'
-                : (norm / 10 | 0);
-        c.textContent = lbl;
+    var SPEED_MIN  = 60, SPEED_MAX = 420;
+    var ARC_LEN    = 377;              /* 270° arc, r = 80  →  80 · 1.5π */
+
+    /* ---------------------------------------------------------
+       Build the tapes once, off-document (single reflow)
+       --------------------------------------------------------- */
+    (function buildAltitudeTape() {
+      var frag = document.createDocumentFragment();
+      for (var a = ALT_MIN; a <= ALT_MAX; a += ALT_STEP) {
+        var maj = (a % 500 === 0);
+        var el = document.createElement('div');
+        el.className = 'tick ' + (maj ? 'maj' : 'min');
+        el.style.top = (-a * PX_PER_FT).toFixed(1) + 'px';
+        if (maj) el.textContent = a;
+        frag.appendChild(el);
       }
-      frag.appendChild(c);
+      altStrip.appendChild(frag);
+    })();
+
+    (function buildCompassRibbon() {
+      var frag = document.createDocumentFragment();
+      for (var h = -360; h <= 720; h += 5) {
+        var maj = (h % 30 === 0);
+        var el = document.createElement('div');
+        el.className = 'card ' + (maj ? 'maj' : 'min');
+        el.style.left = (h * PX_PER_DEG) + 'px';
+        if (maj) {
+          var n = ((h % 360) + 360) % 360;
+          el.textContent = n === 0 ? 'N' : n === 90 ? 'E' : n === 180 ? 'S' : n === 270 ? 'W'
+                          : (n / 10 | 0);
+        }
+        frag.appendChild(el);
+      }
+      compassStrip.appendChild(frag);
+    })();
+
+    /* ---------------------------------------------------------
+       Helpers
+       --------------------------------------------------------- */
+    function lerp(a, b, t) { return a + (b - a) * t; }
+    function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
+
+    /* write text only when it actually changed */
+    function setText(el, txt) {
+      if (el._t !== txt) { el._t = txt; el.textContent = txt; }
     }
-    compassStrip.appendChild(frag);
 
-    /* ---------- cached elements ---------- */
-    var needle      = document.getElementById('needle');
-    var arcFill     = document.getElementById('arcFill');
-    var speedValue  = document.getElementById('speedValue');
-    var machValue   = document.getElementById('machValue');
-    var altValue    = document.getElementById('altValue');
-    var vsValue     = document.getElementById('vsValue');
-    var vsValue2    = document.getElementById('vsValue2');
-    var hdgValue    = document.getElementById('hdgValue');
-    var hdgValue2   = document.getElementById('hdgValue2');
-    var attSphere   = document.getElementById('attSphere');
-    var attitude    = document.getElementById('attitude');
-    var thrFill     = document.getElementById('thrFill');
-    var thrValue    = document.getElementById('thrValue');
-    var hexes       = document.querySelectorAll('#hexRow .hex');
-    var gValue      = document.getElementById('gValue');
-    var timeValue   = document.getElementById('timeValue');
-    var sysState    = document.getElementById('sysState');
-    var lens        = document.getElementById('lensflare');
-    var hint        = document.getElementById('hint');
-    var hud         = document.getElementById('hud');
+    var nf = (typeof Intl !== 'undefined' && Intl.NumberFormat)
+      ? new Intl.NumberFormat('en-US')
+      : { format: function (n) { return String(n); } };
 
-    /* ---------- flight state (demo) ---------- */
-    var state = {
-      speed: 180, alt: 5200, vs: 0, heading: 45,
-      pitch: 0, roll: 0, throttle: 0.35, boost: 0,
-      g: 1
-    };
+    /* ---------------------------------------------------------
+       Cached viewport metrics (no layout reads inside the loop)
+       --------------------------------------------------------- */
+    var vw = window.innerWidth,
+        vh = window.innerHeight,
+        attH = 120;
 
-    var ARC_LEN = 377;      /* length of the 270° arc, r=80 */
-    var SPEED_MIN = 60, SPEED_MAX = 420;
+    function measure() { attH = attitude.clientHeight || 120; }
 
-    /* ---------- input ---------- */
-    var pointerId = null, ox = 0, oy = 0;
+    function onResize() {
+      vw = window.innerWidth;
+      vh = window.innerHeight;
+      measure();
+    }
+
+    window.addEventListener('resize', onResize, { passive: true });
+    window.addEventListener('orientationchange', onResize, { passive: true });
+    window.addEventListener('load', measure);
+
+    if (typeof ResizeObserver === 'function') {
+      new ResizeObserver(measure).observe(attitude);
+    }
+    measure();
+
+    /* ---------------------------------------------------------
+       Input
+       --------------------------------------------------------- */
+    var pointerId = null, originX = 0, originY = 0;
+    var activePointers = 0;
     var inputX = 0, inputY = 0;
     var boostHeld = false;
 
-    var canvas = document.getElementById('scene');
-
     canvas.addEventListener('pointerdown', function (e) {
-      if (pointerId !== null) return;
+      activePointers++;
+      if (pointerId !== null) return;          /* first finger drives, extras boost */
       pointerId = e.pointerId;
-      ox = e.clientX; oy = e.clientY;
+      originX = e.clientX;
+      originY = e.clientY;
       if (canvas.setPointerCapture) canvas.setPointerCapture(e.pointerId);
       hideHint();
     }, { passive: true });
 
     canvas.addEventListener('pointermove', function (e) {
       if (e.pointerId !== pointerId) return;
-      inputX = Math.max(-1, Math.min(1, (e.clientX - ox) / (window.innerWidth  * 0.24)));
-      inputY = Math.max(-1, Math.min(1, (e.clientY - oy) / (window.innerHeight * 0.24)));
+      inputX = clamp((e.clientX - originX) / (vw * 0.24), -1, 1);
+      inputY = clamp((e.clientY - originY) / (vh * 0.24), -1, 1);
     }, { passive: true });
 
     function endPointer(e) {
-      if (e.pointerId !== pointerId) return;
-      pointerId = null;
+      if (e.pointerId === pointerId) pointerId = null;
+      if (activePointers > 0) activePointers--;
     }
-    canvas.addEventListener('pointerup',     endPointer);
+    canvas.addEventListener('pointerup', endPointer);
     canvas.addEventListener('pointercancel', endPointer);
-    canvas.addEventListener('pointerleave',  endPointer);
 
     window.addEventListener('keydown', function (e) {
       if (e.key === 'Shift') boostHeld = true;
@@ -266,48 +316,69 @@
     window.addEventListener('keyup', function (e) {
       if (e.key === 'Shift') boostHeld = false;
     });
+    window.addEventListener('blur', function () {
+      pointerId = null;
+      activePointers = 0;
+      boostHeld = false;
+    });
 
-    var hintHidden = false;
+    var hintTimer = 0, hintHidden = false;
     function hideHint() {
       if (hintHidden) return;
       hintHidden = true;
+      clearTimeout(hintTimer);
       hint.classList.add('gone');
     }
-    setTimeout(hideHint, 7000);
+    hintTimer = setTimeout(hideHint, 7000);
 
-    /* ---------- helpers ---------- */
-    function lerp(a, b, t) { return a + (b - a) * t; }
-    function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
-    function fmt(n, d) { return n.toFixed(d === undefined ? 0 : d); }
+    /* ---------------------------------------------------------
+       Flight state (demo)
+       --------------------------------------------------------- */
+    var state = {
+      speed: 180, alt: 5200, vs: 0, heading: 45,
+      pitch: 0, roll: 0, throttle: 0.35, boost: 0, g: 1
+    };
 
-    /* ---------- main loop ---------- */
-    var last = performance.now();
-    var elapsed = 0;
-    var attH = attitude.clientHeight || 120;
-    var PX_PER_DEG_PITCH = attH / 90;   /* 90° of pitch fills the ball */
+    /* ---------------------------------------------------------
+       Main loop
+       --------------------------------------------------------- */
+    var rafId = 0, last = 0, elapsed = 0;
+
+    var lastAltTxt = null, lastLit = -1, lastHot = null, lastPct = -1;
+    var lastSys = '', lastWarm = -1, lastNorm = -1;
+
+    /* lens flare lives at the centre and is moved purely by transform */
+    lens.style.left = '50%';
+    lens.style.top = '50%';
+    lens.style.willChange = 'transform, opacity';
 
     function frame(now) {
-      requestAnimationFrame(frame);
-      var dt = Math.min((now - last) / 1000, 0.05);
+      rafId = requestAnimationFrame(frame);
+
+      var dt = last ? (now - last) / 1000 : 0;
       last = now;
+      if (dt > 0.05) dt = 0.05;
+      else if (dt < 0) dt = 0;
       elapsed += dt;
 
       /* --- decay input when released --- */
       if (pointerId === null) {
-        var d = Math.exp(-dt * 6);
-        inputX *= d; inputY *= d;
-        if (Math.abs(inputX) < 0.002) inputX = 0;
-        if (Math.abs(inputY) < 0.002) inputY = 0;
+        var decay = Math.exp(-dt * 6);
+        inputX *= decay;
+        inputY *= decay;
+        if (inputX < 0.002 && inputX > -0.002) inputX = 0;
+        if (inputY < 0.002 && inputY > -0.002) inputY = 0;
       }
 
       /* --- simulate aircraft --- */
-      state.roll  = lerp(state.roll,  inputX * 45, 1 - Math.exp(-dt * 3.5));
-      state.pitch = lerp(state.pitch, -inputY * 30, 1 - Math.exp(-dt * 3.5));
+      var k = 1 - Math.exp(-dt * 3.5);
+      state.roll  = lerp(state.roll,  inputX * 45, k);
+      state.pitch = lerp(state.pitch, -inputY * 30, k);
       state.heading = (state.heading + inputX * 40 * dt + 360) % 360;
 
-      var boosting = boostHeld || inputY < -0.85;
+      var boosting = boostHeld || activePointers >= 2 || inputY < -0.85;
       state.boost = lerp(state.boost, boosting ? 1 : 0, 1 - Math.exp(-dt * 4));
-      state.throttle = clamp(0.35 + state.boost * 0.65 + (-inputY) * 0.25, 0, 1);
+      state.throttle = clamp(0.35 + state.boost * 0.65 - inputY * 0.25, 0, 1);
 
       var targetSpeed = SPEED_MIN + state.throttle * (SPEED_MAX - SPEED_MIN);
       state.speed = lerp(state.speed, targetSpeed, 1 - Math.exp(-dt * 1.6));
@@ -319,62 +390,106 @@
 
       /* ============ SPEEDOMETER ============ */
       var sn = clamp((state.speed - SPEED_MIN) / (SPEED_MAX - SPEED_MIN), 0, 1);
-      needle.style.transform = 'rotate(' + (-135 + sn * 270) + 'deg)';
+      needle.style.transform = 'rotate(' + (-135 + sn * 270).toFixed(2) + 'deg)';
       arcFill.style.strokeDashoffset = (ARC_LEN * (1 - sn)).toFixed(1);
-      speedValue.textContent = Math.round(state.speed);
-      machValue.textContent = (state.speed / 660).toFixed(2);
+      setText(speedValue, Math.round(state.speed));
+      setText(machValue, (state.speed / 660).toFixed(2));
 
       /* ============ ALTITUDE TAPE ============ */
-      altStrip.style.transform = 'translateY(' + (state.alt * PX_PER_FT) + 'px)';
-      altValue.textContent = Math.round(state.alt).toLocaleString();
-      var vsStr = (state.vs >= 0 ? '+' : '') + Math.round(state.vs);
-      vsValue.textContent = vsStr;
-      vsValue2.textContent = vsStr;
+      altStrip.style.transform =
+        'translate3d(0,' + (state.alt * PX_PER_FT).toFixed(1) + 'px,0)';
+
+      var altR = Math.round(state.alt);
+      if (altR !== lastAltTxt) {
+        lastAltTxt = altR;
+        setText(altValue, nf.format(altR));
+      }
+
+      var vsR = Math.round(state.vs);
+      var vsStr = (vsR >= 0 ? '+' : '') + vsR;
+      setText(vsValue, vsStr);
+      setText(vsValue2, vsStr);
 
       /* ============ ATTITUDE BALL ============ */
-      var attHNow = attitude.clientHeight || 120;
-      var ppd = attHNow / 90;
+      var ppd = attH / 90;                     /* 90° of pitch fills the ball */
       attSphere.style.transform =
-        'rotate(' + state.roll + 'deg) translateY(' + (state.pitch * ppd) + 'px)';
+        'rotate(' + state.roll.toFixed(2) + 'deg) translateY(' +
+        (state.pitch * ppd).toFixed(1) + 'px)';
 
       /* ============ COMPASS ============ */
-      compassStrip.style.transform = 'translateX(' + (-state.heading * PX_PER_DEG) + 'px)';
+      compassStrip.style.transform =
+        'translate3d(' + (-state.heading * PX_PER_DEG).toFixed(1) + 'px,0,0)';
       var hdg = Math.round(state.heading) % 360;
-      var pad3 = ('00' + hdg).slice(-3);
-      hdgValue.textContent = pad3;
-      hdgValue2.textContent = pad3;
+      setText(hdgValue, ('00' + hdg).slice(-3));
 
       /* ============ POWER ============ */
       var pct = Math.round(state.throttle * 100);
-      thrFill.style.width = pct + '%';
-      thrValue.textContent = pct + '%';
+      if (pct !== lastPct) {
+        lastPct = pct;
+        thrFill.style.width = pct + '%';
+        setText(thrValue, pct + '%');
+      }
+
       var lit = Math.round(state.throttle * hexes.length);
-      for (var i = 0; i < hexes.length; i++) {
-        hexes[i].classList.toggle('on',  i < lit);
-        hexes[i].classList.toggle('hot', i < lit && state.boost > 0.4);
+      var hot = state.boost > 0.4;
+      if (lit !== lastLit || hot !== lastHot) {
+        for (var i = 0; i < hexes.length; i++) {
+          var on = i < lit;
+          hexes[i].classList.toggle('on', on);
+          hexes[i].classList.toggle('hot', on && hot);
+        }
+        lastLit = lit;
+        lastHot = hot;
       }
 
       /* ============ STATUS ============ */
-      gValue.textContent = fmt(state.g, 1);
-      var m = Math.floor(elapsed / 60);
-      var s = Math.floor(elapsed % 60);
-      timeValue.textContent = ('0' + m).slice(-2) + ':' + ('0' + s).slice(-2);
-      sysState.textContent = state.boost > 0.5 ? 'AFTERBURN' : 'NOMINAL';
-      sysState.style.color = state.boost > 0.5 ? '#ffb547' : '';
+      setText(gValue, state.g.toFixed(1));
 
-      /* ============ LENS FLARE ============ */
+      var mins = (elapsed / 60) | 0;
+      var secs = (elapsed % 60) | 0;
+      setText(timeValue, (mins < 10 ? '0' : '') + mins + ':' + (secs < 10 ? '0' : '') + secs);
+
+      var sys = state.boost > 0.5 ? 'AFTERBURN' : 'NOMINAL';
+      if (sys !== lastSys) {
+        lastSys = sys;
+        sysState.textContent = sys;
+        sysState.style.color = sys === 'AFTERBURN' ? '#ffb547' : '';
+      }
+
+      /* ============ LENS FLARE (transform/opacity only) ============ */
       var lf = state.speed / SPEED_MAX;
-      lens.style.left = (55 + Math.sin(elapsed * 0.12) * 12) + '%';
-      lens.style.top  = (24 + Math.cos(elapsed * 0.10) * 6) + '%';
-      lens.style.opacity = (0.5 + lf * 0.5) * (0.85 + state.boost * 0.15);
-      lens.style.transform = 'translate(-50%, -50%) scale(' + (0.8 + lf * 0.5) + ')';
+      lens.style.transform =
+        'translate3d(' + ((0.05 + Math.sin(elapsed * 0.12) * 0.12) * vw).toFixed(1) + 'px,' +
+                          ((-0.26 + Math.cos(elapsed * 0.10) * 0.06) * vh).toFixed(1) + 'px,0) ' +
+        'translate(-50%,-50%) scale(' + (0.8 + lf * 0.5).toFixed(3) + ')';
+      lens.style.opacity = ((0.5 + lf * 0.5) * (0.85 + state.boost * 0.15)).toFixed(3);
 
-      /* ============ HUD WARM TINT on boost ============ */
-      hud.style.setProperty('--warm', state.boost.toFixed(3));
-      hud.style.setProperty('--speed-norm', sn.toFixed(3));
+      /* ============ HUD TINT VARS (only when they change) ============ */
+      var warm = Math.round(state.boost * 100) / 100;
+      if (warm !== lastWarm) {
+        lastWarm = warm;
+        hud.style.setProperty('--warm', warm.toFixed(2));
+      }
+      var norm = Math.round(sn * 100) / 100;
+      if (norm !== lastNorm) {
+        lastNorm = norm;
+        hud.style.setProperty('--speed-norm', norm.toFixed(2));
+      }
     }
 
-    requestAnimationFrame(frame);
+    /* ---------------------------------------------------------
+       Pause when hidden, resume cleanly
+       --------------------------------------------------------- */
+    document.addEventListener('visibilitychange', function () {
+      if (document.hidden) {
+        if (rafId) { cancelAnimationFrame(rafId); rafId = 0; }
+      } else if (!rafId) {
+        last = 0;
+        rafId = requestAnimationFrame(frame);
+      }
+    });
+
+    rafId = requestAnimationFrame(frame);
   })();
   </script>
 
