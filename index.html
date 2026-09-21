@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,69 +10,54 @@
         .pixel-font {
             font-family: 'Press Start 2P', monospace;
         }
-
         .pixel-border {
-            box-shadow: inset -4px -4px 0px 0px rgba(0, 0, 0, 0.5), inset 4px 4px 0px 0px rgba(255, 255, 255, 0.3);
+            box-shadow: inset -4px -4px 0px 0px rgba(0,0,0,0.5), inset 4px 4px 0px 0px rgba(255,255,255,0.3);
         }
-
         .pixel-button {
-            box-shadow: inset -4px -4px 0px 0px rgba(0, 0, 0, 0.6), inset 4px 4px 0px 0px rgba(255, 255, 255, 0.4);
+            box-shadow: inset -4px -4px 0px 0px rgba(0,0,0,0.6), inset 4px 4px 0px 0px rgba(255,255,255,0.4);
             transition: transform 0.05s ease, filter 0.1s ease;
         }
-
         .pixel-button:active {
             transform: translateY(3px);
-            box-shadow: inset -2px -2px 0px 0px rgba(0, 0, 0, 0.6), inset 2px 2px 0px 0px rgba(255, 255, 255, 0.4);
+            box-shadow: inset -2px -2px 0px 0px rgba(0,0,0,0.6), inset 2px 2px 0px 0px rgba(255,255,255,0.4);
         }
-
         .pixel-img {
             image-rendering: pixelated;
-            object-fit: contain;
         }
-
         /* CRT Scanline overlay effect */
         .crt-scanlines::after {
             content: " ";
             display: block;
             position: absolute;
-            top: 0;
-            left: 0;
-            bottom: 0;
-            right: 0;
+            top: 0; left: 0; bottom: 0; right: 0;
             background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.3) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.04), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.04));
             z-index: 40;
             background-size: 100% 4px, 6px 100%;
             pointer-events: none;
         }
-
-        /* Custom scrollbar for battle log */
         ::-webkit-scrollbar {
             width: 8px;
         }
-
         ::-webkit-scrollbar-track {
             background: #1e1b4b;
         }
-
         ::-webkit-scrollbar-thumb {
             background: #4f46e5;
             border-radius: 2px;
         }
     </style>
 </head>
-
 <body class="bg-slate-950 text-slate-100 min-h-screen flex items-center justify-center p-2 md:p-6 select-none">
 
-    <div id="ipad-container"
-        class="relative w-full max-w-5xl h-[820px] bg-slate-900 border-[12px] border-amber-900 rounded-[3rem] shadow-2xl flex flex-col overflow-hidden crt-scanlines">
-
+    <div id="ipad-container" class="relative w-full max-w-5xl h-[820px] bg-slate-900 border-[12px] border-amber-900 rounded-[3rem] shadow-2xl flex flex-col overflow-hidden crt-scanlines">
+        
         <!-- Top Bezel / Header Status Bar -->
         <div class="bg-slate-950 px-6 py-3 border-b-4 border-amber-900/80 flex items-center justify-between z-30">
             <div class="flex items-center space-x-3">
                 <div class="w-3 h-3 rounded-full bg-red-500 animate-pulse"></div>
                 <h1 class="pixel-font text-xs md:text-sm text-amber-400 tracking-wider">PIXEL DUNGEON TACTICS</h1>
             </div>
-
+            
             <div class="flex items-center space-x-4">
                 <button id="audio-toggle" onclick="toggleAudio()" class="pixel-button px-3 py-1 bg-indigo-800 hover:bg-indigo-700 text-xs pixel-font rounded border border-indigo-500">
                     SOUND: ON
@@ -88,52 +72,40 @@
         </div>
 
         <!-- Main Game Area -->
-        <div
-            class="flex-1 flex flex-col justify-between p-4 md:p-6 relative overflow-hidden bg-gradient-to-b from-slate-900 via-indigo-950/40 to-slate-900">
-
+        <div class="flex-1 flex flex-col justify-between p-4 md:p-6 relative overflow-hidden bg-gradient-to-b from-slate-900 via-indigo-950/40 to-slate-900">
+            
             <!-- Combat Stats / Arena Header -->
             <div class="grid grid-cols-2 gap-4 z-20">
                 <!-- Player Status Card -->
-                <div
-                    class="bg-slate-900/90 border-4 border-emerald-600 p-3 rounded-xl pixel-border flex items-center justify-between">
+                <div class="bg-slate-900/90 border-4 border-emerald-600 p-3 rounded-xl pixel-border flex items-center justify-between">
                     <div>
                         <div class="pixel-font text-xs text-emerald-400 mb-1">HERO (LVL 1)</div>
-                        <div class="text-xs text-slate-300 font-bold mb-1">HP:
-                            <span id="player-hp" class="text-emerald-300">50</span>/<span id="player-max-hp">50</span>
-                        </div>
+                        <div class="text-xs text-slate-300 font-bold mb-1">HP: <span id="player-hp" class="text-emerald-300">50</span>/<span id="player-max-hp">50</span></div>
                         <div class="w-32 md:w-48 bg-slate-800 h-3 rounded border border-slate-600 overflow-hidden">
-                            <div id="player-hp-bar" class="bg-emerald-500 h-full transition-all duration-300"
-                                style="width: 100%;"></div>
+                            <div id="player-hp-bar" class="bg-emerald-500 h-full transition-all duration-300" style="width: 100%;"></div>
                         </div>
                     </div>
                     <div class="text-right">
-                        <div class="pixel-font text-[10px] text-amber-300 mb-1">SHIELD:
-                            <span id="player-shield">0</span></div>
-                        <div class="pixel-font text-[10px] text-cyan-300">ENERGY:
-                            <span id="player-energy">3</span>/<span id="player-max-energy">3</span></div>
+                        <div class="pixel-font text-[10px] text-amber-300 mb-1">SHIELD: <span id="player-shield">0</span></div>
+                        <div class="pixel-font text-[10px] text-cyan-300">ENERGY: <span id="player-energy">3</span>/<span id="player-max-energy">3</span></div>
                     </div>
                 </div>
 
                 <!-- Boss Status Card -->
-                <div
-                    class="bg-slate-900/90 border-4 border-rose-600 p-3 rounded-xl pixel-border flex items-center justify-between">
+                <div class="bg-slate-900/90 border-4 border-rose-600 p-3 rounded-xl pixel-border flex items-center justify-between">
                     <div class="text-left">
                         <div class="pixel-font text-xs text-rose-400 mb-1">DUNGEON LORD</div>
-                        <div class="text-xs text-slate-300 font-bold mb-1">HP:
-                            <span id="enemy-hp" class="text-rose-300">80</span>/<span id="enemy-max-hp">80</span></div>
+                        <div class="text-xs text-slate-300 font-bold mb-1">HP: <span id="enemy-hp" class="text-rose-300">80</span>/<span id="enemy-max-hp">80</span></div>
                         <div class="w-32 md:w-48 bg-slate-800 h-3 rounded border border-slate-600 overflow-hidden">
-                            <div id="enemy-hp-bar" class="bg-rose-500 h-full transition-all duration-300"
-                                style="width: 100%;"></div>
+                            <div id="enemy-hp-bar" class="bg-rose-500 h-full transition-all duration-300" style="width: 100%;"></div>
                         </div>
                     </div>
                     <div class="text-right">
                         <div class="pixel-font text-[10px] text-rose-300 mb-1">INTENT</div>
-                        <div id="enemy-intent"
-                            class="pixel-font text-xs text-amber-300 bg-rose-950/80 px-2 py-1 rounded border border-rose-700 inline-block">
+                        <div id="enemy-intent" class="pixel-font text-xs text-amber-300 bg-rose-950/80 px-2 py-1 rounded border border-rose-700 inline-block">
                             ⚔️ ATTACK (8)
                         </div>
-                        <div class="pixel-font text-[10px] text-slate-400 mt-1">SHIELD: <span id="enemy-shield">0</span>
-                        </div>
+                        <div class="pixel-font text-[10px] text-slate-400 mt-1">SHIELD: <span id="enemy-shield">0</span></div>
                     </div>
                 </div>
             </div>
@@ -142,29 +114,23 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 my-2 items-center z-20 flex-1">
                 <!-- Hero Sprite Area -->
                 <div class="flex flex-col items-center justify-center relative">
-                    <div id="hero-sprite"
-                        class="w-24 h-24 md:w-32 md:h-32 bg-indigo-900/60 border-4 border-indigo-600 rounded-2xl flex items-center justify-center pixel-border shadow-lg relative">
+                    <div id="hero-sprite" class="w-24 h-24 md:w-32 md:h-32 bg-indigo-900/60 border-4 border-indigo-600 rounded-2xl flex items-center justify-center pixel-border shadow-lg relative">
                         <span class="text-4xl md:text-5xl animate-bounce">🛡️</span>
-                        <div id="hero-floating-text"
-                            class="absolute -top-6 pixel-font text-xs text-emerald-400 font-bold opacity-0 transition-all">
-                        </div>
+                        <div id="hero-floating-text" class="absolute -top-6 pixel-font text-xs text-emerald-400 font-bold opacity-0 transition-all"></div>
                     </div>
                     <span class="pixel-font text-[10px] text-indigo-300 mt-2">PLAYER CHARACTER</span>
                 </div>
 
                 <!-- Battle Log & Turn Indicator -->
-                <div
-                    class="flex flex-col h-full justify-between bg-slate-950/80 border-2 border-slate-700 rounded-xl p-3">
+                <div class="flex flex-col h-full justify-between bg-slate-950/80 border-2 border-slate-700 rounded-xl p-3">
                     <div class="flex justify-between items-center mb-2 border-b border-slate-800 pb-1">
                         <span class="pixel-font text-[10px] text-amber-400">COMBAT LOG</span>
                         <span id="turn-indicator" class="pixel-font text-[10px] text-cyan-300">PLAYER TURN</span>
                     </div>
-                    <div id="battle-log"
-                        class="flex-1 overflow-y-auto text-xs text-slate-300 space-y-1 font-mono pr-1 max-h-28">
+                    <div id="battle-log" class="flex-1 overflow-y-auto text-xs text-slate-300 space-y-1 font-mono pr-1 max-h-28">
                         <div>[System] Dungeon battle started! Defeat the Dungeon Lord.</div>
                     </div>
-                    <div
-                        class="mt-2 pt-2 border-t border-slate-800 flex justify-between items-center text-[10px] pixel-font">
+                    <div class="mt-2 pt-2 border-t border-slate-800 flex justify-between items-center text-[10px] pixel-font">
                         <span class="text-slate-400">DECK: <span id="deck-count">10</span></span>
                         <span class="text-slate-400">DISCARD: <span id="discard-count">0</span></span>
                     </div>
@@ -172,23 +138,19 @@
 
                 <!-- Boss Sprite Area -->
                 <div class="flex flex-col items-center justify-center relative">
-                    <div id="boss-sprite"
-                        class="w-24 h-24 md:w-32 md:h-32 bg-rose-950/60 border-4 border-rose-600 rounded-2xl flex items-center justify-center pixel-border shadow-lg relative">
+                    <div id="boss-sprite" class="w-24 h-24 md:w-32 md:h-32 bg-rose-950/60 border-4 border-rose-600 rounded-2xl flex items-center justify-center pixel-border shadow-lg relative">
                         <span class="text-4xl md:text-5xl animate-pulse">👹</span>
-                        <div id="boss-floating-text"
-                            class="absolute -top-6 pixel-font text-xs text-rose-400 font-bold opacity-0 transition-all">
-                        </div>
+                        <div id="boss-floating-text" class="absolute -top-6 pixel-font text-xs text-rose-400 font-bold opacity-0 transition-all"></div>
                     </div>
                     <span class="pixel-font text-[10px] text-rose-300 mt-2">DUNGEON LORD</span>
                 </div>
             </div>
 
             <!-- Player Hand & Action Controls -->
-            <div
-                class="z-20 bg-slate-950/90 border-4 border-indigo-900/80 rounded-2xl p-4 flex flex-col md:flex-row items-center justify-between gap-4">
-
+            <div class="z-20 bg-slate-950/90 border-4 border-indigo-900/80 rounded-2xl p-4 flex flex-col md:flex-row items-center justify-between gap-4">
+                
                 <!-- Cards Hand Container -->
-                <div id="cards-container" class="flex flex-wrap items-center justify-center gap-3 min-h-[140px] flex-1">
+                <div id="cards-container" class="flex flex-wrap items-center justify-center gap-4 min-h-[160px] flex-1">
                     <!-- Dynamically populated cards go here -->
                 </div>
 
@@ -209,13 +171,10 @@
     </div>
 
     <!-- Victory / Defeat Modal Overlay -->
-    <div id="game-modal"
-        class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center hidden">
-        <div
-            class="bg-slate-900 border-4 border-amber-500 p-8 rounded-3xl max-w-md w-full text-center pixel-border shadow-2xl">
+    <div id="game-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center hidden">
+        <div class="bg-slate-900 border-4 border-amber-500 p-8 rounded-3xl max-w-md w-full text-center pixel-border shadow-2xl">
             <h2 id="modal-title" class="pixel-font text-lg text-amber-400 mb-4">VICTORY!</h2>
-            <p id="modal-desc" class="text-xs text-slate-300 mb-6 font-mono leading-relaxed">You have vanquished the
-                Dungeon Lord and claimed eternal glory!</p>
+            <p id="modal-desc" class="text-xs text-slate-300 mb-6 font-mono leading-relaxed">You have vanquished the Dungeon Lord and claimed eternal glory!</p>
             <button onclick="restartGame()" class="pixel-button px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white pixel-font text-xs rounded-xl border-2 border-emerald-400">
                 PLAY AGAIN
             </button>
@@ -223,7 +182,6 @@
     </div>
 
     <script>
-        // Web Audio API Sound Synthesizer
         let audioCtx = null;
         let soundEnabled = true;
         let crtEnabled = true;
@@ -281,10 +239,10 @@
                 osc.stop(now + 0.3);
             } else if (type === 'win') {
                 osc.type = 'square';
-                osc.frequency.setValueAtTime(261.63, now); // C4
-                osc.frequency.setValueAtTime(329.63, now + 0.15); // E4
-                osc.frequency.setValueAtTime(392.00, now + 0.3); // G4
-                osc.frequency.setValueAtTime(523.25, now + 0.45); // C5
+                osc.frequency.setValueAtTime(261.63, now);
+                osc.frequency.setValueAtTime(329.63, now + 0.15);
+                osc.frequency.setValueAtTime(392.00, now + 0.3);
+                osc.frequency.setValueAtTime(523.25, now + 0.45);
                 gain.gain.setValueAtTime(0.2, now);
                 gain.gain.linearRampToValueAtTime(0.01, now + 0.7);
                 osc.start(now);
@@ -319,8 +277,6 @@
     </script>
 
     <script>
-        // Card Master List
-        // Common cards use assets/card.png, Gold rare cards use assets/goldcard.png
         const ALL_CARDS = [
             { id: 'strike', name: 'PIXEL STRIKE', type: 'attack', cost: 1, value: 6, desc: 'Deal 6 damage to enemy.', isGold: false },
             { id: 'strike', name: 'PIXEL STRIKE', type: 'attack', cost: 1, value: 6, desc: 'Deal 6 damage to enemy.', isGold: false },
@@ -330,7 +286,6 @@
             { id: 'defend', name: 'CHUNKY SHIELD', type: 'skill', cost: 1, value: 5, desc: 'Gain 5 armor shield.', isGold: false },
             { id: 'heal', name: 'MINOR POTION', type: 'skill', cost: 1, value: 4, desc: 'Restore 4 HP.', isGold: false },
             { id: 'heavy', name: 'HEAVY SLASH', type: 'attack', cost: 2, value: 12, desc: 'Deal 12 heavy damage.', isGold: false },
-            // Rare Gold Cards
             { id: 'gold_strike', name: 'GOLDEN BLADE', type: 'attack', cost: 1, value: 14, desc: 'Deal 14 damage with gold power.', isGold: true },
             { id: 'gold_shield', name: 'AEGIS SHIELD', type: 'skill', cost: 2, value: 12, desc: 'Gain 12 heavy armor shield.', isGold: true }
         ];
@@ -368,7 +323,6 @@
             gameState.enemyShield = 0;
             gameState.isPlayerTurn = true;
 
-            // Clone and shuffle deck
             gameState.deck = shuffle(JSON.parse(JSON.stringify(ALL_CARDS)));
             gameState.hand = [];
             gameState.discard = [];
@@ -378,6 +332,10 @@
             
             drawCards(4);
             updateUI();
+        }
+
+        function restartGame() {
+            initGame();
         }
 
         function logMessage(msg) {
@@ -418,10 +376,8 @@
             gameState.hand.splice(index, 1);
             gameState.discard.push(card);
 
-            // Execute card effect
             if (card.type === 'attack') {
                 let damage = card.value;
-                // Deal damage to enemy shield first, then HP
                 if (gameState.enemyShield > 0) {
                     if (gameState.enemyShield >= damage) {
                         gameState.enemyShield -= damage;
@@ -461,7 +417,6 @@
             document.getElementById('turn-indicator').innerText = 'ENEMY TURN';
             logMessage('[System] Player ended turn.');
 
-            // Discard remaining hand
             gameState.discard.push(...gameState.hand);
             gameState.hand = [];
             updateUI();
@@ -493,10 +448,9 @@
             } else if (gameState.enemyIntentType === 'defend') {
                 gameState.enemyShield += 6;
                 playSound('shield');
-                showFloatingText('boss-floating-text', `+6 SHIELD`, 'text-cyan-300');
+                showFloatingText('boss-sprite', `+6 SHIELD`, 'text-cyan-300');
             }
 
-            // Determine next intent
             const intents = [
                 { type: 'attack', val: 7 },
                 { type: 'attack', val: 11 },
@@ -506,11 +460,10 @@
             gameState.enemyIntentType = nextIntent.type;
             gameState.enemyIntentValue = nextIntent.val;
 
-            // Start new player turn
             setTimeout(() => {
                 gameState.isPlayerTurn = true;
                 gameState.playerEnergy = gameState.playerMaxEnergy;
-                gameState.playerShield = 0; // Reset shield at start of turn
+                gameState.playerShield = 0;
                 document.getElementById('turn-indicator').innerText = 'PLAYER TURN';
                 logMessage('[System] Player turn started. Draw 4 cards.');
                 drawCards(4);
@@ -548,7 +501,6 @@
 
     <script>
         function updateUI() {
-            // HP Bars & Stats
             document.getElementById('player-hp').innerText = gameState.playerHP;
             document.getElementById('player-max-hp').innerText = gameState.playerMaxHP;
             document.getElementById('player-hp-bar').style.width = `${(gameState.playerHP / gameState.playerMaxHP) * 100}%`;
@@ -560,7 +512,6 @@
             document.getElementById('enemy-hp-bar').style.width = `${(gameState.enemyHP / gameState.enemyMaxHP) * 100}%`;
             document.getElementById('enemy-shield').innerText = gameState.enemyShield;
 
-            // Intent
             const intentEl = document.getElementById('enemy-intent');
             if (gameState.enemyIntentType === 'attack') {
                 intentEl.innerHTML = `⚔️ ATTACK (${gameState.enemyIntentValue})`;
@@ -568,46 +519,46 @@
                 intentEl.innerHTML = `🛡️ DEFEND (${gameState.enemyIntentValue})`;
             }
 
-            // Deck counts
             document.getElementById('deck-count').innerText = gameState.deck.length;
             document.getElementById('discard-count').innerText = gameState.discard.length;
 
-            // Render Hand Cards
             const container = document.getElementById('cards-container');
             container.innerHTML = '';
 
             gameState.hand.forEach((card, index) => {
                 const cardDiv = document.createElement('div');
-                // Appropriate card asset path as requested: assets/card.png for common, assets/goldcard.png for rare gold
+                
+                // Asset path: assets/card.png for common, assets/goldcard.png for rare gold
                 const assetPath = card.isGold ? 'assets/goldcard.png' : 'assets/card.png';
                 
-                // Fallback SVG data URI in case local asset file is not found in sandbox preview
+                // Hollow outline frame fallback SVG (transparent inside so text is displayed inside)
                 const fallbackImg = card.isGold 
-                    ? "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='160' viewBox='0 0 120 160'%3E%3Crect width='120' height='160' rx='8' fill='%23b45309' stroke='%23f59e0b' stroke-width='4'/%3E%3Crect x='10' y='10' width='100' height='140' rx='4' fill='%2378350f'/%3E%3C/svg%3E"
-                    : "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='160' viewBox='0 0 120 160'%3E%3Crect width='120' height='160' rx='8' fill='%231e293b' stroke='%234f46e5' stroke-width='4'/%3E%3Crect x='10' y='10' width='100' height='140' rx='4' fill='%230f172a'/%3E%3C/svg%3E";
+                    ? "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='160' viewBox='0 0 120 160'%3E%3Crect x='2' y='2' width='116' height='156' rx='8' fill='none' stroke='%23f59e0b' stroke-width='6'/%3E%3Crect x='6' y='6' width='108' height='148' rx='6' fill='none' stroke='%23b45309' stroke-width='2'/%3E%3C/svg%3E"
+                    : "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='160' viewBox='0 0 120 160'%3E%3Crect x='2' y='2' width='116' height='156' rx='8' fill='none' stroke='%236366f1' stroke-width='6'/%3E%3Crect x='6' y='6' width='108' height='148' rx='6' fill='none' stroke='%23312e81' stroke-width='2'/%3E%3C/svg%3E";
 
-                cardDiv.className = `relative w-28 h-36 md:w-32 md:h-40 rounded-xl cursor-pointer transition-transform hover:-translate-y-3 flex flex-col justify-between p-2 select-none shadow-xl ${card.isGold ? 'border-2 border-amber-400' : 'border-2 border-indigo-500'}`;
+                // Card container fully takes up space with card frame stretching to edges (object-fill)
+                cardDiv.className = `relative w-28 h-36 md:w-32 md:h-40 rounded-xl cursor-pointer transition-transform hover:-translate-y-3 flex flex-col justify-between p-3 select-none shadow-xl bg-slate-900/40`;
                 
                 cardDiv.onclick = () => playCard(index);
 
                 cardDiv.innerHTML = `
-                    <!-- Background card image with correct pixelated rendering and transparent scaling -->
-                    <img src="${assetPath}" onerror="this.onerror=null; this.src='${fallbackImg}';" class="absolute inset-0 w-full h-full rounded-xl pixel-img z-0" alt="Card Background" />
+                    <!-- Background Card Frame PNG (Stretches across entire card space, hollow center for text) -->
+                    <img src="${assetPath}" onerror="this.onerror=null; this.src='${fallbackImg}';" class="absolute inset-0 w-full h-full rounded-xl pixel-img z-0 object-fill pointer-events-none" alt="Card Frame" />
                     
-                    <!-- Card Header / Cost -->
-                    <div class="relative z-10 flex justify-between items-center">
-                        <span class="pixel-font text-[9px] ${card.isGold ? 'text-amber-200 bg-amber-950/80 px-1.5 py-0.5 rounded border border-amber-600' : 'text-indigo-200 bg-indigo-950/80 px-1.5 py-0.5 rounded border border-indigo-700'}">${card.name}</span>
-                        <span class="pixel-font text-xs bg-amber-500 text-slate-950 px-1.5 py-0.5 rounded-full font-bold">${card.cost}⚡</span>
+                    <!-- Card Header / Title & Cost (Positioned inside the transparent frame) -->
+                    <div class="relative z-10 flex justify-between items-center px-1 pt-1">
+                        <span class="pixel-font text-[8px] md:text-[9px] ${card.isGold ? 'text-amber-200 bg-amber-950/90 px-1.5 py-0.5 rounded border border-amber-600' : 'text-indigo-200 bg-indigo-950/90 px-1.5 py-0.5 rounded border border-indigo-700'}">${card.name}</span>
+                        <span class="pixel-font text-[10px] md:text-xs bg-amber-500 text-slate-950 px-1.5 py-0.5 rounded-full font-bold">${card.cost}⚡</span>
                     </div>
 
                     <!-- Card Body Icon / Art -->
                     <div class="relative z-10 flex items-center justify-center my-auto">
-                        <span class="text-2xl md:text-3xl drop-shadow">${card.type === 'attack' ? '⚔️' : (card.id === 'heal' ? '🧪' : '🛡️')}</span>
+                        <span class="text-2xl md:text-3xl drop-shadow-md">${card.type === 'attack' ? '⚔️' : (card.id === 'heal' ? '🧪' : '🛡️')}</span>
                     </div>
 
-                    <!-- Card Footer Description -->
-                    <div class="relative z-10 bg-slate-950/80 p-1.5 rounded border border-slate-700">
-                        <p class="text-[9px] font-mono text-slate-200 text-center leading-tight">${card.desc}</p>
+                    <!-- Card Footer Description (Positioned inside the frame bottom) -->
+                    <div class="relative z-10 bg-slate-950/90 p-1.5 rounded border border-slate-700 mb-1">
+                        <p class="text-[8px] md:text-[9px] font-mono text-slate-200 text-center leading-tight">${card.desc}</p>
                     </div>
                 `;
 
@@ -615,11 +566,9 @@
             });
         }
 
-        // Initialize game on load
         window.onload = function() {
             initGame();
         };
     </script>
 </body>
-
 </html>
