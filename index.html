@@ -12,7 +12,7 @@
 <body>
 <div id="app">
 
-  <!-- ================= MENU ================= -->
+  <!-- ============ MENU ============ -->
   <section id="scr-menu" class="screen active">
     <div class="menu-overlay"></div>
     <div class="menu-box">
@@ -32,7 +32,7 @@
     </div>
   </section>
 
-  <!-- ================= DECK BUILDER ================= -->
+  <!-- ============ DECK BUILDER ============ -->
   <section id="scr-deck" class="screen">
     <div class="topbar">
       <div class="chip deck"><span>DECK</span><b id="deckCount">0</b><span>/ 12</span></div>
@@ -62,7 +62,7 @@
     </div>
   </section>
 
-  <!-- ================= BATTLE ================= -->
+  <!-- ============ BATTLE ============ -->
   <section id="scr-battle" class="screen">
     <div class="topbar">
       <div class="chip"><span>STAGE</span><b id="hudStage">1</b></div>
@@ -100,32 +100,32 @@
     </div>
   </section>
 
-  <!-- ================= REWARD ================= -->
+  <!-- ============ REWARD ============ -->
   <section id="scr-reward" class="screen center-col">
     <h2 class="screen-title" style="color:var(--gold)">VICTORY!</h2>
-    <div style="font-family:var(--fp);font-size:9px;color:var(--dim);letter-spacing:2px">
-      EARNED <b style="color:var(--gold);font-size:13px" id="rewardGold">0</b> GOLD
+    <div class="sub-line">
+      EARNED <b id="rewardGold">0</b> GOLD
     </div>
-    <div style="font-family:var(--fp);font-size:7px;color:var(--dim2);letter-spacing:3px;margin-top:2px">CHOOSE A CARD</div>
+    <div class="sub-hint">CHOOSE A CARD</div>
     <div class="reward-row" id="rewardRow"></div>
   </section>
 
-  <!-- ================= SHOP ================= -->
+  <!-- ============ SHOP ============ -->
   <section id="scr-shop" class="screen center-col">
     <h2 class="screen-title" style="color:var(--cyan)">SHOP</h2>
-    <div style="font-family:var(--fp);font-size:12px;color:var(--gold);letter-spacing:1px">◈ <span id="shopGold">0</span></div>
+    <div class="gold-line">◈ <span id="shopGold">0</span></div>
     <div class="shop-list" id="shopList"></div>
     <div id="shopLog"></div>
-    <div style="display:flex;gap:12px">
+    <div class="row-buttons">
       <button class="btn" id="btnEditDeck">EDIT DECK</button>
       <button class="btn big blue" id="btnNextBattle">NEXT BATTLE ▶</button>
     </div>
   </section>
 
-  <!-- ================= GAME OVER ================= -->
+  <!-- ============ GAME OVER ============ -->
   <section id="scr-over" class="screen center-col">
     <h2 id="overTitle" class="screen-title" style="color:var(--red)">YOU DIED</h2>
-    <div id="overStats" style="font-family:var(--fp);font-size:9px;color:var(--dim);line-height:2.4;letter-spacing:1px"></div>
+    <div id="overStats" class="over-stats"></div>
     <button class="btn big gold" id="btnRestart">↺ NEW RUN</button>
   </section>
 
@@ -140,15 +140,19 @@ const $ = s => document.querySelector(s);
 const wait = ms => new Promise(r => setTimeout(r, ms));
 const rndInt = n => Math.floor(Math.random() * n);
 const pick = a => a[rndInt(a.length)];
-const clamp = (v,a,b) => Math.max(a, Math.min(b, v));
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+
 function shuffle(a){
   a = a.slice();
-  for (let i=a.length-1;i>0;i--){ const j=rndInt(i+1); [a[i],a[j]]=[a[j],a[i]]; }
+  for (let i = a.length - 1; i > 0; i--){
+    const j = rndInt(i + 1);
+    [a[i], a[j]] = [a[j], a[i]];
+  }
   return a;
 }
 function hashStr(s){
   let h = 2166136261;
-  for (let i=0;i<s.length;i++){ h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+  for (let i = 0; i < s.length; i++){ h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
   return h >>> 0;
 }
 function hexToRgb(h){
@@ -157,7 +161,9 @@ function hexToRgb(h){
 }
 function shade(hex, amt){
   let [r,g,b] = hexToRgb(hex);
-  r = clamp(r+amt,0,255); g = clamp(g+amt,0,255); b = clamp(b+amt,0,255);
+  r = clamp(r + amt, 0, 255);
+  g = clamp(g + amt, 0, 255);
+  b = clamp(b + amt, 0, 255);
   return '#' + [r,g,b].map(v => v.toString(16).padStart(2,'0')).join('');
 }
 
@@ -166,7 +172,7 @@ function shade(hex, amt){
    ========================================================= */
 (function loadMenuBg(){
   const img = new Image();
-  img.onload = () => document.body.classList.add('has-menu-bg');
+  img.onload  = () => document.body.classList.add('has-menu-bg');
   img.onerror = () => document.body.classList.remove('has-menu-bg');
   img.src = 'assets/bg.png';
 })();
@@ -181,6 +187,7 @@ const ELEM = {
   earth:  { name:'Earth',   color:'#7ed957', glyph:'🪨' },
   shock:  { name:'Shock',   color:'#ffd23f', glyph:'⚡' },
 };
+/* shock > fire > ice > earth > shock */
 const WEAK_OF = { fire:'shock', ice:'fire', earth:'ice', shock:'earth', neutral:'neutral' };
 
 /* =========================================================
@@ -277,7 +284,7 @@ const B = { enemy:null, draw:[], hand:[], disc:[], turn:'player', busy:true, ove
 let deckReturn = 'begin';
 
 /* =========================================================
-   WEBGL BACKGROUND
+   WEBGL BACKGROUND  (chunky pixel-art sunset)
    ========================================================= */
 const BG = {
   gl:null, prog:null, u:{}, canvas:null,
@@ -378,10 +385,12 @@ void main(){
 
 function compileShader(gl, type, src){
   const s = gl.createShader(type);
-  gl.shaderSource(s, src); gl.compileShader(s);
+  gl.shaderSource(s, src);
+  gl.compileShader(s);
   if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)){
     console.warn('Shader error:', gl.getShaderInfoLog(s));
-    gl.deleteShader(s); return null;
+    gl.deleteShader(s);
+    return null;
   }
   return s;
 }
@@ -392,7 +401,9 @@ function bgInit(){
   BG.canvas = canvas;
   let gl = null;
   try {
-    gl = canvas.getContext('webgl2', {antialias:false, alpha:false, depth:false, stencil:false, powerPreference:'low-power'});
+    gl = canvas.getContext('webgl2', {
+      antialias:false, alpha:false, depth:false, stencil:false, powerPreference:'low-power'
+    });
   } catch(e){ gl = null; }
   if (!gl){ canvas.style.display = 'none'; return; }
 
@@ -401,13 +412,17 @@ function bgInit(){
   if (!vs || !fs){ canvas.style.display = 'none'; return; }
 
   const prog = gl.createProgram();
-  gl.attachShader(prog, vs); gl.attachShader(prog, fs); gl.linkProgram(prog);
+  gl.attachShader(prog, vs);
+  gl.attachShader(prog, fs);
+  gl.linkProgram(prog);
   if (!gl.getProgramParameter(prog, gl.LINK_STATUS)){
     console.warn('Program link error:', gl.getProgramInfoLog(prog));
-    canvas.style.display = 'none'; return;
+    canvas.style.display = 'none';
+    return;
   }
   gl.useProgram(prog);
-  BG.gl = gl; BG.prog = prog;
+  BG.gl = gl;
+  BG.prog = prog;
   BG.u.res  = gl.getUniformLocation(prog, 'u_res');
   BG.u.time = gl.getUniformLocation(prog, 'u_time');
   BG.u.tint = gl.getUniformLocation(prog, 'u_tint');
@@ -429,7 +444,8 @@ function bgResize(){
   const w = 320;
   const h = clamp(Math.round(w * r.height / r.width), 90, 420);
   if (BG.canvas.width !== w || BG.canvas.height !== h){
-    BG.canvas.width = w; BG.canvas.height = h;
+    BG.canvas.width = w;
+    BG.canvas.height = h;
     BG.gl.viewport(0, 0, w, h);
   }
 }
@@ -439,7 +455,7 @@ function bgFrame(now){
   if (!BG.ready || G.screen !== 'scr-battle') return;
   const gl = BG.gl;
   bgResize();
-  for (let i=0;i<3;i++) BG.tint[i] += (BG.tintTarget[i] - BG.tint[i]) * 0.05;
+  for (let i = 0; i < 3; i++) BG.tint[i] += (BG.tintTarget[i] - BG.tint[i]) * 0.05;
   BG.hurt *= 0.90;
   if (BG.hurt < 0.008) BG.hurt = 0;
   const t = (now - BG.start) * 0.001;
@@ -458,6 +474,9 @@ function bgSetTint(hex){
 
 /* =========================================================
    FULL CARD ASSETS  (assets/cards/{id}.png)
+   Each asset is drawn with `contain`, and the card's box is
+   resized to match the asset's aspect ratio so nothing is
+   stretched or squished.
    ========================================================= */
 const cardAssetStatus = {};
 const cardAssetImg = {};
@@ -469,7 +488,8 @@ function preloadCardAssets(){
     img.onload = () => {
       cardAssetStatus[id] = 'ok';
       cardAssetImg[id] = img;
-      document.querySelectorAll('.card[data-card-id="'+id+'"]').forEach(el => applyCardFace(el, id));
+      document.querySelectorAll('.card[data-card-id="' + id + '"]').forEach(el => applyCardFace(el, id));
+      if (B.hand.length) layoutHand();
     };
     img.onerror = () => { cardAssetStatus[id] = 'fail'; };
     img.src = 'assets/cards/' + id + '.png';
@@ -480,13 +500,45 @@ function applyCardFace(cardEl, id){
   const c = CARDS[id];
   const face = cardEl.querySelector('.card-face');
   if (!face) return;
+
   if (cardAssetStatus[id] === 'ok'){
     face.style.backgroundImage = "url('assets/cards/" + id + ".png')";
     cardEl.classList.add('has-asset');
+    sizeCardToAsset(cardEl, cardAssetImg[id]);
   } else {
     face.style.backgroundImage = "url('" + fallbackFrame(c.el) + "')";
     cardEl.classList.remove('has-asset');
+    cardEl.style.width = '';
+    cardEl.style.marginLeft = '';
+    delete cardEl.dataset.aspect;
   }
+}
+
+/* Resize a card element so its box matches the asset's natural aspect ratio.
+   The image itself is drawn with `contain`, so it is never stretched. */
+function sizeCardToAsset(cardEl, img){
+  if (!img || !img.naturalWidth || !img.naturalHeight) return;
+  cardEl.dataset.aspect = img.naturalWidth / img.naturalHeight;
+  applyCardAspect(cardEl);
+}
+
+function applyCardAspect(cardEl){
+  const aspect = parseFloat(cardEl.dataset.aspect);
+  if (!aspect || !isFinite(aspect)) return;
+  const baseH = CARD_H();
+  /* Clamp so wide or tall assets don't break the hand layout.
+     `contain` still guarantees no distortion even when clamped. */
+  const w = Math.max(56, Math.min(240, Math.round(baseH * aspect)));
+  cardEl.style.width = w + 'px';
+  if (!cardEl.classList.contains('static')){
+    cardEl.style.marginLeft = (-w / 2) + 'px';
+  } else {
+    cardEl.style.marginLeft = '';
+  }
+}
+
+function refreshCardSizes(){
+  document.querySelectorAll('.card[data-aspect]').forEach(applyCardAspect);
 }
 
 /* =========================================================
@@ -499,7 +551,8 @@ function cardArt(id, elemKey){
   const cv = document.createElement('canvas');
   cv.width = S; cv.height = S;
   const ctx = cv.getContext('2d');
-  ctx.fillStyle = '#0d0a1a'; ctx.fillRect(0,0,S,S);
+  ctx.fillStyle = '#0d0a1a';
+  ctx.fillRect(0, 0, S, S);
 
   let seed = hashStr(id);
   const R = () => { seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0; return seed / 4294967296; };
@@ -509,11 +562,11 @@ function cardArt(id, elemKey){
   const dark  = shade(base, -80);
   const cx = S/2 - 0.5, cy = S/2 - 0.5;
 
-  for (let y=1; y<S-1; y++){
-    for (let x=0; x<Math.ceil(S/2); x++){
+  for (let y = 1; y < S-1; y++){
+    for (let x = 0; x < Math.ceil(S/2); x++){
       const dx = x - cx, dy = y - cy;
       const d = Math.sqrt(dx*dx + dy*dy) / (S/2);
-      if (R() > (1-d) * 1.05 + 0.06) continue;
+      if (R() > (1 - d) * 1.05 + 0.06) continue;
       const v = R();
       ctx.fillStyle = v < 0.25 ? light : v < 0.75 ? base : dark;
       ctx.fillRect(x, y, 1, 1);
@@ -521,7 +574,7 @@ function cardArt(id, elemKey){
     }
   }
   ctx.fillStyle = '#ffffff';
-  for (let i=0;i<5;i++){
+  for (let i = 0; i < 5; i++){
     const px = 3 + rndInt(S-6), py = 3 + rndInt(S-6);
     if (R() < 0.5) ctx.fillRect(px, py, 1, 1);
   }
@@ -540,13 +593,13 @@ function fallbackFrame(elemKey){
   const dark  = shade(col, -85);
   const light = shade(col, 45);
 
-  ctx.fillStyle = '#05030a'; ctx.fillRect(0, 0, W, H);
-  ctx.fillStyle = dark;      ctx.fillRect(3, 3, W-6, H-6);
-  ctx.fillStyle = col;       ctx.fillRect(3, 3, W-6, 9);
-  ctx.fillStyle = shade(col, -50); ctx.fillRect(3, 12, W-6, 1);
-  ctx.fillStyle = '#150f2a'; ctx.fillRect(6, 18, W-12, 42);
+  ctx.fillStyle = '#05030a';        ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = dark;             ctx.fillRect(3, 3, W-6, H-6);
+  ctx.fillStyle = col;              ctx.fillRect(3, 3, W-6, 9);
+  ctx.fillStyle = shade(col, -50);  ctx.fillRect(3, 12, W-6, 1);
+  ctx.fillStyle = '#150f2a';        ctx.fillRect(6, 18, W-12, 42);
   ctx.fillStyle = 'rgba(255,255,255,0.05)'; ctx.fillRect(6, 18, W-12, 2);
-  ctx.fillStyle = '#08050f'; ctx.fillRect(3, H-28, W-6, 25);
+  ctx.fillStyle = '#08050f';        ctx.fillRect(3, H-28, W-6, 25);
   ctx.fillStyle = light;
   ctx.fillRect(3, 3, 2, 2);
   ctx.fillRect(W-5, 3, 2, 2);
@@ -602,19 +655,28 @@ const playerPoint = () => pointOf('#playerBody');
 
 function layoutHand(){
   const n = B.hand.length;
-  const cw = CARD_W();
+  if (n === 0) return;
+
+  /* Use the widest card in hand so variable-width assets don't overlap. */
+  const baseW = CARD_W();
+  let maxW = baseW;
+  B.hand.forEach(obj => {
+    const w = parseFloat(obj.el.style.width) || baseW;
+    if (w > maxW) maxW = w;
+  });
+
   const avail = Math.max(handEl.clientWidth - 150, 220);
-  const spread = n > 1 ? Math.min(110, (avail - cw) / (n-1)) : 0;
-  const total = spread * (n-1);
-  const mid = (n-1)/2;
+  const spread = n > 1 ? Math.min(maxW * 0.82, (avail - maxW) / (n - 1)) : 0;
+  const total  = spread * (n - 1);
+  const mid    = (n - 1) / 2;
 
   B.hand.forEach((obj, i) => {
     const el = obj.el;
     if (el.classList.contains('flying')) return;
-    const x = -total/2 + i*spread;
+    const x = -total/2 + i * spread;
     const mm = Math.max(mid, 1);
-    const yy = Math.pow((i-mid)/mm, 2) * 16;
-    const rot = (i-mid) * 4;
+    const yy = Math.pow((i - mid) / mm, 2) * 16;
+    const rot = (i - mid) * 4;
     el.style.transition = '';
     el.style.transform = 'translate(' + x + 'px, ' + yy + 'px) rotate(' + rot + 'deg)';
     el.style.zIndex = 10 + i;
@@ -628,7 +690,7 @@ function addCardToHand(id){
   const o  = handOrigin();
   const dp = pointOf('#drawPile');
   el.style.transition = 'none';
-  el.style.transform  = 'translate(' + (dp.x-o.x) + 'px, ' + (dp.y-o.y) + 'px) rotate(-25deg) scale(.55)';
+  el.style.transform  = 'translate(' + (dp.x - o.x) + 'px, ' + (dp.y - o.y) + 'px) rotate(-25deg) scale(.55)';
   el.style.opacity = '0';
   el.style.zIndex  = 200;
   handEl.appendChild(el);
@@ -636,6 +698,8 @@ function addCardToHand(id){
   const obj = { id, el };
   B.hand.push(obj);
   attachCardEvents(obj);
+
+  /* Reflow after the browser has painted the new element. */
   void el.offsetWidth;
   el.style.transition = '';
   layoutHand();
@@ -689,14 +753,14 @@ function updateEnergyPips(flashIndex){
   if (!container) return;
   if (container.children.length !== P.maxEnergy){
     container.innerHTML = '';
-    for (let i=0;i<P.maxEnergy;i++){
+    for (let i = 0; i < P.maxEnergy; i++){
       const p = document.createElement('div');
       p.className = 'pip';
       container.appendChild(p);
     }
   }
   const pips = container.children;
-  for (let i=0;i<pips.length;i++){
+  for (let i = 0; i < pips.length; i++){
     pips[i].classList.toggle('filled', i < P.energy);
   }
   if (typeof flashIndex === 'number' && pips[flashIndex]){
@@ -785,7 +849,7 @@ function renderEnemySide(){
       '<span class="bar-txt" id="eHpTxt"></span>' +
     '</div>' +
     '<div class="statuses" id="eStatus"></div>' +
-    '<div class="unit-name" id="weakHint" style="color:var(--dim);font-size:6px"></div>';
+    '<div class="unit-name weak-hint" id="weakHint"></div>';
   updateEnemyUI();
 }
 
@@ -801,8 +865,8 @@ function renderIntent(){
     const per  = mv.dmg + e.str;
     const hits = mv.hits || 1;
     html = '<span class="pop">⚔</span> ' + (hits > 1 ? per + '×' + hits : per);
-    if (mv.burn) html += ' <span style="font-size:8px">🔥' + mv.burn + '</span>';
-    if (mv.weak) html += ' <span style="font-size:8px">▼' + mv.weak + '</span>';
+    if (mv.burn) html += ' <span class="tiny">🔥' + mv.burn + '</span>';
+    if (mv.weak) html += ' <span class="tiny">▼' + mv.weak + '</span>';
     cls = 'atk';
   } else if (mv.t === 'def'){
     html = '<span class="pop">🛡</span> ' + mv.shield;
@@ -940,7 +1004,7 @@ async function endTurn(){
     const o0 = handOrigin();
     const dp = pointOf('#discardPile');
     o.el.style.transition = 'transform .32s ease-in, opacity .32s';
-    o.el.style.transform  = 'translate(' + (dp.x-o0.x) + 'px, ' + (dp.y-o0.y) + 'px) rotate(22deg) scale(.45)';
+    o.el.style.transform  = 'translate(' + (dp.x - o0.x) + 'px, ' + (dp.y - o0.y) + 'px) rotate(22deg) scale(.45)';
     o.el.style.opacity    = '0';
     o.el.style.zIndex     = 5;
     setTimeout(() => o.el.remove(), 340);
@@ -986,7 +1050,7 @@ async function enemyTurn(){
 
   if (mv.t === 'atk'){
     const hits = mv.hits || 1;
-    for (let i=0;i<hits;i++){
+    for (let i = 0; i < hits; i++){
       let dmg = mv.dmg + e.str;
       if (e.chill > 0) dmg = Math.max(1, Math.round(dmg * 0.6));
       damagePlayer(dmg);
@@ -1177,7 +1241,7 @@ async function playCardObj(obj){
   const target = (card.t === 'attack') ? enemyPoint() : playerPoint();
   const o = handOrigin();
   el.style.transition = 'transform .34s cubic-bezier(.4,0,.6,1), opacity .34s';
-  el.style.transform  = 'translate(' + (target.x-o.x) + 'px, ' + (target.y-o.y) + 'px) rotate(0deg) scale(.32)';
+  el.style.transform  = 'translate(' + (target.x - o.x) + 'px, ' + (target.y - o.y) + 'px) rotate(0deg) scale(.32)';
   el.style.opacity    = '0';
 
   layoutHand();
@@ -1196,7 +1260,7 @@ async function resolveCard(card){
 
   if (card.dmg){
     const hits = card.hits || 1;
-    for (let i=0;i<hits;i++){
+    for (let i = 0; i < hits; i++){
       const res = calcPlayerDamage(card.dmg, card.el);
       await hitEnemy(res.dmg, card.el, { crit: res.crit });
       if (B.over) return;
@@ -1273,6 +1337,7 @@ function go(id){
   if (el) el.classList.add('active');
   G.screen = id;
   if (id === 'scr-battle') bgResize();
+  if (id !== 'scr-battle') refreshCardSizes();
 }
 
 /* =========================================================
@@ -1340,13 +1405,13 @@ function buyItem(item){
   let msg = '';
   if (item.id === 'pack1'){
     const got = [];
-    for (let i=0;i<3;i++){ const id = rollCard(0); G.collection.push(id); got.push(CARDS[id].name); }
+    for (let i = 0; i < 3; i++){ const id = rollCard(0); G.collection.push(id); got.push(CARDS[id].name); }
     msg = 'GOT: ' + got.join(', ');
   } else if (item.id === 'pack2'){
     const got = [];
     const rare = rollCard(1.6);
     G.collection.push(rare); got.push('★' + CARDS[rare].name);
-    for (let i=0;i<4;i++){ const id = rollCard(0.1); G.collection.push(id); got.push(CARDS[id].name); }
+    for (let i = 0; i < 4; i++){ const id = rollCard(0.1); G.collection.push(id); got.push(CARDS[id].name); }
     msg = 'GOT: ' + got.join(', ');
   } else if (item.id === 'heal'){
     P.hp = Math.min(P.maxHp, P.hp + 20);
@@ -1385,7 +1450,7 @@ function renderDeckBuilder(){
 
   const cg = $('#collectionGrid');
   cg.innerHTML = '';
-  const ownedIds = [...new Set(G.collection)].sort((a,b) =>
+  const ownedIds = [...new Set(G.collection)].sort((a, b) =>
     CARDS[a].cost - CARDS[b].cost || CARDS[a].name.localeCompare(CARDS[b].name)
   );
   ownedIds.forEach(id => {
@@ -1423,7 +1488,7 @@ function renderDeckBuilder(){
 
 function autoDeck(){
   G.deck = [];
-  const pool = G.collection.slice().sort((a,b) =>
+  const pool = G.collection.slice().sort((a, b) =>
     CARDS[a].cost - CARDS[b].cost || CARDS[a].name.localeCompare(CARDS[b].name)
   );
   const perCard = {};
@@ -1475,6 +1540,7 @@ $('#btnNextBattle').addEventListener('click', beginBattle);
 $('#btnRestart').addEventListener('click', () => go('scr-menu'));
 
 window.addEventListener('resize', () => {
+  refreshCardSizes();
   if (B.hand.length) layoutHand();
   bgResize();
 });
