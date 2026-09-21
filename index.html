@@ -1,1571 +1,383 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no"/>
-<title>PIXELCARD</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css">
+  <meta charset="utf-8">
+  <meta name="viewport"
+    content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#05090d">
+  <title>Sky Drift</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
-<div id="app">
 
-  <!-- ============ MENU ============ -->
-  <section id="scr-menu" class="screen active">
-    <div class="menu-overlay"></div>
-    <div class="menu-box">
-      <h1 class="logo">PIXEL<span>CARD</span></h1>
-      <p class="sub">A TINY DECK BATTLER</p>
-      <button class="btn big gold" id="btnStart">▶ START RUN</button>
-      <button class="btn" id="btnHow">? HOW TO PLAY</button>
-      <div id="howBox" class="hidden">
-        <p>• BUILD A DECK OF UP TO <b>12</b> CARDS.</p>
-        <p>• EACH TURN: <b>3 ENERGY</b>, DRAW UP TO <b>5</b>.</p>
-        <p>• <span class="k">DRAG</span> UP OR <span class="k">CLICK</span> TO PLAY A CARD.</p>
-        <p>• ELEMENT CYCLE: <b>⚡ &gt; 🔥 &gt; ❄ &gt; 🪨 &gt; ⚡</b></p>
-        <p>• WEAKNESS = <b>+75%</b> DMG. SAME ELEMENT = <b>-50%</b>.</p>
-        <p>• SHIELD RESETS AT THE START OF YOUR TURN.</p>
-        <p>• WIN FOR <b>GOLD</b> & NEW <b>CARDS</b>. SPEND IN THE SHOP.</p>
+  <canvas id="scene"></canvas>
+
+  <!-- ============================================================
+       HUD  —  all shapes drawn with CSS gradients, masks,
+       conic wedges, clip-paths and a small SVG gauge.
+       ============================================================ -->
+  <div id="hud">
+
+    <!-- ambient overlays -->
+    <div class="fx fx-vignette"></div>
+    <div class="fx fx-scanlines"></div>
+
+    <div class="fx-lens" id="lensflare" aria-hidden="true">
+      <i class="lens-core"></i>
+      <i class="lens-halo"></i>
+      <i class="lens-ghost g1"></i>
+      <i class="lens-ghost g2"></i>
+      <i class="lens-ghost g3"></i>
+      <i class="lens-streak"></i>
+    </div>
+
+    <!-- corner brackets -->
+    <span class="bracket tl"></span>
+    <span class="bracket tr"></span>
+    <span class="bracket bl"></span>
+    <span class="bracket br"></span>
+
+    <!-- ==================== AIRSPEED GAUGE ==================== -->
+    <section class="gauge speedo" id="speedo">
+      <span class="ring ring-a"></span>
+      <span class="ring ring-b"></span>
+      <span class="ring ring-c"></span>
+
+      <svg class="dial" viewBox="0 0 200 200" aria-hidden="true">
+        <defs>
+          <linearGradient id="gradSpeed" x1="0" y1="1" x2="1" y2="0">
+            <stop offset="0%"   stop-color="#3ce9ff"/>
+            <stop offset="55%"  stop-color="#a6f7ff"/>
+            <stop offset="100%" stop-color="#ffb547"/>
+          </linearGradient>
+          <linearGradient id="gradRed" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%"   stop-color="#ff6a3a"/>
+            <stop offset="100%" stop-color="#ff2a2a"/>
+          </linearGradient>
+          <filter id="glow" x="-80%" y="-80%" width="260%" height="260%">
+            <feGaussianBlur stdDeviation="3.2" result="b"/>
+            <feMerge>
+              <feMergeNode in="b"/>
+              <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+          </filter>
+        </defs>
+
+        <!-- 270° arc from 135° → 45°, r = 80, centre (100,100) -->
+        <path class="arc-bg"   d="M 43.43 156.57 A 80 80 0 1 1 156.57 156.57"/>
+        <path class="arc-red"  d="M 127.92 33.02 A 80 80 0 0 1 156.57 156.57"/>
+        <path class="arc-fill" id="arcFill"
+              d="M 43.43 156.57 A 80 80 0 1 1 156.57 156.57"/>
+      </svg>
+
+      <span class="ticks ticks-minor"></span>
+      <span class="ticks ticks-major"></span>
+
+      <span class="needle" id="needle"><i></i></span>
+      <span class="hub"></span>
+
+      <div class="readout">
+        <span class="value" id="speedValue">0</span>
+        <span class="unit">KTS</span>
       </div>
-    </div>
-  </section>
+      <div class="mach">MACH <b id="machValue">0.00</b></div>
+      <div class="caption">AIRSPEED</div>
+    </section>
 
-  <!-- ============ DECK BUILDER ============ -->
-  <section id="scr-deck" class="screen">
-    <div class="topbar">
-      <div class="chip deck"><span>DECK</span><b id="deckCount">0</b><span>/ 12</span></div>
-      <div class="spacer"></div>
-      <button class="btn small" id="btnAutoDeck">AUTO</button>
-      <button class="btn small" id="btnClearDeck">CLEAR</button>
-      <button class="btn blue" id="btnDeckDone">BEGIN ▶</button>
-    </div>
-    <div class="deck-wrap">
-      <div class="panel col">
-        <div class="col-head">
-          <h3>COLLECTION</h3>
-          <div class="spacer"></div>
-          <span class="hint">CLICK TO EQUIP</span>
+    <!-- ==================== ALTITUDE TAPE ==================== -->
+    <section class="alt">
+      <div class="alt-window">
+        <div class="alt-strip" id="altStrip"></div>
+      </div>
+      <span class="alt-pointer"></span>
+      <div class="alt-num">
+        <span id="altValue">0</span><i>FT</i>
+      </div>
+      <div class="alt-vs"><span id="vsValue">+0</span><i>FPM</i></div>
+      <div class="caption v">ALT</div>
+    </section>
+
+    <!-- ==================== ATTITUDE BALL ==================== -->
+    <section class="attitude" id="attitude">
+      <div class="att-sphere" id="attSphere">
+        <div class="att-sky"></div>
+        <div class="att-ground"></div>
+        <div class="att-ladder">
+          <i></i><i></i><i></i><i></i><i></i>
         </div>
-        <div id="collectionGrid" class="grid"></div>
+        <div class="att-glow"></div>
       </div>
-      <div class="panel col">
-        <div class="col-head">
-          <h3>ACTIVE DECK</h3>
-          <div class="spacer"></div>
-          <span class="hint">CLICK TO UNEQUIP</span>
-        </div>
-        <div id="deckMeter"><div id="deckBar"></div></div>
-        <div id="deckGrid" class="grid"></div>
+      <span class="att-frame"></span>
+      <span class="att-wing"></span>
+      <span class="att-dot"></span>
+      <div class="caption v">ATTITUDE</div>
+    </section>
+
+    <!-- ==================== COMPASS RIBBON ==================== -->
+    <section class="compass">
+      <div class="compass-window">
+        <div class="compass-strip" id="compassStrip"></div>
       </div>
-    </div>
-  </section>
+      <span class="compass-mark"></span>
+      <div class="compass-num"><span id="hdgValue">000</span>°</div>
+    </section>
 
-  <!-- ============ BATTLE ============ -->
-  <section id="scr-battle" class="screen">
-    <div class="topbar">
-      <div class="chip"><span>STAGE</span><b id="hudStage">1</b></div>
-      <div class="chip gold"><span>◈</span><b id="hudGold">0</b></div>
-      <div class="chip deck"><span>DECK</span><b id="hudDeck">0</b></div>
-      <div class="spacer"></div>
-      <button class="btn red" id="btnEndTurn">END TURN ▸</button>
-    </div>
-    <div id="arena">
-      <canvas id="bgCanvas"></canvas>
-      <div id="banner"></div>
-      <div class="side player">
-        <div class="unit player-unit" id="playerBody" style="--c:#4d9bff">
-          <div class="eye l"></div><div class="eye r"></div>
-          <div class="shield-badge" id="pShield">🛡 0</div>
-        </div>
-        <div class="unit-name">YOU</div>
-        <div class="bar" id="pBar">
-          <div class="bar-fill" id="pHpFill" style="width:100%"></div>
-          <span class="bar-txt" id="pHpTxt">60/60</span>
-        </div>
-        <div class="statuses" id="pStatus"></div>
+    <!-- ==================== THROTTLE / BOOST ==================== -->
+    <section class="power">
+      <div class="pwr-head">
+        <span class="pwr-cap">THROTTLE</span>
+        <span class="pwr-num" id="thrValue">0%</span>
       </div>
-      <div class="side enemy" id="enemySide"></div>
-    </div>
-    <div id="handWrap">
-      <div id="hand"></div>
-      <div id="playHint">DRAG ▲ OR CLICK TO PLAY</div>
-      <div id="drawPile" class="pile">DRAW<b id="drawCount">0</b></div>
-      <div id="discardPile" class="pile">DISCARD<b id="discardCount">0</b></div>
-      <div id="energyPanel">
-        <div class="ep-label">⚡ ENERGY</div>
-        <div class="ep-pips" id="energyPips"></div>
+      <div class="pwr-bar">
+        <span class="pwr-fill" id="thrFill"></span>
+        <span class="pwr-notches"></span>
       </div>
+      <div class="hex-row" id="hexRow">
+        <span class="hex"></span><span class="hex"></span><span class="hex"></span>
+        <span class="hex"></span><span class="hex"></span><span class="hex"></span>
+      </div>
+      <div class="pwr-cap small">AFTERBURNER</div>
+    </section>
+
+    <!-- ==================== STATUS ==================== -->
+    <section class="status">
+      <div class="st-line"><b>SYS</b><span class="ok" id="sysState">NOMINAL</span></div>
+      <div class="st-line"><b>G</b><span id="gValue">1.0</span></div>
+      <div class="st-line"><b>V/S</b><span id="vsValue2">+0</span></div>
+      <div class="st-line"><b>TIME</b><span id="timeValue">00:00</span></div>
+    </section>
+
+    <!-- ==================== HINT ==================== -->
+    <div id="hint">
+      <span class="hint-main">DRAG TO FLY</span>
+      <span class="hint-sub">HOLD <b>SHIFT</b> / <b>TWO FINGERS</b> FOR AFTERBURNER</span>
     </div>
-  </section>
 
-  <!-- ============ REWARD ============ -->
-  <section id="scr-reward" class="screen center-col">
-    <h2 class="screen-title" style="color:var(--gold)">VICTORY!</h2>
-    <div class="sub-line">
-      EARNED <b id="rewardGold">0</b> GOLD
-    </div>
-    <div class="sub-hint">CHOOSE A CARD</div>
-    <div class="reward-row" id="rewardRow"></div>
-  </section>
+  </div>
 
-  <!-- ============ SHOP ============ -->
-  <section id="scr-shop" class="screen center-col">
-    <h2 class="screen-title" style="color:var(--cyan)">SHOP</h2>
-    <div class="gold-line">◈ <span id="shopGold">0</span></div>
-    <div class="shop-list" id="shopList"></div>
-    <div id="shopLog"></div>
-    <div class="row-buttons">
-      <button class="btn" id="btnEditDeck">EDIT DECK</button>
-      <button class="btn big blue" id="btnNextBattle">NEXT BATTLE ▶</button>
-    </div>
-  </section>
+  <!-- ============================================================
+       DEMO DRIVER  —  replace with your own game.js later.
+       Wires up the HUD so all animations come alive immediately.
+       ============================================================ -->
+  <script>
+  (function () {
+    "use strict";
 
-  <!-- ============ GAME OVER ============ -->
-  <section id="scr-over" class="screen center-col">
-    <h2 id="overTitle" class="screen-title" style="color:var(--red)">YOU DIED</h2>
-    <div id="overStats" class="over-stats"></div>
-    <button class="btn big gold" id="btnRestart">↺ NEW RUN</button>
-  </section>
+    /* ---------- build altitude tape ---------- */
+    var altStrip = document.getElementById('altStrip');
+    var PX_PER_FT = 0.22;
+    var ALT_MIN = -1000, ALT_MAX = 30000, ALT_STEP = 100;
+    var frag = document.createDocumentFragment();
+    for (var a = ALT_MIN; a <= ALT_MAX; a += ALT_STEP) {
+      var t = document.createElement('div');
+      t.className = 'tick ' + (a % 500 === 0 ? 'maj' : 'min');
+      t.style.top = (-a * PX_PER_FT) + 'px';
+      t.textContent = (a % 500 === 0) ? a : '';
+      frag.appendChild(t);
+    }
+    altStrip.appendChild(frag);
 
-</div>
-<div id="floatLayer"></div>
+    /* ---------- build compass ribbon ---------- */
+    var compassStrip = document.getElementById('compassStrip');
+    var PX_PER_DEG = 4;
+    frag = document.createDocumentFragment();
+    for (var h = -360; h <= 720; h += 5) {
+      var c = document.createElement('div');
+      var maj = (h % 30 === 0);
+      c.className = 'card ' + (maj ? 'maj' : 'min');
+      c.style.left = (h * PX_PER_DEG) + 'px';
+      if (maj) {
+        var norm = ((h % 360) + 360) % 360;
+        var lbl = norm === 0 ? 'N' : norm === 90 ? 'E' : norm === 180 ? 'S' : norm === 270 ? 'W'
+                : (norm / 10 | 0);
+        c.textContent = lbl;
+      }
+      frag.appendChild(c);
+    }
+    compassStrip.appendChild(frag);
 
-<script>
-/* =========================================================
-   UTILITIES
-   ========================================================= */
-const $ = s => document.querySelector(s);
-const wait = ms => new Promise(r => setTimeout(r, ms));
-const rndInt = n => Math.floor(Math.random() * n);
-const pick = a => a[rndInt(a.length)];
-const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+    /* ---------- cached elements ---------- */
+    var needle      = document.getElementById('needle');
+    var arcFill     = document.getElementById('arcFill');
+    var speedValue  = document.getElementById('speedValue');
+    var machValue   = document.getElementById('machValue');
+    var altValue    = document.getElementById('altValue');
+    var vsValue     = document.getElementById('vsValue');
+    var vsValue2    = document.getElementById('vsValue2');
+    var hdgValue    = document.getElementById('hdgValue');
+    var hdgValue2   = document.getElementById('hdgValue2');
+    var attSphere   = document.getElementById('attSphere');
+    var attitude    = document.getElementById('attitude');
+    var thrFill     = document.getElementById('thrFill');
+    var thrValue    = document.getElementById('thrValue');
+    var hexes       = document.querySelectorAll('#hexRow .hex');
+    var gValue      = document.getElementById('gValue');
+    var timeValue   = document.getElementById('timeValue');
+    var sysState    = document.getElementById('sysState');
+    var lens        = document.getElementById('lensflare');
+    var hint        = document.getElementById('hint');
+    var hud         = document.getElementById('hud');
 
-function shuffle(a){
-  a = a.slice();
-  for (let i = a.length - 1; i > 0; i--){
-    const j = rndInt(i + 1);
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-}
-function hashStr(s){
-  let h = 2166136261;
-  for (let i = 0; i < s.length; i++){ h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
-  return h >>> 0;
-}
-function hexToRgb(h){
-  h = h.replace('#','');
-  return [parseInt(h.substr(0,2),16), parseInt(h.substr(2,2),16), parseInt(h.substr(4,2),16)];
-}
-function shade(hex, amt){
-  let [r,g,b] = hexToRgb(hex);
-  r = clamp(r + amt, 0, 255);
-  g = clamp(g + amt, 0, 255);
-  b = clamp(b + amt, 0, 255);
-  return '#' + [r,g,b].map(v => v.toString(16).padStart(2,'0')).join('');
-}
-
-/* =========================================================
-   MENU BACKGROUND (assets/bg.png)
-   ========================================================= */
-(function loadMenuBg(){
-  const img = new Image();
-  img.onload  = () => document.body.classList.add('has-menu-bg');
-  img.onerror = () => document.body.classList.remove('has-menu-bg');
-  img.src = 'assets/bg.png';
-})();
-
-/* =========================================================
-   ELEMENTS
-   ========================================================= */
-const ELEM = {
-  neutral:{ name:'Neutral', color:'#b9b6cc', glyph:'✦' },
-  fire:   { name:'Fire',    color:'#ff7a3d', glyph:'🔥' },
-  ice:    { name:'Ice',     color:'#4dd0ff', glyph:'❄'  },
-  earth:  { name:'Earth',   color:'#7ed957', glyph:'🪨' },
-  shock:  { name:'Shock',   color:'#ffd23f', glyph:'⚡' },
-};
-/* shock > fire > ice > earth > shock */
-const WEAK_OF = { fire:'shock', ice:'fire', earth:'ice', shock:'earth', neutral:'neutral' };
-
-/* =========================================================
-   CARDS
-   ========================================================= */
-const CARDS = {
-  jab:      {name:'Jab',        cost:0, el:'neutral', t:'attack', dmg:3,  desc:'Deal 3 damage.', rar:'common'},
-  guard:    {name:'Guard',      cost:1, el:'neutral', t:'skill',  shield:6,  desc:'Gain 6 Shield.', rar:'common'},
-  focus:    {name:'Focus',      cost:1, el:'neutral', t:'skill',  draw:2,    desc:'Draw 2 cards.', rar:'common'},
-  bulwark:  {name:'Bulwark',    cost:1, el:'neutral', t:'skill',  shield:9,  desc:'Gain 9 Shield.', rar:'common'},
-  ironwall: {name:'Iron Wall',  cost:2, el:'neutral', t:'skill',  shield:14, desc:'Gain 14 Shield.', rar:'uncommon'},
-  mend:     {name:'Mend',       cost:1, el:'neutral', t:'skill',  heal:8,    desc:'Heal 8 HP.', rar:'uncommon'},
-
-  ember:    {name:'Ember',      cost:1, el:'fire', t:'attack', dmg:6,  desc:'Deal 6 damage.', rar:'common'},
-  cinder:   {name:'Cinder',     cost:1, el:'fire', t:'attack', dmg:4, burn:3, desc:'Deal 4 dmg. Apply 3 Burn.', rar:'common'},
-  flamelash:{name:'Flame Lash', cost:2, el:'fire', t:'attack', dmg:11, desc:'Deal 11 damage.', rar:'uncommon'},
-  inferno:  {name:'Inferno',    cost:3, el:'fire', t:'attack', dmg:18, burn:2, desc:'Deal 18 dmg. Apply 2 Burn.', rar:'rare'},
-
-  frostshard:{name:'Frost Shard',cost:1, el:'ice', t:'attack', dmg:5, shield:3, desc:'Deal 5 dmg. Gain 3 Shield.', rar:'common'},
-  glacier:   {name:'Glacier',    cost:2, el:'ice', t:'attack', dmg:9, chill:2, desc:'Deal 9 dmg. Apply 2 Chill.', rar:'uncommon'},
-  blizzard:  {name:'Blizzard',   cost:3, el:'ice', t:'attack', dmg:13, chill:2, shield:8, desc:'13 dmg. 2 Chill. 8 Shield.', rar:'rare'},
-
-  stonefist:{name:'Stone Fist', cost:1, el:'earth', t:'attack', dmg:7,  desc:'Deal 7 damage.', rar:'common'},
-  mossguard:{name:'Moss Guard', cost:1, el:'earth', t:'skill',  shield:5, heal:4, desc:'Gain 5 Shield. Heal 4 HP.', rar:'common'},
-  boulder:  {name:'Boulder',    cost:2, el:'earth', t:'attack', dmg:13, desc:'Deal 13 damage.', rar:'uncommon'},
-  quake:    {name:'Quake',      cost:3, el:'earth', t:'attack', dmg:11, static:2, desc:'Deal 11 dmg. Apply 2 Static.', rar:'rare'},
-
-  spark:    {name:'Spark',      cost:1, el:'shock', t:'attack', dmg:5, draw:1, desc:'Deal 5 dmg. Draw 1 card.', rar:'common'},
-  thunder:  {name:'Thunder',    cost:2, el:'shock', t:'attack', dmg:12, desc:'Deal 12 damage.', rar:'uncommon'},
-  siphon:   {name:'Siphon',     cost:2, el:'shock', t:'attack', dmg:8, heal:6, desc:'Deal 8 dmg. Heal 6 HP.', rar:'uncommon'},
-  overload: {name:'Overload',   cost:2, el:'shock', t:'attack', dmg:8, energy:1, desc:'Deal 8 dmg. Gain 1 Energy.', rar:'rare'},
-};
-
-/* =========================================================
-   ENEMIES
-   ========================================================= */
-const ENEMY_TYPES = [
-  { id:'slime', name:'EMBER SLIME', el:'fire', color:'#ff7a3d', hp:32, moves:[
-      {n:'Tackle',      t:'atk', dmg:6},
-      {n:'Harden',      t:'def', shield:6},
-      {n:'Flame Spit',  t:'atk', dmg:4, burn:2},
-  ]},
-  { id:'wisp', name:'FROST WISP', el:'ice', color:'#4dd0ff', hp:40, moves:[
-      {n:'Frost Bolt',  t:'atk', dmg:8},
-      {n:'Ice Ward',    t:'def', shield:8},
-      {n:'Chill Touch', t:'atk', dmg:5, weak:2},
-  ]},
-  { id:'golem', name:'STONE GOLEM', el:'earth', color:'#7ed957', hp:56, moves:[
-      {n:'Slam',        t:'atk', dmg:11},
-      {n:'Fortify',     t:'def', shield:13},
-      {n:'Rock Toss',   t:'atk', dmg:7, shield:5},
-  ]},
-  { id:'imp', name:'SPARK IMP', el:'shock', color:'#ffd23f', hp:50, moves:[
-      {n:'Zap',         t:'atk', dmg:7},
-      {n:'Double Zap',  t:'atk', dmg:4, hits:2},
-      {n:'Charge Up',   t:'buff', str:3, shield:4},
-  ]},
-  { id:'shade', name:'VOID SHADE', el:'neutral', color:'#b06cff', hp:64, moves:[
-      {n:'Drain',       t:'atk', dmg:9, heal:6},
-      {n:'Curse',       t:'atk', dmg:3, burn:4},
-      {n:'Fade',        t:'def', shield:11},
-  ]},
-  { id:'warden', name:'CHRONO WARDEN', el:'shock', color:'#ff4fa3', hp:86, moves:[
-      {n:'Time Slash',  t:'atk', dmg:13},
-      {n:'Rewind',      t:'def', shield:14, heal:9},
-      {n:'Static Field',t:'atk', dmg:6, burn:3, weak:2},
-  ]},
-];
-
-/* =========================================================
-   SHOP
-   ========================================================= */
-const SHOP_ITEMS = [
-  { id:'pack1', name:'CARD PACK',  desc:'3 random cards added to collection', cost:60,  icon:'📦' },
-  { id:'pack2', name:'PRIME PACK', desc:'5 cards, at least 1 rare',           cost:140, icon:'🎁' },
-  { id:'heal',  name:'REPAIR KIT', desc:'Restore 20 HP',                      cost:40,  icon:'❤'  },
-  { id:'maxhp', name:'HEART UP',   desc:'+8 Max HP and heal 8',               cost:110, icon:'💗' },
-];
-
-const STARTER = ['jab','jab','guard','guard','ember','ember','frostshard','stonefist','spark','bulwark','cinder','focus'];
-
-/* =========================================================
-   STATE
-   ========================================================= */
-const G = {
-  stage: 0,
-  gold: 0,
-  collection: [],
-  deck: [],
-  screen: 'scr-menu',
-};
-const P = { maxHp:60, hp:60, shield:0, energy:3, maxEnergy:3, burn:0, weak:0 };
-const B = { enemy:null, draw:[], hand:[], disc:[], turn:'player', busy:true, over:false };
-let deckReturn = 'begin';
-
-/* =========================================================
-   WEBGL BACKGROUND  (chunky pixel-art sunset)
-   ========================================================= */
-const BG = {
-  gl:null, prog:null, u:{}, canvas:null,
-  start: performance.now(), tint:[0.35,0.2,0.55], tintTarget:[0.35,0.2,0.55],
-  hurt:0, raf:0, ready:false,
-};
-
-const BG_VS = `#version 300 es
-void main(){
-  float x = float((gl_VertexID << 1) & 2);
-  float y = float(gl_VertexID & 2);
-  gl_Position = vec4(x * 2.0 - 1.0, y * 2.0 - 1.0, 0.0, 1.0);
-}`;
-
-const BG_FS = `#version 300 es
-precision highp float;
-uniform vec2  u_res;
-uniform float u_time;
-uniform vec3  u_tint;
-uniform float u_hurt;
-out vec4 fragColor;
-
-float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123); }
-float noise(vec2 p){
-  vec2 i = floor(p), f = fract(p);
-  vec2 u = f * f * (3.0 - 2.0 * f);
-  float a = hash(i), b = hash(i + vec2(1.0, 0.0));
-  float c = hash(i + vec2(0.0, 1.0)), d = hash(i + vec2(1.0, 1.0));
-  return mix(mix(a, b, u.x), mix(c, d, u.x), u.y);
-}
-float b2(float x, float y){ return mod(2.0*x + 3.0*y, 4.0); }
-float bayer4(vec2 p){
-  vec2 c = floor(mod(p, 4.0));
-  return (4.0 * b2(mod(c.x, 2.0), mod(c.y, 2.0)) + b2(floor(c.x*0.5), floor(c.y*0.5))) * 0.0625;
-}
-
-void main(){
-  vec2 pc = floor(gl_FragCoord.xy);
-  vec2 uv = gl_FragCoord.xy / u_res;
-  float t = u_time;
-  float aspect = u_res.x / u_res.y;
-  float xw = uv.x * aspect;
-  float horizon = 0.30;
-
-  vec3 deep = mix(vec3(0.035, 0.022, 0.075), u_tint * 0.08, 0.5);
-  vec3 glow = mix(vec3(0.92, 0.38, 0.24), u_tint, 0.40);
-
-  float k = clamp((uv.y - horizon) / (1.0 - horizon), 0.0, 1.0);
-  vec3 col = mix(glow, deep, pow(k, 0.55));
-
-  vec2 sunPos = vec2(0.63 + 0.03 * sin(t * 0.05), horizon + 0.15);
-  float sd = length((uv - sunPos) * vec2(aspect, 1.0));
-  float disc = 1.0 - smoothstep(0.070, 0.078, sd);
-  col += disc * mix(vec3(1.0, 0.88, 0.55), u_tint, 0.35) * 0.95;
-  col += (1.0 - smoothstep(0.078, 0.30, sd)) * glow * 0.16;
-
-  float sr = hash(pc);
-  float tw = 0.55 + 0.45 * sin(t * 2.0 + sr * 70.0);
-  float star = step(0.9970, sr) * tw;
-  star *= smoothstep(horizon + 0.02, horizon + 0.22, uv.y);
-  col += vec3(star) * 1.1;
-
-  float h0 = horizon + 0.055 + (noise(vec2(xw * 1.7 + t * 0.010, 3.1)) * 0.65
-                              + noise(vec2(xw * 4.3 + t * 0.014, 9.7)) * 0.35) * 0.17;
-  float h1 = horizon + 0.015 + (noise(vec2(xw * 2.6 + t * 0.022, 17.3)) * 0.60
-                              + noise(vec2(xw * 6.1 + t * 0.028, 23.9)) * 0.40) * 0.20;
-  float h2 = horizon - 0.025 + (noise(vec2(xw * 4.0 + t * 0.036, 31.7)) * 0.55
-                              + noise(vec2(xw * 9.3 + t * 0.048, 41.1)) * 0.45) * 0.22;
-
-  vec3 c0 = mix(deep, glow, 0.30);
-  vec3 c1 = mix(deep, glow, 0.14) * 0.85;
-  vec3 c2 = deep * 0.65;
-  col = mix(col, c0, step(uv.y, h0) * 0.92);
-  col = mix(col, c1, step(uv.y, h1) * 0.94);
-  col = mix(col, c2, step(uv.y, h2) * 0.96);
-
-  float gh = horizon - 0.055;
-  col = mix(col, vec3(0.020, 0.014, 0.045), step(uv.y, gh) * 0.97);
-
-  float e1 = noise(vec2(xw * 9.0,        uv.y * 11.0 - t * 0.5));
-  float e2 = noise(vec2(xw * 17.0 + 3.0, uv.y * 19.0 - t * 0.8));
-  float ember = smoothstep(0.80, 0.95, e1 * 0.55 + e2 * 0.55);
-  ember *= smoothstep(0.02, 0.25, uv.y) * (1.0 - smoothstep(0.72, 1.0, uv.y));
-  col += ember * mix(vec3(1.0, 0.72, 0.35), u_tint, 0.55) * 0.85;
-
-  col = mix(col, vec3(0.75, 0.06, 0.10), u_hurt * 0.45);
-
-  vec2 vv = (uv - 0.5) * vec2(1.0, 1.25);
-  float vig = 1.0 - dot(vv, vv) * 1.05;
-  col *= clamp(vig, 0.35, 1.0);
-
-  float L = 6.0;
-  col = floor(col * L + bayer4(pc)) / L;
-  col = clamp(col, 0.0, 1.0);
-
-  fragColor = vec4(col, 1.0);
-}`;
-
-function compileShader(gl, type, src){
-  const s = gl.createShader(type);
-  gl.shaderSource(s, src);
-  gl.compileShader(s);
-  if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)){
-    console.warn('Shader error:', gl.getShaderInfoLog(s));
-    gl.deleteShader(s);
-    return null;
-  }
-  return s;
-}
-
-function bgInit(){
-  const canvas = document.getElementById('bgCanvas');
-  if (!canvas) return;
-  BG.canvas = canvas;
-  let gl = null;
-  try {
-    gl = canvas.getContext('webgl2', {
-      antialias:false, alpha:false, depth:false, stencil:false, powerPreference:'low-power'
-    });
-  } catch(e){ gl = null; }
-  if (!gl){ canvas.style.display = 'none'; return; }
-
-  const vs = compileShader(gl, gl.VERTEX_SHADER, BG_VS);
-  const fs = compileShader(gl, gl.FRAGMENT_SHADER, BG_FS);
-  if (!vs || !fs){ canvas.style.display = 'none'; return; }
-
-  const prog = gl.createProgram();
-  gl.attachShader(prog, vs);
-  gl.attachShader(prog, fs);
-  gl.linkProgram(prog);
-  if (!gl.getProgramParameter(prog, gl.LINK_STATUS)){
-    console.warn('Program link error:', gl.getProgramInfoLog(prog));
-    canvas.style.display = 'none';
-    return;
-  }
-  gl.useProgram(prog);
-  BG.gl = gl;
-  BG.prog = prog;
-  BG.u.res  = gl.getUniformLocation(prog, 'u_res');
-  BG.u.time = gl.getUniformLocation(prog, 'u_time');
-  BG.u.tint = gl.getUniformLocation(prog, 'u_tint');
-  BG.u.hurt = gl.getUniformLocation(prog, 'u_hurt');
-  BG.ready = true;
-
-  gl.disable(gl.DEPTH_TEST);
-  gl.disable(gl.BLEND);
-  bgResize();
-  BG.raf = requestAnimationFrame(bgFrame);
-}
-
-function bgResize(){
-  if (!BG.gl || !BG.canvas) return;
-  const parent = BG.canvas.parentElement;
-  if (!parent) return;
-  const r = parent.getBoundingClientRect();
-  if (r.width < 4 || r.height < 4) return;
-  const w = 320;
-  const h = clamp(Math.round(w * r.height / r.width), 90, 420);
-  if (BG.canvas.width !== w || BG.canvas.height !== h){
-    BG.canvas.width = w;
-    BG.canvas.height = h;
-    BG.gl.viewport(0, 0, w, h);
-  }
-}
-
-function bgFrame(now){
-  BG.raf = requestAnimationFrame(bgFrame);
-  if (!BG.ready || G.screen !== 'scr-battle') return;
-  const gl = BG.gl;
-  bgResize();
-  for (let i = 0; i < 3; i++) BG.tint[i] += (BG.tintTarget[i] - BG.tint[i]) * 0.05;
-  BG.hurt *= 0.90;
-  if (BG.hurt < 0.008) BG.hurt = 0;
-  const t = (now - BG.start) * 0.001;
-  gl.useProgram(BG.prog);
-  gl.uniform2f(BG.u.res, BG.canvas.width, BG.canvas.height);
-  gl.uniform1f(BG.u.time, t);
-  gl.uniform3fv(BG.u.tint, BG.tint);
-  gl.uniform1f(BG.u.hurt, BG.hurt);
-  gl.drawArrays(gl.TRIANGLES, 0, 3);
-}
-
-function bgSetTint(hex){
-  const [r,g,b] = hexToRgb(hex);
-  BG.tintTarget = [r/255, g/255, b/255];
-}
-
-/* =========================================================
-   FULL CARD ASSETS  (assets/cards/{id}.png)
-   Each asset is drawn with `contain`, and the card's box is
-   resized to match the asset's aspect ratio so nothing is
-   stretched or squished.
-   ========================================================= */
-const cardAssetStatus = {};
-const cardAssetImg = {};
-
-function preloadCardAssets(){
-  Object.keys(CARDS).forEach(id => {
-    cardAssetStatus[id] = 'loading';
-    const img = new Image();
-    img.onload = () => {
-      cardAssetStatus[id] = 'ok';
-      cardAssetImg[id] = img;
-      document.querySelectorAll('.card[data-card-id="' + id + '"]').forEach(el => applyCardFace(el, id));
-      if (B.hand.length) layoutHand();
+    /* ---------- flight state (demo) ---------- */
+    var state = {
+      speed: 180, alt: 5200, vs: 0, heading: 45,
+      pitch: 0, roll: 0, throttle: 0.35, boost: 0,
+      g: 1
     };
-    img.onerror = () => { cardAssetStatus[id] = 'fail'; };
-    img.src = 'assets/cards/' + id + '.png';
-  });
-}
 
-function applyCardFace(cardEl, id){
-  const c = CARDS[id];
-  const face = cardEl.querySelector('.card-face');
-  if (!face) return;
+    var ARC_LEN = 377;      /* length of the 270° arc, r=80 */
+    var SPEED_MIN = 60, SPEED_MAX = 420;
 
-  if (cardAssetStatus[id] === 'ok'){
-    face.style.backgroundImage = "url('assets/cards/" + id + ".png')";
-    cardEl.classList.add('has-asset');
-    sizeCardToAsset(cardEl, cardAssetImg[id]);
-  } else {
-    face.style.backgroundImage = "url('" + fallbackFrame(c.el) + "')";
-    cardEl.classList.remove('has-asset');
-    cardEl.style.width = '';
-    cardEl.style.marginLeft = '';
-    delete cardEl.dataset.aspect;
-  }
-}
+    /* ---------- input ---------- */
+    var pointerId = null, ox = 0, oy = 0;
+    var inputX = 0, inputY = 0;
+    var boostHeld = false;
 
-/* Resize a card element so its box matches the asset's natural aspect ratio.
-   The image itself is drawn with `contain`, so it is never stretched. */
-function sizeCardToAsset(cardEl, img){
-  if (!img || !img.naturalWidth || !img.naturalHeight) return;
-  cardEl.dataset.aspect = img.naturalWidth / img.naturalHeight;
-  applyCardAspect(cardEl);
-}
+    var canvas = document.getElementById('scene');
 
-function applyCardAspect(cardEl){
-  const aspect = parseFloat(cardEl.dataset.aspect);
-  if (!aspect || !isFinite(aspect)) return;
-  const baseH = CARD_H();
-  /* Clamp so wide or tall assets don't break the hand layout.
-     `contain` still guarantees no distortion even when clamped. */
-  const w = Math.max(56, Math.min(240, Math.round(baseH * aspect)));
-  cardEl.style.width = w + 'px';
-  if (!cardEl.classList.contains('static')){
-    cardEl.style.marginLeft = (-w / 2) + 'px';
-  } else {
-    cardEl.style.marginLeft = '';
-  }
-}
+    canvas.addEventListener('pointerdown', function (e) {
+      if (pointerId !== null) return;
+      pointerId = e.pointerId;
+      ox = e.clientX; oy = e.clientY;
+      if (canvas.setPointerCapture) canvas.setPointerCapture(e.pointerId);
+      hideHint();
+    }, { passive: true });
 
-function refreshCardSizes(){
-  document.querySelectorAll('.card[data-aspect]').forEach(applyCardAspect);
-}
+    canvas.addEventListener('pointermove', function (e) {
+      if (e.pointerId !== pointerId) return;
+      inputX = Math.max(-1, Math.min(1, (e.clientX - ox) / (window.innerWidth  * 0.24)));
+      inputY = Math.max(-1, Math.min(1, (e.clientY - oy) / (window.innerHeight * 0.24)));
+    }, { passive: true });
 
-/* =========================================================
-   FALLBACK PIXEL ART
-   ========================================================= */
-const artCache = {};
-function cardArt(id, elemKey){
-  if (artCache[id]) return artCache[id];
-  const S = 32;
-  const cv = document.createElement('canvas');
-  cv.width = S; cv.height = S;
-  const ctx = cv.getContext('2d');
-  ctx.fillStyle = '#0d0a1a';
-  ctx.fillRect(0, 0, S, S);
-
-  let seed = hashStr(id);
-  const R = () => { seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0; return seed / 4294967296; };
-
-  const base  = ELEM[elemKey].color;
-  const light = shade(base, 65);
-  const dark  = shade(base, -80);
-  const cx = S/2 - 0.5, cy = S/2 - 0.5;
-
-  for (let y = 1; y < S-1; y++){
-    for (let x = 0; x < Math.ceil(S/2); x++){
-      const dx = x - cx, dy = y - cy;
-      const d = Math.sqrt(dx*dx + dy*dy) / (S/2);
-      if (R() > (1 - d) * 1.05 + 0.06) continue;
-      const v = R();
-      ctx.fillStyle = v < 0.25 ? light : v < 0.75 ? base : dark;
-      ctx.fillRect(x, y, 1, 1);
-      ctx.fillRect(S-1-x, y, 1, 1);
+    function endPointer(e) {
+      if (e.pointerId !== pointerId) return;
+      pointerId = null;
     }
-  }
-  ctx.fillStyle = '#ffffff';
-  for (let i = 0; i < 5; i++){
-    const px = 3 + rndInt(S-6), py = 3 + rndInt(S-6);
-    if (R() < 0.5) ctx.fillRect(px, py, 1, 1);
-  }
-  artCache[id] = cv.toDataURL();
-  return artCache[id];
-}
-
-const frameCache = {};
-function fallbackFrame(elemKey){
-  if (frameCache[elemKey]) return frameCache[elemKey];
-  const W = 64, H = 90;
-  const cv = document.createElement('canvas');
-  cv.width = W; cv.height = H;
-  const ctx = cv.getContext('2d');
-  const col   = ELEM[elemKey].color;
-  const dark  = shade(col, -85);
-  const light = shade(col, 45);
-
-  ctx.fillStyle = '#05030a';        ctx.fillRect(0, 0, W, H);
-  ctx.fillStyle = dark;             ctx.fillRect(3, 3, W-6, H-6);
-  ctx.fillStyle = col;              ctx.fillRect(3, 3, W-6, 9);
-  ctx.fillStyle = shade(col, -50);  ctx.fillRect(3, 12, W-6, 1);
-  ctx.fillStyle = '#150f2a';        ctx.fillRect(6, 18, W-12, 42);
-  ctx.fillStyle = 'rgba(255,255,255,0.05)'; ctx.fillRect(6, 18, W-12, 2);
-  ctx.fillStyle = '#08050f';        ctx.fillRect(3, H-28, W-6, 25);
-  ctx.fillStyle = light;
-  ctx.fillRect(3, 3, 2, 2);
-  ctx.fillRect(W-5, 3, 2, 2);
-  ctx.fillRect(3, H-5, 2, 2);
-  ctx.fillRect(W-5, H-5, 2, 2);
-
-  const url = cv.toDataURL();
-  frameCache[elemKey] = url;
-  return url;
-}
-
-/* =========================================================
-   CARD ELEMENT
-   ========================================================= */
-function buildCardEl(id, staticMode){
-  staticMode = !!staticMode;
-  const c = CARDS[id];
-  const d = document.createElement('div');
-  d.className = 'card el-' + c.el + (staticMode ? ' static' : '');
-  d.dataset.cardId = id;
-  d.innerHTML =
-    '<div class="card-inner">' +
-      '<div class="card-face"></div>' +
-      '<img class="card-art" src="' + cardArt(id, c.el) + '" alt=""/>' +
-      '<div class="card-cost">' + c.cost + '</div>' +
-      '<div class="card-el" style="color:' + ELEM[c.el].color + '">' + ELEM[c.el].glyph + '</div>' +
-      '<div class="card-name">' + c.name.toUpperCase() + '</div>' +
-      '<div class="card-text">' + c.desc + '</div>' +
-    '</div>';
-  applyCardFace(d, id);
-  return d;
-}
-
-/* =========================================================
-   HAND LAYOUT
-   ========================================================= */
-const handEl = $('#hand');
-const CARD_W = () => parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--cw'));
-const CARD_H = () => parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--ch'));
-
-function handOrigin(){
-  const r = handEl.getBoundingClientRect();
-  return { x: r.left + r.width/2, y: r.top + CARD_H()/2 };
-}
-function pointOf(sel){
-  const e = typeof sel === 'string' ? document.querySelector(sel) : sel;
-  if (!e) return { x: innerWidth/2, y: innerHeight/2 };
-  const r = e.getBoundingClientRect();
-  return { x: r.left + r.width/2, y: r.top + r.height/2 };
-}
-const enemyPoint  = () => pointOf('#enemyBody');
-const playerPoint = () => pointOf('#playerBody');
-
-function layoutHand(){
-  const n = B.hand.length;
-  if (n === 0) return;
-
-  /* Use the widest card in hand so variable-width assets don't overlap. */
-  const baseW = CARD_W();
-  let maxW = baseW;
-  B.hand.forEach(obj => {
-    const w = parseFloat(obj.el.style.width) || baseW;
-    if (w > maxW) maxW = w;
-  });
-
-  const avail = Math.max(handEl.clientWidth - 150, 220);
-  const spread = n > 1 ? Math.min(maxW * 0.82, (avail - maxW) / (n - 1)) : 0;
-  const total  = spread * (n - 1);
-  const mid    = (n - 1) / 2;
-
-  B.hand.forEach((obj, i) => {
-    const el = obj.el;
-    if (el.classList.contains('flying')) return;
-    const x = -total/2 + i * spread;
-    const mm = Math.max(mid, 1);
-    const yy = Math.pow((i - mid) / mm, 2) * 16;
-    const rot = (i - mid) * 4;
-    el.style.transition = '';
-    el.style.transform = 'translate(' + x + 'px, ' + yy + 'px) rotate(' + rot + 'deg)';
-    el.style.zIndex = 10 + i;
-    el.style.opacity = '1';
-    el.classList.toggle('unaffordable', P.energy < CARDS[obj.id].cost);
-  });
-}
-
-function addCardToHand(id){
-  const el = buildCardEl(id);
-  const o  = handOrigin();
-  const dp = pointOf('#drawPile');
-  el.style.transition = 'none';
-  el.style.transform  = 'translate(' + (dp.x - o.x) + 'px, ' + (dp.y - o.y) + 'px) rotate(-25deg) scale(.55)';
-  el.style.opacity = '0';
-  el.style.zIndex  = 200;
-  handEl.appendChild(el);
-
-  const obj = { id, el };
-  B.hand.push(obj);
-  attachCardEvents(obj);
-
-  /* Reflow after the browser has painted the new element. */
-  void el.offsetWidth;
-  el.style.transition = '';
-  layoutHand();
-  return obj;
-}
-
-/* =========================================================
-   FLOATING FX
-   ========================================================= */
-function floatText(txt, cls, pt){
-  const d = document.createElement('div');
-  d.className = 'float ' + cls;
-  d.textContent = txt;
-  d.style.left = pt.x + 'px';
-  d.style.top  = pt.y + 'px';
-  $('#floatLayer').appendChild(d);
-  setTimeout(() => d.remove(), 1150);
-}
-function shakeScreen(){
-  const a = $('#arena');
-  if (!a) return;
-  a.animate(
-    [{transform:'translate(0,0)'},
-     {transform:'translate(-6px,4px)'},
-     {transform:'translate(6px,-4px)'},
-     {transform:'translate(-4px,2px)'},
-     {transform:'translate(0,0)'}],
-    {duration:210, easing:'ease-out'}
-  );
-}
-function banner(text, color){
-  const b = $('#banner');
-  b.textContent = text;
-  b.style.color = color || '#ffd23f';
-  b.classList.add('show');
-  setTimeout(() => b.classList.remove('show'), 850);
-}
-function toast(msg){
-  const d = document.createElement('div');
-  d.className = 'toast';
-  d.textContent = msg;
-  document.body.appendChild(d);
-  setTimeout(() => d.remove(), 2450);
-}
-
-/* =========================================================
-   ENERGY PIPS
-   ========================================================= */
-function updateEnergyPips(flashIndex){
-  const container = $('#energyPips');
-  if (!container) return;
-  if (container.children.length !== P.maxEnergy){
-    container.innerHTML = '';
-    for (let i = 0; i < P.maxEnergy; i++){
-      const p = document.createElement('div');
-      p.className = 'pip';
-      container.appendChild(p);
-    }
-  }
-  const pips = container.children;
-  for (let i = 0; i < pips.length; i++){
-    pips[i].classList.toggle('filled', i < P.energy);
-  }
-  if (typeof flashIndex === 'number' && pips[flashIndex]){
-    pips[flashIndex].classList.remove('boost');
-    void pips[flashIndex].offsetWidth;
-    pips[flashIndex].classList.add('boost');
-    setTimeout(() => pips[flashIndex] && pips[flashIndex].classList.remove('boost'), 420);
-  }
-}
-
-/* =========================================================
-   HUD
-   ========================================================= */
-function updateHud(){
-  const hpPct = Math.max(0, P.hp / P.maxHp * 100);
-  $('#pHpFill').style.width = hpPct + '%';
-  $('#pHpTxt').textContent = Math.max(0, Math.round(P.hp)) + '/' + P.maxHp;
-
-  const ps = $('#pShield');
-  ps.textContent = '🛡 ' + P.shield;
-  ps.classList.toggle('on', P.shield > 0);
-
-  updateEnergyPips();
-
-  $('#hudStage').textContent = G.stage + 1;
-  $('#hudGold').textContent  = G.gold;
-  $('#hudDeck').textContent  = G.deck.length;
-  $('#drawCount').textContent    = B.draw.length;
-  $('#discardCount').textContent = B.disc.length;
-
-  const st = [];
-  if (P.burn > 0) st.push('<span class="st">🔥 ' + P.burn + '</span>');
-  if (P.weak > 0) st.push('<span class="st weak">▼ ' + P.weak + '</span>');
-  $('#pStatus').innerHTML = st.join('');
-
-  B.hand.forEach(o => o.el.classList.toggle('unaffordable', P.energy < CARDS[o.id].cost));
-  $('#btnEndTurn').disabled = B.turn !== 'player' || B.busy || B.over;
-}
-
-function updateEnemyUI(){
-  const e = B.enemy;
-  if (!e) return;
-  const pct = Math.max(0, e.hp / e.maxHp * 100);
-  const f = $('#eHpFill'), t = $('#eHpTxt');
-  if (f) f.style.width = pct + '%';
-  if (t) t.textContent = Math.max(0, Math.round(e.hp)) + '/' + e.maxHp;
-
-  const sb = $('#eShield');
-  if (sb){
-    const wasOn = sb.classList.contains('on');
-    sb.textContent = '🛡 ' + e.shield;
-    sb.classList.toggle('on', e.shield > 0);
-    if (!wasOn && e.shield > 0){ sb.classList.remove('on'); void sb.offsetWidth; sb.classList.add('on'); }
-  }
-  const s = $('#eStatus');
-  if (s){
-    const arr = [];
-    if (e.burn   > 0) arr.push('<span class="st">🔥 ' + e.burn + '</span>');
-    if (e.chill  > 0) arr.push('<span class="st chill">❄ ' + e.chill + '</span>');
-    if (e.static > 0) arr.push('<span class="st static">⚡ ' + e.static + '</span>');
-    if (e.str    > 0) arr.push('<span class="st str">▲ ' + e.str + '</span>');
-    s.innerHTML = arr.join('');
-  }
-  const w = $('#weakHint');
-  if (w){
-    const wk = ELEM[e.weak];
-    w.innerHTML = 'WEAK: <span style="color:' + wk.color + '">' + wk.glyph + ' ' + wk.name.toUpperCase() + '</span>';
-  }
-}
-
-/* =========================================================
-   ENEMY RENDER
-   ========================================================= */
-function renderEnemySide(){
-  const e = B.enemy;
-  const enemySide = $('#enemySide');
-  enemySide.innerHTML =
-    '<div class="intent" id="intentEl"></div>' +
-    '<div class="unit enemy-unit" id="enemyBody" style="--c:' + e.color + '">' +
-      '<div class="eye l"></div><div class="eye r"></div>' +
-      '<div class="shield-badge" id="eShield">🛡 0</div>' +
-    '</div>' +
-    '<div class="unit-name">' + e.name + '</div>' +
-    '<div class="bar" id="eBar">' +
-      '<div class="bar-fill" id="eHpFill" style="width:100%"></div>' +
-      '<span class="bar-txt" id="eHpTxt"></span>' +
-    '</div>' +
-    '<div class="statuses" id="eStatus"></div>' +
-    '<div class="unit-name weak-hint" id="weakHint"></div>';
-  updateEnemyUI();
-}
-
-function renderIntent(){
-  const e = B.enemy;
-  if (!e || !e.intent) return;
-  const mv = e.intent;
-  const el = $('#intentEl');
-  if (!el) return;
-
-  let html = '', cls = '';
-  if (mv.t === 'atk'){
-    const per  = mv.dmg + e.str;
-    const hits = mv.hits || 1;
-    html = '<span class="pop">⚔</span> ' + (hits > 1 ? per + '×' + hits : per);
-    if (mv.burn) html += ' <span class="tiny">🔥' + mv.burn + '</span>';
-    if (mv.weak) html += ' <span class="tiny">▼' + mv.weak + '</span>';
-    cls = 'atk';
-  } else if (mv.t === 'def'){
-    html = '<span class="pop">🛡</span> ' + mv.shield;
-    cls = 'def';
-  } else if (mv.t === 'buff'){
-    html = '<span class="pop">▲</span> STR +' + mv.str;
-    cls = 'buff';
-  }
-  el.className = 'intent ' + cls;
-  el.innerHTML = html;
-}
-
-/* =========================================================
-   BATTLE SETUP
-   ========================================================= */
-function makeEnemy(tpl){
-  const loop = Math.floor(G.stage / ENEMY_TYPES.length);
-  const hp = Math.round(tpl.hp * (1 + G.stage * 0.17));
-  return {
-    name: tpl.name, el: tpl.el, color: tpl.color,
-    hp, maxHp: hp, shield: 0,
-    str: loop * 2 + Math.floor(G.stage / 4),
-    weak: WEAK_OF[tpl.el] || 'neutral',
-    resist: tpl.el === 'neutral' ? null : tpl.el,
-    moves: tpl.moves,
-    burn: 0, chill: 0, static: 0,
-    intent: null, lastMove: null,
-  };
-}
-
-async function beginBattle(){
-  const tpl = ENEMY_TYPES[G.stage % ENEMY_TYPES.length];
-  B.enemy = makeEnemy(tpl);
-  B.draw  = shuffle(G.deck.slice());
-  B.hand  = [];
-  B.disc  = [];
-  B.over  = false;
-  B.busy  = true;
-  B.turn  = 'player';
-  P.shield = 0; P.burn = 0; P.weak = 0;
-  handEl.innerHTML = '';
-
-  bgSetTint(tpl.color);
-  renderEnemySide();
-  updateHud();
-  go('scr-battle');
-
-  await wait(340);
-  chooseIntent();
-  banner('BATTLE ' + (G.stage + 1), '#ffd23f');
-  await wait(620);
-  startPlayerTurn();
-}
-
-function chooseIntent(){
-  const e = B.enemy;
-  let pool = e.moves.slice();
-  if (e.lastMove && e.lastMove.t === 'def'){
-    const f = pool.filter(m => m.t !== 'def');
-    if (f.length) pool = f;
-  }
-  const mv = pick(pool);
-  e.lastMove = mv;
-  e.intent = mv;
-  renderIntent();
-}
-
-/* =========================================================
-   TURN FLOW
-   ========================================================= */
-async function startPlayerTurn(){
-  if (B.over) return;
-  B.turn = 'player';
-  B.busy = true;
-  P.shield = 0;
-  updateHud();
-
-  if (P.burn > 0){
-    await wait(220);
-    P.hp -= P.burn;
-    floatText('🔥 -' + P.burn, 'f-dmg', playerPoint());
-    flashPlayerBar();
-    P.burn--;
-    updateHud();
-    if (P.hp <= 0){ loseBattle(); return; }
-  }
-
-  P.energy = P.maxEnergy;
-  await wait(150);
-  updateEnergyPips(P.maxEnergy - 1);
-  await drawTo(5);
-  updateHud();
-  B.busy = false;
-  banner('YOUR TURN', '#4dd0ff');
-  updateHud();
-}
-
-function flashPlayerBar(){
-  const bar = $('#pBar');
-  if (!bar) return;
-  bar.classList.remove('flash'); void bar.offsetWidth; bar.classList.add('flash');
-}
-function flashEnemyBar(){
-  const bar = $('#eBar');
-  if (!bar) return;
-  bar.classList.remove('flash'); void bar.offsetWidth; bar.classList.add('flash');
-}
-
-async function drawTo(n){
-  while (B.hand.length < n && B.hand.length < 10){
-    if (B.draw.length === 0){
-      if (B.disc.length === 0) break;
-      B.draw = shuffle(B.disc);
-      B.disc = [];
-    }
-    const id = B.draw.pop();
-    addCardToHand(id);
-    await wait(85);
-  }
-}
-
-async function endTurn(){
-  if (B.busy || B.turn !== 'player' || B.over) return;
-  B.busy = true;
-  B.turn = 'enemy';
-  updateHud();
-
-  if (P.weak > 0) P.weak--;
-
-  const copy = B.hand.slice();
-  B.hand = [];
-  copy.forEach(o => B.disc.push(o.id));
-
-  for (const o of copy){
-    const o0 = handOrigin();
-    const dp = pointOf('#discardPile');
-    o.el.style.transition = 'transform .32s ease-in, opacity .32s';
-    o.el.style.transform  = 'translate(' + (dp.x - o0.x) + 'px, ' + (dp.y - o0.y) + 'px) rotate(22deg) scale(.45)';
-    o.el.style.opacity    = '0';
-    o.el.style.zIndex     = 5;
-    setTimeout(() => o.el.remove(), 340);
-  }
-  await wait(360);
-  updateHud();
-  banner('ENEMY TURN', '#ff4d6d');
-  await wait(420);
-  await enemyTurn();
-}
-
-async function enemyTurn(){
-  if (B.over) return;
-  const e = B.enemy;
-
-  e.shield = 0;
-  updateEnemyUI();
-  await wait(260);
-
-  if (e.burn > 0){
-    const dmg = e.burn;
-    e.hp -= dmg;
-    e.burn = Math.max(0, e.burn - 1);
-    floatText('🔥 -' + dmg, 'f-dmg', enemyPoint());
-    hitAnim();
-    flashEnemyBar();
-    updateEnemyUI();
-    await wait(420);
-    if (e.hp <= 0){ winBattle(); return; }
-  }
-
-  const mv = e.intent;
-  const body = $('#enemyBody');
-  if (body && mv.t !== 'def'){
-    body.animate(
-      [{transform:'translateX(0)'},
-       {transform:'translateX(-28px) scale(1.05)'},
-       {transform:'translateX(0)'}],
-      {duration:340, easing:'ease-out'}
-    );
-  }
-  await wait(250);
-
-  if (mv.t === 'atk'){
-    const hits = mv.hits || 1;
-    for (let i = 0; i < hits; i++){
-      let dmg = mv.dmg + e.str;
-      if (e.chill > 0) dmg = Math.max(1, Math.round(dmg * 0.6));
-      damagePlayer(dmg);
-      await wait(230);
-      if (B.over) return;
-    }
-    if (mv.burn){ P.burn += mv.burn; floatText('🔥 +' + mv.burn, 'f-status', playerPoint()); }
-    if (mv.weak){ P.weak += mv.weak; floatText('▼ +' + mv.weak, 'f-status', playerPoint()); }
-  } else if (mv.t === 'def'){
-    e.shield += mv.shield;
-    floatText('🛡 +' + mv.shield, 'f-shield', enemyPoint());
-  } else if (mv.t === 'buff'){
-    e.str += mv.str;
-    if (mv.shield) e.shield += mv.shield;
-    floatText('▲ +' + mv.str, 'f-status', enemyPoint());
-  }
-  if (mv.heal){
-    e.hp = Math.min(e.maxHp, e.hp + mv.heal);
-    floatText('+' + mv.heal, 'f-heal', enemyPoint());
-  }
-  updateEnemyUI();
-  updateHud();
-  await wait(460);
-
-  if (e.chill  > 0) e.chill--;
-  if (e.static > 0) e.static--;
-  updateEnemyUI();
-
-  if (B.over) return;
-  chooseIntent();
-  await wait(320);
-  startPlayerTurn();
-}
-
-/* =========================================================
-   DAMAGE
-   ========================================================= */
-function calcPlayerDamage(base, elem){
-  const e = B.enemy;
-  let m = 1, crit = false;
-  if (e.weak === elem){ m *= 1.75; crit = true; }
-  else if (e.resist === elem) m *= 0.5;
-  if (e.static > 0) m *= 1.25;
-  if (P.weak > 0)   m *= 0.75;
-  return { dmg: Math.max(1, Math.round(base * m)), crit };
-}
-
-function hitAnim(){
-  const b = $('#enemyBody');
-  if (!b) return;
-  b.classList.remove('hit');
-  void b.offsetWidth;
-  b.classList.add('hit');
-  setTimeout(() => b.classList.remove('hit'), 320);
-}
-
-async function hitEnemy(amount, elem, opts){
-  opts = opts || {};
-  const e = B.enemy;
-  if (!e || B.over) return;
-  let dmg = amount;
-
-  if (!opts.ignoreShield && e.shield > 0){
-    const abs = Math.min(e.shield, dmg);
-    e.shield -= abs; dmg -= abs;
-    floatText('🛡 -' + abs, 'f-shield', enemyPoint());
-  }
-  if (dmg > 0){
-    e.hp -= dmg;
-    floatText('-' + dmg, opts.crit ? 'f-crit' : 'f-dmg', enemyPoint());
-    hitAnim();
-    flashEnemyBar();
-    shakeScreen();
-  }
-  updateEnemyUI();
-  await wait(130);
-  if (e.hp <= 0) winBattle();
-}
-
-function damagePlayer(amount){
-  let dmg = amount;
-  if (P.shield > 0){
-    const abs = Math.min(P.shield, dmg);
-    P.shield -= abs; dmg -= abs;
-    floatText('🛡 -' + abs, 'f-shield', playerPoint());
-  }
-  if (dmg > 0){
-    P.hp -= dmg;
-    floatText('-' + dmg, 'f-dmg', playerPoint());
-    shakeScreen();
-    flashPlayerBar();
-    BG.hurt = 1;
-    const b = $('#playerBody');
-    if (b) b.animate([{filter:'brightness(3)'},{filter:'brightness(1)'}], {duration:280});
-  }
-  updateHud();
-  if (P.hp <= 0) loseBattle();
-}
-
-/* =========================================================
-   PLAYING CARDS
-   ========================================================= */
-function attachCardEvents(obj){
-  obj.el.addEventListener('pointerdown', e => startDrag(e, obj));
-}
-
-let drag = null;
-
-function startDrag(ev, obj){
-  if (B.busy || B.turn !== 'player' || B.over) return;
-  ev.preventDefault();
-  const el = obj.el;
-  const r = el.getBoundingClientRect();
-  const cx = r.left + r.width/2, cy = r.top + r.height/2;
-  drag = {
-    obj, el,
-    dx: ev.clientX - cx,
-    dy: ev.clientY - cy,
-    sx: ev.clientX, sy: ev.clientY,
-    moved: false,
-  };
-  el.classList.add('dragging');
-  el.style.zIndex = 5000;
-  window.addEventListener('pointermove', onDragMove);
-  window.addEventListener('pointerup', onDragUp);
-  window.addEventListener('pointercancel', onDragUp);
-}
-
-function onDragMove(ev){
-  if (!drag) return;
-  const o = handOrigin();
-  const tx = (ev.clientX - drag.dx) - o.x;
-  const ty = (ev.clientY - drag.dy) - o.y;
-  drag.el.style.transform = 'translate(' + tx + 'px, ' + ty + 'px) rotate(0deg) scale(1.07)';
-  if (Math.hypot(ev.clientX - drag.sx, ev.clientY - drag.sy) > 8) drag.moved = true;
-  const zone = handEl.getBoundingClientRect().top + 30;
-  drag.el.classList.toggle('canplay', ev.clientY < zone);
-}
-
-function onDragUp(ev){
-  if (!drag) return;
-  window.removeEventListener('pointermove', onDragMove);
-  window.removeEventListener('pointerup', onDragUp);
-  window.removeEventListener('pointercancel', onDragUp);
-
-  const d = drag; drag = null;
-  d.el.classList.remove('dragging', 'canplay');
-
-  const zone = handEl.getBoundingClientRect().top + 30;
-  const r = d.el.getBoundingClientRect();
-  const card = CARDS[d.obj.id];
-  const shouldPlay = (!d.moved && ev.type === 'pointerup') || (r.top + r.height/2 < zone);
-
-  if (shouldPlay){
-    if (P.energy < card.cost){
-      d.el.classList.add('nope');
-      setTimeout(() => d.el.classList.remove('nope'), 380);
-      layoutHand();
-      return;
-    }
-    playCardObj(d.obj);
-  } else {
-    d.el.style.transition = '';
-    layoutHand();
-  }
-}
-
-async function playCardObj(obj){
-  if (B.busy || B.over) return;
-  const card = CARDS[obj.id];
-  if (P.energy < card.cost) return;
-
-  B.busy = true;
-  const spendFrom = P.energy - 1;
-  P.energy -= card.cost;
-  updateHud();
-  updateEnergyPips(spendFrom);
-
-  const idx = B.hand.indexOf(obj);
-  if (idx >= 0) B.hand.splice(idx, 1);
-  B.disc.push(obj.id);
-
-  const el = obj.el;
-  el.classList.remove('dragging');
-  el.classList.add('flying');
-  el.style.zIndex = 6000;
-
-  const target = (card.t === 'attack') ? enemyPoint() : playerPoint();
-  const o = handOrigin();
-  el.style.transition = 'transform .34s cubic-bezier(.4,0,.6,1), opacity .34s';
-  el.style.transform  = 'translate(' + (target.x - o.x) + 'px, ' + (target.y - o.y) + 'px) rotate(0deg) scale(.32)';
-  el.style.opacity    = '0';
-
-  layoutHand();
-  await wait(320);
-  el.remove();
-
-  await resolveCard(card);
-
-  updateHud();
-  if (!B.over) B.busy = false;
-  updateHud();
-}
-
-async function resolveCard(card){
-  const e = B.enemy;
-
-  if (card.dmg){
-    const hits = card.hits || 1;
-    for (let i = 0; i < hits; i++){
-      const res = calcPlayerDamage(card.dmg, card.el);
-      await hitEnemy(res.dmg, card.el, { crit: res.crit });
-      if (B.over) return;
-      if (hits > 1) await wait(130);
-    }
-  }
-  if (card.shield){
-    P.shield += card.shield;
-    floatText('+' + card.shield + ' 🛡', 'f-shield', playerPoint());
-    updateHud();
-    await wait(120);
-  }
-  if (card.heal){
-    P.hp = Math.min(P.maxHp, P.hp + card.heal);
-    floatText('+' + card.heal, 'f-heal', playerPoint());
-    updateHud();
-    await wait(120);
-  }
-  if (card.burn){ e.burn += card.burn; floatText('🔥 +' + card.burn, 'f-status', enemyPoint()); updateEnemyUI(); await wait(120); }
-  if (card.chill){ e.chill += card.chill; floatText('❄ +' + card.chill, 'f-status', enemyPoint()); updateEnemyUI(); await wait(120); }
-  if (card.static){ e.static += card.static; floatText('⚡ +' + card.static, 'f-status', enemyPoint()); updateEnemyUI(); await wait(120); }
-  if (card.energy){
-    P.energy += card.energy;
-    updateHud();
-    updateEnergyPips(P.energy - 1);
-    await wait(100);
-  }
-  if (card.draw){
-    await drawTo(B.hand.length + card.draw);
-  }
-  updateHud();
-}
-
-/* =========================================================
-   WIN / LOSE
-   ========================================================= */
-async function winBattle(){
-  if (B.over) return;
-  B.over = true;
-  B.busy = true;
-  const body = $('#enemyBody');
-  if (body) body.classList.add('dying');
-  await wait(760);
-
-  const gold = 20 + G.stage * 10 + rndInt(20);
-  G.gold += gold;
-  G.stage++;
-  P.hp = Math.min(P.maxHp, P.hp + Math.round(P.maxHp * 0.25));
-  updateHud();
-  showReward(gold);
-}
-
-function loseBattle(){
-  if (B.over) return;
-  B.over = true;
-  B.busy = true;
-  updateHud();
-  setTimeout(() => {
-    $('#overTitle').textContent = 'YOU DIED';
-    $('#overStats').innerHTML =
-      'BATTLES WON: <b style="color:var(--gold)">' + G.stage + '</b><br>' +
-      'GOLD: <b style="color:var(--gold)">' + G.gold + '</b><br>' +
-      'CARDS OWNED: <b style="color:var(--cyan)">' + G.collection.length + '</b>';
-    go('scr-over');
-  }, 720);
-}
-
-/* =========================================================
-   NAVIGATION
-   ========================================================= */
-function go(id){
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  const el = document.getElementById(id);
-  if (el) el.classList.add('active');
-  G.screen = id;
-  if (id === 'scr-battle') bgResize();
-  if (id !== 'scr-battle') refreshCardSizes();
-}
-
-/* =========================================================
-   REWARD
-   ========================================================= */
-function rollCard(bonus){
-  bonus = bonus || 0;
-  const r = Math.random() + bonus * 0.4;
-  const rar = r < 0.55 ? 'common' : r < 0.87 ? 'uncommon' : 'rare';
-  const pool = Object.keys(CARDS).filter(k => CARDS[k].rar === rar);
-  return pick(pool);
-}
-
-function showReward(gold){
-  $('#rewardGold').textContent = gold;
-  const chosen = [];
-  const used = new Set();
-  let guard = 0;
-  while (chosen.length < 3 && guard++ < 80){
-    const id = rollCard(chosen.length === 2 ? 0.6 : 0);
-    if (used.has(id)) continue;
-    used.add(id);
-    chosen.push(id);
-  }
-  const row = $('#rewardRow');
-  row.innerHTML = '';
-  chosen.forEach(id => {
-    const cardEl = buildCardEl(id, true);
-    cardEl.classList.add('reward-card');
-    cardEl.addEventListener('click', () => {
-      G.collection.push(id);
-      toast('+ ' + CARDS[id].name.toUpperCase() + ' ADDED');
-      showShop();
+    canvas.addEventListener('pointerup',     endPointer);
+    canvas.addEventListener('pointercancel', endPointer);
+    canvas.addEventListener('pointerleave',  endPointer);
+
+    window.addEventListener('keydown', function (e) {
+      if (e.key === 'Shift') boostHeld = true;
     });
-    row.appendChild(cardEl);
-  });
-  go('scr-reward');
-}
-
-/* =========================================================
-   SHOP
-   ========================================================= */
-function showShop(){
-  $('#shopGold').textContent = G.gold;
-  const list = $('#shopList');
-  list.innerHTML = '';
-  SHOP_ITEMS.forEach(item => {
-    const b = document.createElement('button');
-    b.className = 'shop-item';
-    b.innerHTML =
-      '<div class="si-icon">' + item.icon + '</div>' +
-      '<div class="si-info"><b>' + item.name + '</b><small>' + item.desc + '</small></div>' +
-      '<div class="si-cost">◈ ' + item.cost + '</div>';
-    b.disabled = G.gold < item.cost;
-    b.addEventListener('click', () => buyItem(item));
-    list.appendChild(b);
-  });
-  $('#shopLog').textContent = '';
-  go('scr-shop');
-}
-
-function buyItem(item){
-  if (G.gold < item.cost) return;
-  G.gold -= item.cost;
-  let msg = '';
-  if (item.id === 'pack1'){
-    const got = [];
-    for (let i = 0; i < 3; i++){ const id = rollCard(0); G.collection.push(id); got.push(CARDS[id].name); }
-    msg = 'GOT: ' + got.join(', ');
-  } else if (item.id === 'pack2'){
-    const got = [];
-    const rare = rollCard(1.6);
-    G.collection.push(rare); got.push('★' + CARDS[rare].name);
-    for (let i = 0; i < 4; i++){ const id = rollCard(0.1); G.collection.push(id); got.push(CARDS[id].name); }
-    msg = 'GOT: ' + got.join(', ');
-  } else if (item.id === 'heal'){
-    P.hp = Math.min(P.maxHp, P.hp + 20);
-    msg = 'HEALED 20 HP';
-  } else if (item.id === 'maxhp'){
-    P.maxHp += 8; P.hp += 8;
-    msg = 'MAX HP INCREASED';
-  }
-  showShop();
-  $('#shopLog').textContent = msg;
-  toast(msg);
-}
-
-/* =========================================================
-   DECK BUILDER
-   ========================================================= */
-function countIn(arr, id){ let n = 0; for (const x of arr) if (x === id) n++; return n; }
-
-function miniCard(id){
-  const c = CARDS[id];
-  const d = document.createElement('div');
-  d.className = 'mini m-' + c.el;
-  d.innerHTML =
-    '<div class="m-cost">' + c.cost + '</div>' +
-    '<div class="m-el" style="color:' + ELEM[c.el].color + '">' + ELEM[c.el].glyph + '</div>' +
-    '<div class="m-name">' + c.name.toUpperCase() + '</div>' +
-    '<div class="m-desc">' + c.desc + '</div>';
-  return d;
-}
-
-function renderDeckBuilder(){
-  const DECK_MAX = 12;
-  $('#deckCount').textContent = G.deck.length;
-  $('#deckBar').style.width = (G.deck.length / DECK_MAX * 100) + '%';
-  $('#btnDeckDone').textContent = (deckReturn === 'shop') ? 'SAVE ✓' : 'BEGIN ▶';
-
-  const cg = $('#collectionGrid');
-  cg.innerHTML = '';
-  const ownedIds = [...new Set(G.collection)].sort((a, b) =>
-    CARDS[a].cost - CARDS[b].cost || CARDS[a].name.localeCompare(CARDS[b].name)
-  );
-  ownedIds.forEach(id => {
-    const owned = countIn(G.collection, id);
-    const used  = countIn(G.deck, id);
-    const avail = owned - used;
-    const m = miniCard(id);
-    const badge = document.createElement('div');
-    badge.className = 'm-count';
-    badge.textContent = avail + '/' + owned;
-    m.appendChild(badge);
-    if (avail <= 0 || G.deck.length >= DECK_MAX) m.classList.add('used');
-    m.addEventListener('click', () => {
-      if (avail <= 0){ toast('ALL COPIES ARE IN YOUR DECK'); return; }
-      if (G.deck.length >= DECK_MAX){ toast('DECK IS FULL (12)'); return; }
-      G.deck.push(id);
-      renderDeckBuilder();
+    window.addEventListener('keyup', function (e) {
+      if (e.key === 'Shift') boostHeld = false;
     });
-    cg.appendChild(m);
-  });
 
-  const dg = $('#deckGrid');
-  dg.innerHTML = '';
-  G.deck.forEach((id, i) => {
-    const m = miniCard(id);
-    m.addEventListener('click', () => {
-      G.deck.splice(i, 1);
-      renderDeckBuilder();
-    });
-    dg.appendChild(m);
-  });
-
-  $('#btnDeckDone').disabled = G.deck.length < 5;
-}
-
-function autoDeck(){
-  G.deck = [];
-  const pool = G.collection.slice().sort((a, b) =>
-    CARDS[a].cost - CARDS[b].cost || CARDS[a].name.localeCompare(CARDS[b].name)
-  );
-  const perCard = {};
-  for (const id of pool){
-    if (G.deck.length >= 12) break;
-    perCard[id] = (perCard[id] || 0) + 1;
-    if (perCard[id] > 2) continue;
-    G.deck.push(id);
-  }
-  renderDeckBuilder();
-}
-
-/* =========================================================
-   RUN SETUP
-   ========================================================= */
-function newRun(){
-  G.stage = 0;
-  G.gold = 0;
-  G.collection = STARTER.slice();
-  G.deck = STARTER.slice();
-  P.maxHp = 60; P.hp = 60; P.shield = 0;
-  P.energy = 3; P.maxEnergy = 3;
-  P.burn = 0; P.weak = 0;
-  B.hand = []; B.draw = []; B.disc = []; B.over = false;
-  deckReturn = 'begin';
-  renderDeckBuilder();
-  go('scr-deck');
-}
-
-/* =========================================================
-   EVENTS
-   ========================================================= */
-$('#btnStart').addEventListener('click', newRun);
-$('#btnHow').addEventListener('click', () => $('#howBox').classList.toggle('hidden'));
-$('#btnAutoDeck').addEventListener('click', autoDeck);
-$('#btnClearDeck').addEventListener('click', () => { G.deck = []; renderDeckBuilder(); });
-$('#btnDeckDone').addEventListener('click', () => {
-  if (G.deck.length < 5) return;
-  if (deckReturn === 'shop'){ showShop(); }
-  else { beginBattle(); }
-});
-$('#btnEndTurn').addEventListener('click', endTurn);
-$('#btnEditDeck').addEventListener('click', () => {
-  deckReturn = 'shop';
-  renderDeckBuilder();
-  go('scr-deck');
-});
-$('#btnNextBattle').addEventListener('click', beginBattle);
-$('#btnRestart').addEventListener('click', () => go('scr-menu'));
-
-window.addEventListener('resize', () => {
-  refreshCardSizes();
-  if (B.hand.length) layoutHand();
-  bgResize();
-});
-
-window.addEventListener('keydown', e => {
-  if (G.screen !== 'scr-battle') return;
-  if (e.code === 'Space'){ e.preventDefault(); endTurn(); return; }
-  const n = parseInt(e.key, 10);
-  if (n >= 1 && n <= 9 && B.hand[n-1]){
-    const obj = B.hand[n-1];
-    if (!B.busy && B.turn === 'player' && !B.over && P.energy >= CARDS[obj.id].cost){
-      playCardObj(obj);
+    var hintHidden = false;
+    function hideHint() {
+      if (hintHidden) return;
+      hintHidden = true;
+      hint.classList.add('gone');
     }
-  }
-});
+    setTimeout(hideHint, 7000);
 
-document.addEventListener('contextmenu', e => e.preventDefault());
+    /* ---------- helpers ---------- */
+    function lerp(a, b, t) { return a + (b - a) * t; }
+    function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
+    function fmt(n, d) { return n.toFixed(d === undefined ? 0 : d); }
 
-/* =========================================================
-   BOOT
-   ========================================================= */
-bgInit();
-preloadCardAssets();
-renderDeckBuilder();
-updateHud();
-</script>
+    /* ---------- main loop ---------- */
+    var last = performance.now();
+    var elapsed = 0;
+    var attH = attitude.clientHeight || 120;
+    var PX_PER_DEG_PITCH = attH / 90;   /* 90° of pitch fills the ball */
+
+    function frame(now) {
+      requestAnimationFrame(frame);
+      var dt = Math.min((now - last) / 1000, 0.05);
+      last = now;
+      elapsed += dt;
+
+      /* --- decay input when released --- */
+      if (pointerId === null) {
+        var d = Math.exp(-dt * 6);
+        inputX *= d; inputY *= d;
+        if (Math.abs(inputX) < 0.002) inputX = 0;
+        if (Math.abs(inputY) < 0.002) inputY = 0;
+      }
+
+      /* --- simulate aircraft --- */
+      state.roll  = lerp(state.roll,  inputX * 45, 1 - Math.exp(-dt * 3.5));
+      state.pitch = lerp(state.pitch, -inputY * 30, 1 - Math.exp(-dt * 3.5));
+      state.heading = (state.heading + inputX * 40 * dt + 360) % 360;
+
+      var boosting = boostHeld || inputY < -0.85;
+      state.boost = lerp(state.boost, boosting ? 1 : 0, 1 - Math.exp(-dt * 4));
+      state.throttle = clamp(0.35 + state.boost * 0.65 + (-inputY) * 0.25, 0, 1);
+
+      var targetSpeed = SPEED_MIN + state.throttle * (SPEED_MAX - SPEED_MIN);
+      state.speed = lerp(state.speed, targetSpeed, 1 - Math.exp(-dt * 1.6));
+
+      state.vs = lerp(state.vs, -state.pitch * 60, 1 - Math.exp(-dt * 2));
+      state.alt = clamp(state.alt + state.vs * dt, ALT_MIN + 100, ALT_MAX - 100);
+      state.g = lerp(state.g, 1 + Math.abs(state.roll) / 45 * 1.6 + state.boost * 1.2,
+                     1 - Math.exp(-dt * 3));
+
+      /* ============ SPEEDOMETER ============ */
+      var sn = clamp((state.speed - SPEED_MIN) / (SPEED_MAX - SPEED_MIN), 0, 1);
+      needle.style.transform = 'rotate(' + (-135 + sn * 270) + 'deg)';
+      arcFill.style.strokeDashoffset = (ARC_LEN * (1 - sn)).toFixed(1);
+      speedValue.textContent = Math.round(state.speed);
+      machValue.textContent = (state.speed / 660).toFixed(2);
+
+      /* ============ ALTITUDE TAPE ============ */
+      altStrip.style.transform = 'translateY(' + (state.alt * PX_PER_FT) + 'px)';
+      altValue.textContent = Math.round(state.alt).toLocaleString();
+      var vsStr = (state.vs >= 0 ? '+' : '') + Math.round(state.vs);
+      vsValue.textContent = vsStr;
+      vsValue2.textContent = vsStr;
+
+      /* ============ ATTITUDE BALL ============ */
+      var attHNow = attitude.clientHeight || 120;
+      var ppd = attHNow / 90;
+      attSphere.style.transform =
+        'rotate(' + state.roll + 'deg) translateY(' + (state.pitch * ppd) + 'px)';
+
+      /* ============ COMPASS ============ */
+      compassStrip.style.transform = 'translateX(' + (-state.heading * PX_PER_DEG) + 'px)';
+      var hdg = Math.round(state.heading) % 360;
+      var pad3 = ('00' + hdg).slice(-3);
+      hdgValue.textContent = pad3;
+      hdgValue2.textContent = pad3;
+
+      /* ============ POWER ============ */
+      var pct = Math.round(state.throttle * 100);
+      thrFill.style.width = pct + '%';
+      thrValue.textContent = pct + '%';
+      var lit = Math.round(state.throttle * hexes.length);
+      for (var i = 0; i < hexes.length; i++) {
+        hexes[i].classList.toggle('on',  i < lit);
+        hexes[i].classList.toggle('hot', i < lit && state.boost > 0.4);
+      }
+
+      /* ============ STATUS ============ */
+      gValue.textContent = fmt(state.g, 1);
+      var m = Math.floor(elapsed / 60);
+      var s = Math.floor(elapsed % 60);
+      timeValue.textContent = ('0' + m).slice(-2) + ':' + ('0' + s).slice(-2);
+      sysState.textContent = state.boost > 0.5 ? 'AFTERBURN' : 'NOMINAL';
+      sysState.style.color = state.boost > 0.5 ? '#ffb547' : '';
+
+      /* ============ LENS FLARE ============ */
+      var lf = state.speed / SPEED_MAX;
+      lens.style.left = (55 + Math.sin(elapsed * 0.12) * 12) + '%';
+      lens.style.top  = (24 + Math.cos(elapsed * 0.10) * 6) + '%';
+      lens.style.opacity = (0.5 + lf * 0.5) * (0.85 + state.boost * 0.15);
+      lens.style.transform = 'translate(-50%, -50%) scale(' + (0.8 + lf * 0.5) + ')';
+
+      /* ============ HUD WARM TINT on boost ============ */
+      hud.style.setProperty('--warm', state.boost.toFixed(3));
+      hud.style.setProperty('--speed-norm', sn.toFixed(3));
+    }
+
+    requestAnimationFrame(frame);
+  })();
+  </script>
+
 </body>
+
 </html>
