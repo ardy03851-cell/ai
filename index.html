@@ -1,708 +1,1436 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pixel Vault: Gacha Odyssey</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Press Start 2P', monospace;
-            background-color: #0f051d;
-            color: #f3f4f6;
-            touch-action: manipulation;
-            user-select: none;
-            -webkit-user-select: none;
-            overflow-x: hidden;
-        }
-
-        /* Robust Pixel Borders for Retro Indie Aesthetic */
-        .pixel-border {
-            box-shadow:
-                -4px 0 0 0 #4c1d95,
-                4px 0 0 0 #4c1d95,
-                0 -4px 0 0 #4c1d95,
-                0 4px 0 0 #4c1d95,
-                -8px 0 0 0 #1e1b4b,
-                8px 0 0 0 #1e1b4b,
-                0 -8px 0 0 #1e1b4b,
-                0 8px 0 0 #1e1b4b;
-        }
-
-        .pixel-card-border {
-            box-shadow:
-                -3px 0 0 0 #f59e0b,
-                3px 0 0 0 #f59e0b,
-                0 -3px 0 0 #f59e0b,
-                0 3px 0 0 #f59e0b;
-        }
-
-        .pixel-common-border {
-            box-shadow:
-                -3px 0 0 0 #7c3aed,
-                3px 0 0 0 #7c3aed,
-                0 -3px 0 0 #7c3aed,
-                0 3px 0 0 #7c3aed;
-        }
-
-        .pixel-btn {
-            position: relative;
-            transition: transform 0.1s ease;
-        }
-
-        .pixel-btn:active {
-            transform: translateY(4px);
-        }
-
-        .pixel-card {
-            image-rendering: pixelated;
-            image-rendering: crisp-edges;
-        }
-
-        @keyframes shake {
-            0% {
-                transform: translate(1px, 1px) rotate(0deg);
-            }
-
-            20% {
-                transform: translate(-3px, 0px) rotate(-1deg);
-            }
-
-            40% {
-                transform: translate(1px, -1px) rotate(1deg);
-            }
-
-            60% {
-                transform: translate(-1px, 2px) rotate(0deg);
-            }
-
-            80% {
-                transform: translate(3px, 1px) rotate(-1deg);
-            }
-
-            100% {
-                transform: translate(0, 0) rotate(0deg);
-            }
-        }
-
-        .screen-shake {
-            animation: shake 0.5s cubic-bezier(.36, .07, .19, .97) both;
-        }
-
-        @keyframes pulse-gold {
-
-            0%,
-            100% {
-                filter: drop-shadow(0 0 12px #f59e0b);
-            }
-
-            50% {
-                filter: drop-shadow(0 0 28px #fbbf24);
-            }
-        }
-
-        .gold-glow {
-            animation: pulse-gold 1.5s infinite;
-        }
-
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: #1e1b4b;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: #7c3aed;
-        }
-    </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="theme-color" content="#06060e">
+<title>LABOTOMY</title>
+<style>
+  html, body {
+    margin: 0; padding: 0;
+    width: 100%; height: 100%;
+    overflow: hidden;
+    background: #06060e;
+    touch-action: none;
+    -webkit-user-select: none; user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    overscroll-behavior: none;
+  }
+  #game, #fx {
+    position: absolute; top: 0; left: 0;
+    width: 100%; height: 100%;
+    display: block;
+  }
+  #game {
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+    z-index: 1;
+  }
+  #fx {
+    z-index: 2;
+    pointer-events: none;
+  }
+</style>
 </head>
+<body>
+<canvas id="game"></canvas>
+<canvas id="fx"></canvas>
+<script src="models.js"></script>
+<script>
+(function () {
+'use strict';
 
-<body class="min-h-screen flex flex-col justify-between items-center p-4 sm:p-6 select-none relative">
+// ============================================================
+//  LABOTOMY — index.html (engine)
+//  Player · camera · input · particles · main loop · HUD
+//  Everything else lives in models.js
+// ============================================================
 
-    <header
-        class="w-full max-w-4xl flex justify-between items-center bg-purple-950 p-4 sm:p-6 rounded-none pixel-border mb-6 z-10">
-        <div class="flex items-center space-x-3">
-            <span class="text-yellow-400 text-xl">🕹️</span>
-            <div>
-                <h1 class="text-xs sm:text-sm text-yellow-400 tracking-wider">PIXEL VAULT</h1>
-                <p class="text-[9px] text-purple-300 mt-1">iPad Indie Edition</p>
-            </div>
-        </div>
-        <div class="flex space-x-4 text-xs sm:text-sm">
-            <div class="bg-black/60 px-3 py-2 pixel-border flex items-center space-x-2">
-                <span class="text-yellow-400">🪙</span>
-                <span id="header-coins" class="text-yellow-300 font-bold">500</span>
-            </div>
-            <div class="bg-black/60 px-3 py-2 pixel-border flex items-center space-x-2">
-                <span class="text-purple-400">📦</span>
-                <span id="header-unique" class="text-purple-200 font-bold">0/14</span>
-            </div>
-        </div>
-    </header>
+const M = window.MODELS;
+if (!M) { console.error('models.js failed to load'); return; }
 
-    <main id="app-container"
-        class="w-full max-w-4xl flex-1 flex flex-col justify-center items-center relative z-10 mb-6">
+const rnd = (a, b) => a + Math.random() * (b - a);
+const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
+const mod = (n, m) => ((n % m) + m) % m;
+const pick = a => a[(Math.random() * a.length) | 0];
 
-        <!-- HOME / SUMMON HALL VIEW -->
-        <div id="view-home" class="w-full flex flex-col items-center justify-center space-y-8 py-6">
-            <div class="text-center space-y-4">
-                <div
-                    class="inline-block bg-purple-900/90 px-6 py-3 pixel-border text-xs sm:text-sm text-yellow-300 animate-bounce">
-                    ✨ READY TO ROLL RARITIES! ✨
-                </div>
-                <p class="text-[10px] sm:text-xs text-purple-200 max-w-md mx-auto leading-relaxed">
-                    Test your luck in the arcade vault! Collect Common gear (80%) and Legendary Gold artifacts (20%).
-                </p>
-            </div>
+// ---------- canvases ----------
+const cvs = document.getElementById('game');
+const ctx = cvs.getContext('2d', { alpha: false });
+const fxc = document.getElementById('fx');
+let W = 1, H = 1, DPR = 1;
 
-            <!-- Central Portal / Banner -->
-            <div
-                class="relative w-64 h-64 sm:w-80 sm:h-80 bg-slate-900 pixel-border flex flex-col items-center justify-center p-4 overflow-hidden group">
-                <div
-                    class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-purple-900/40 via-black to-black">
-                </div>
-                <div class="relative z-10 flex flex-col items-center space-y-4">
-                    <div class="text-6xl sm:text-7xl animate-pulse">🔮</div>
-                    <div class="text-center">
-                        <h2 class="text-xs sm:text-sm text-yellow-400 mb-1">ARCADE SUMMON</h2>
-                        <p class="text-[9px] text-purple-400">Cost: 50 Coins per Roll</p>
-                    </div>
-                </div>
-            </div>
+const view = { W: 1, H: 1, DPR: 1 };
 
-            <!-- Main Action Buttons -->
-            <div class="flex flex-col sm:flex-row gap-4 w-full max-w-md px-4">
-                <button onclick="startRoll()" class="pixel-btn flex-1 bg-yellow-500 hover:bg-yellow-400 text-black font-bold py-4 px-6 text-xs sm:text-sm pixel-border flex items-center justify-center space-x-2">
-                    <span>⚡</span>
-                    <span>ROLL (50 🪙)</span>
-                </button>
-                <button onclick="switchView('inventory')" class="pixel-btn flex-1 bg-purple-700 hover:bg-purple-600 text-white font-bold py-4 px-6 text-xs sm:text-sm pixel-border flex items-center justify-center space-x-2">
-                    <span>📦</span>
-                    <span>CARD BOX</span>
-                </button>
-            </div>
+let bgGrad = null;
+let vigGrad = null;
 
-            <div class="flex gap-4">
-                <button onclick="earnCoins()" class="pixel-btn bg-emerald-700 hover:bg-emerald-600 text-white text-[10px] py-3 px-5 pixel-border">
-                    +100 FREE COINS 🪙
-                </button>
-                <button onclick="toggleAudio()" id="audio-toggle-btn" class="pixel-btn bg-slate-700 hover:bg-slate-600 text-white text-[10px] py-3 px-5 pixel-border">
-                    🔊 SOUND: ON
-                </button>
-            </div>
-        </div>
+function buildGradient() {
+  bgGrad = ctx.createLinearGradient(0, 0, 0, H);
+  bgGrad.addColorStop(0, '#050510');
+  bgGrad.addColorStop(0.55, '#0a0817');
+  bgGrad.addColorStop(1, '#130f22');
 
-        <!-- ROLLING REEL ANIMATION VIEW -->
-        <div id="view-roll" class="hidden w-full flex flex-col items-center justify-center space-y-8 py-8">
-            <div class="text-center space-y-2">
-                <h2 class="text-sm sm:text-base text-yellow-400 animate-pulse">SUMMONING IN PROGRESS...</h2>
-                <p class="text-[10px] text-purple-300">Shuffling the arcade deck!</p>
-            </div>
+  // cached once per resize instead of every frame
+  vigGrad = ctx.createRadialGradient(
+    W / 2, H / 2, Math.min(W, H) * 0.35,
+    W / 2, H / 2, Math.max(W, H) * 0.8
+  );
+  vigGrad.addColorStop(0, 'rgba(0,0,0,0)');
+  vigGrad.addColorStop(1, 'rgba(0,0,0,0.58)');
+}
 
-            <!-- Reel Window with generous height & spacing -->
-            <div class="w-full max-w-2xl h-72 bg-black pixel-border relative overflow-hidden flex items-center">
-                <!-- Center Drop Line Indicator -->
-                <div class="absolute inset-y-0 left-1/2 -translate-x-1/2 w-1 bg-red-500 z-30 shadow-[0_0_12px_#ef4444]">
-                </div>
-                <div
-                    class="absolute top-2 left-1/2 -translate-x-1/2 bg-red-500 text-black text-[8px] px-2 py-0.5 font-bold z-30 pixel-border">
-                    DROP ZONE
-                </div>
+function resize() {
+  DPR = Math.min(window.devicePixelRatio || 1, 2);
+  W = Math.max(1, window.innerWidth);
+  H = Math.max(1, window.innerHeight);
+  for (const c of [cvs, fxc]) {
+    c.width = Math.round(W * DPR);
+    c.height = Math.round(H * DPR);
+    c.style.width = W + 'px';
+    c.style.height = H + 'px';
+  }
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  ctx.imageSmoothingEnabled = false;
+  if (fx) fx.resize(W, H, DPR);
+  buildGradient();
 
-                <!-- Sliding Track -->
-                <div id="reel-track" class="flex absolute left-0 transition-all ease-out"
-                    style="transition-duration: 4000ms; transform: translateX(0px);">
-                    <!-- Dynamically populated reel items -->
-                </div>
-            </div>
+  view.W = W; view.H = H; view.DPR = DPR;
+}
+window.addEventListener('resize', resize);
+window.addEventListener('orientationchange', () => setTimeout(resize, 120));
 
-            <div id="roll-result-actions" class="hidden flex flex-col items-center space-y-4">
-                <div id="roll-result-banner" class="bg-purple-950 p-5 pixel-border text-center max-w-md">
-                    <p id="roll-result-text" class="text-xs sm:text-sm text-yellow-300 mb-2"></p>
-                    <p id="roll-result-sub" class="text-[10px] text-purple-300"></p>
-                </div>
-                <div class="flex gap-4">
-                    <button onclick="startRoll()" class="pixel-btn bg-yellow-500 hover:bg-yellow-400 text-black font-bold py-3 px-6 text-xs pixel-border">
-                        ROLL AGAIN ⚡
-                    </button>
-                    <button onclick="switchView('home')" class="pixel-btn bg-purple-700 hover:bg-purple-600 text-white font-bold py-3 px-6 text-xs pixel-border">
-                        MAIN MENU 🏠
-                    </button>
-                </div>
-            </div>
-        </div>
+// ============================================================
+//  WEBGL PARTICLE SYSTEM
+// ============================================================
 
-        <!-- CARD BOX (INVENTORY) VIEW WITH SPACIOUS GRID -->
-        <div id="view-inventory" class="hidden w-full flex flex-col items-center justify-center space-y-6 py-4">
-            <div class="w-full flex justify-between items-center bg-purple-950 p-4 pixel-border">
-                <div class="flex items-center space-x-2">
-                    <span class="text-yellow-400">📦</span>
-                    <h2 class="text-xs sm:text-sm text-yellow-300">CARD BOX INVENTORY</h2>
-                </div>
-                <button onclick="switchView('home')" class="pixel-btn bg-red-700 hover:bg-red-600 text-white text-[10px] py-2 px-4 pixel-border">
-                    BACK 🏠
-                </button>
-            </div>
+class ParticleFX {
+  constructor(canvas) {
+    this.ok = false;
+    let gl = null;
+    try {
+      gl = canvas.getContext('webgl', {
+        alpha: true, premultipliedAlpha: true,
+        antialias: false, depth: false, stencil: false,
+        powerPreference: 'high-performance'
+      }) || canvas.getContext('experimental-webgl');
+    } catch (e) {}
+    if (!gl) return;
 
-            <!-- Stats Summary -->
-            <div class="w-full grid grid-cols-2 sm:grid-cols-4 gap-3 text-center text-[10px]">
-                <div class="bg-purple-950/90 p-3 pixel-border">
-                    <span class="text-purple-400 block mb-1">TOTAL ROLLS</span>
-                    <span id="stat-total-rolls" class="text-white font-bold">0</span>
-                </div>
-                <div class="bg-purple-950/90 p-3 pixel-border">
-                    <span class="text-slate-400 block mb-1">COMMONS</span>
-                    <span id="stat-common-count" class="text-slate-200 font-bold">0</span>
-                </div>
-                <div class="bg-purple-950/90 p-3 pixel-border">
-                    <span class="text-yellow-400 block mb-1">GOLDS</span>
-                    <span id="stat-gold-count" class="text-yellow-300 font-bold">0</span>
-                </div>
-                <div class="bg-purple-950/90 p-3 pixel-border">
-                    <span class="text-emerald-400 block mb-1">LUCK RATE</span>
-                    <span id="stat-luck-rate" class="text-emerald-300 font-bold">0%</span>
-                </div>
-            </div>
+    this.gl = gl;
+    this.canvas = canvas;
+    this.MAX = 3000;
 
-            <!-- Spacious Cards Grid -->
-            <div id="inventory-grid"
-                class="w-full grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 max-h-[55vh] overflow-y-auto p-4 bg-black/50 pixel-border">
-                <!-- Cards injected via JS -->
-            </div>
-        </div>
+    const vsSrc = `
+      attribute vec2 a_pos;
+      attribute vec4 a_col;
+      attribute float a_size;
+      attribute float a_shape;
+      uniform vec2 u_res;
+      uniform float u_dpr;
+      varying vec4 v_col;
+      varying float v_shape;
+      void main() {
+        vec2 clip = (a_pos / u_res) * 2.0 - 1.0;
+        clip.y = -clip.y;
+        gl_Position = vec4(clip, 0.0, 1.0);
+        gl_PointSize = a_size * u_dpr;
+        v_col = a_col;
+        v_shape = a_shape;
+      }
+    `;
 
-    </main>
-
-    <div id="card-modal" class="fixed inset-0 bg-black/85 z-50 hidden flex items-center justify-center p-4">
-        <div
-            class="bg-purple-950 p-6 sm:p-8 pixel-border max-w-sm w-full flex flex-col items-center space-y-5 relative">
-            <button onclick="closeModal()" class="absolute top-3 right-3 text-red-400 hover:text-red-300 text-sm font-bold px-3 py-1">✕</button>
-            <div id="modal-card-container"
-                class="w-36 h-52 bg-slate-900 pixel-border flex items-center justify-center relative overflow-hidden">
-                <!-- Modal card image / fallback -->
-            </div>
-            <div class="text-center space-y-2">
-                <h3 id="modal-card-name" class="text-xs sm:text-sm text-yellow-400">Card Name</h3>
-                <p id="modal-card-rarity" class="text-[10px] text-purple-300 uppercase">Common</p>
-                <p id="modal-card-desc" class="text-[9px] text-slate-300 leading-relaxed px-2">Card description goes
-                    here.</p>
-                <div class="bg-black/60 p-2.5 pixel-border text-[10px] mt-3">
-                    <span>Collected: </span><span id="modal-card-count" class="text-yellow-300 font-bold">0</span>
-                </div>
-            </div>
-            <button onclick="closeModal()" class="pixel-btn bg-purple-700 hover:bg-purple-600 text-white text-[10px] py-3 px-6 pixel-border w-full">
-                CLOSE
-            </button>
-        </div>
-    </div>
-
-    <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col space-y-2 pointer-events-none"></div>
-
-    <footer class="w-full max-w-4xl text-center text-[8px] text-purple-400/60 py-2 z-10">
-        PIXEL VAULT INDIE ARCADE • OPTIMIZED FOR IPAD & TOUCH DEVICES
-    </footer>
-
-    <script>
-        class SoundEngine {
-            constructor() {
-                this.ctx = null;
-                this.enabled = true;
-            }
-
-            init() {
-                if (!this.ctx) {
-                    const AudioContext = window.AudioContext || window.webkitAudioContext;
-                    this.ctx = new AudioContext();
-                }
-                if (this.ctx.state === 'suspended') {
-                    this.ctx.resume();
-                }
-            }
-
-            playTick() {
-                if (!this.enabled) return;
-                this.init();
-                try {
-                    const osc = this.ctx.createOscillator();
-                    const gain = this.ctx.createGain();
-                    osc.type = 'square';
-                    osc.frequency.setValueAtTime(400, this.ctx.currentTime);
-                    osc.frequency.exponentialRampToValueAtTime(800, this.ctx.currentTime + 0.05);
-                    gain.gain.setValueAtTime(0.05, this.ctx.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.05);
-                    osc.connect(gain);
-                    gain.connect(this.ctx.destination);
-                    osc.start();
-                    osc.stop(this.ctx.currentTime + 0.05);
-                } catch(e) {}
-            }
-
-            playCommonDrop() {
-                if (!this.enabled) return;
-                this.init();
-                try {
-                    const now = this.ctx.currentTime;
-                    const osc = this.ctx.createOscillator();
-                    const gain = this.ctx.createGain();
-                    osc.type = 'triangle';
-                    osc.frequency.setValueAtTime(220, now);
-                    osc.frequency.setValueAtTime(330, now + 0.1);
-                    gain.gain.setValueAtTime(0.1, now);
-                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
-                    osc.connect(gain);
-                    gain.connect(this.ctx.destination);
-                    osc.start(now);
-                    osc.stop(now + 0.3);
-                } catch(e) {}
-            }
-
-            playGoldFanfare() {
-                if (!this.enabled) return;
-                this.init();
-                try {
-                    const now = this.ctx.currentTime;
-                    const notes = [523.25, 659.25, 783.99, 1046.50];
-                    notes.forEach((freq, idx) => {
-                        const osc = this.ctx.createOscillator();
-                        const gain = this.ctx.createGain();
-                        osc.type = 'sawtooth';
-                        osc.frequency.setValueAtTime(freq, now + (idx * 0.12));
-                        gain.gain.setValueAtTime(0.15, now + (idx * 0.12));
-                        gain.gain.exponentialRampToValueAtTime(0.001, now + (idx * 0.12) + 0.4);
-                        osc.connect(gain);
-                        gain.connect(this.ctx.destination);
-                        osc.start(now + (idx * 0.12));
-                        osc.stop(now + (idx * 0.12) + 0.4);
-                    });
-                } catch(e) {}
-            }
+    const fsSrc = `
+      precision mediump float;
+      varying vec4 v_col;
+      varying float v_shape;
+      void main() {
+        vec2 c = gl_PointCoord - 0.5;
+        float a;
+        if (v_shape < 0.5) {
+          float d = length(c) * 2.0;
+          a = smoothstep(1.0, 0.0, d);
+          a *= a;
+        } else if (v_shape < 1.5) {
+          a = step(max(abs(c.x), abs(c.y)), 0.5);
+        } else {
+          float dx = abs(c.x), dy = abs(c.y);
+          a = step(dx, 0.08) * smoothstep(0.5, 0.0, dy)
+            + step(dy, 0.08) * smoothstep(0.5, 0.0, dx);
+          a = min(1.0, a);
         }
+        vec3 rgb = v_col.rgb;
+        float alpha = v_col.a * a;
+        gl_FragColor = vec4(rgb * alpha, alpha);
+      }
+    `;
 
-        const soundSystem = new SoundEngine();
+    const mkShader = (type, src) => {
+      const s = gl.createShader(type);
+      gl.shaderSource(s, src);
+      gl.compileShader(s);
+      if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
+        console.error(gl.getShaderInfoLog(s));
+        return null;
+      }
+      return s;
+    };
+    const vs = mkShader(gl.VERTEX_SHADER, vsSrc);
+    const fs = mkShader(gl.FRAGMENT_SHADER, fsSrc);
+    if (!vs || !fs) return;
+    const prog = gl.createProgram();
+    gl.attachShader(prog, vs);
+    gl.attachShader(prog, fs);
+    gl.linkProgram(prog);
+    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) return;
+    gl.useProgram(prog);
+    this.prog = prog;
 
-        function toggleAudio() {
-            soundSystem.enabled = !soundSystem.enabled;
-            const btn = document.getElementById('audio-toggle-btn');
-            btn.innerText = soundSystem.enabled ? "🔊 SOUND: ON" : "🔇 SOUND: OFF";
-            btn.className = soundSystem.enabled ? "pixel-btn bg-slate-700 hover:bg-slate-600 text-white text-[10px] py-3 px-5 pixel-border" : "pixel-btn bg-red-900 hover:bg-red-800 text-white text-[10px] py-3 px-5 pixel-border";
-            showToast(soundSystem.enabled ? "Sound Enabled" : "Sound Muted");
+    this.a_pos   = gl.getAttribLocation(prog, 'a_pos');
+    this.a_col   = gl.getAttribLocation(prog, 'a_col');
+    this.a_size  = gl.getAttribLocation(prog, 'a_size');
+    this.a_shape = gl.getAttribLocation(prog, 'a_shape');
+    this.u_res   = gl.getUniformLocation(prog, 'u_res');
+    this.u_dpr   = gl.getUniformLocation(prog, 'u_dpr');
+
+    this.STRIDE = 8;
+    this.glowData = new Float32Array(this.MAX * this.STRIDE);
+    this.solidData = new Float32Array(this.MAX * this.STRIDE);
+    this.glowN = 0;
+    this.solidN = 0;
+
+    this.vboGlow = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.vboGlow);
+    gl.bufferData(gl.ARRAY_BUFFER, this.glowData.byteLength, gl.DYNAMIC_DRAW);
+
+    this.vboSolid = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.vboSolid);
+    gl.bufferData(gl.ARRAY_BUFFER, this.solidData.byteLength, gl.DYNAMIC_DRAW);
+
+    gl.enable(gl.BLEND);
+    gl.disable(gl.DEPTH_TEST);
+    gl.disable(gl.CULL_FACE);
+
+    this.particles = [];
+    this.ok = true;
+  }
+
+  resize(w, h, dpr) {
+    if (!this.ok) return;
+    this.gl.viewport(0, 0, this.gl.drawingBufferWidth, this.gl.drawingBufferHeight);
+    this._w = w; this._h = h; this._dpr = dpr;
+  }
+
+  emit(o) {
+    if (!this.ok) return;
+    const P = this.particles;
+    if (P.length >= this.MAX) {
+      // swap-remove the oldest instead of shift() — O(1)
+      P[0] = P[P.length - 1];
+      P.pop();
+    }
+    P.push({
+      x: o.x, y: o.y,
+      vx: o.vx || 0, vy: o.vy || 0,
+      life: o.life, maxLife: o.life,
+      size: o.size || 6,
+      grow: o.grow || 0,
+      r: o.r, g: o.g, b: o.b,
+      a: o.a === undefined ? 1 : o.a,
+      drag: o.drag === undefined ? 0.94 : o.drag,
+      grav: o.grav || 0,
+      glow: o.glow ? 1 : 0,
+      shape: o.shape || 0
+    });
+  }
+
+  update(dt) {
+    if (!this.ok) return;
+    const P = this.particles;
+    for (let i = P.length - 1; i >= 0; i--) {
+      const p = P[i];
+      p.life -= dt;
+      if (p.life <= 0) {
+        P[i] = P[P.length - 1];
+        P.pop();
+        continue;
+      }
+      p.vy += p.grav * dt;
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+      const d = Math.pow(p.drag, dt * 60);
+      p.vx *= d;
+      p.vy *= d;
+      p.size += p.grow * dt;
+      if (p.size < 0.5) p.size = 0.5;
+      if (p.size > 90) p.size = 90;
+    }
+  }
+
+  render() {
+    if (!this.ok) return;
+    const gl = this.gl;
+    gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
+    gl.clearColor(0, 0, 0, 0);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.useProgram(this.prog);
+    gl.uniform2f(this.u_res, this._w, this._h);
+    gl.uniform1f(this.u_dpr, this._dpr);
+
+    const GB = this.glowData, SB = this.solidData;
+    const P = this.particles;
+    let gi = 0, si = 0;
+    for (let i = 0; i < P.length; i++) {
+      const p = P[i];
+      const t = clamp(p.life / p.maxLife, 0, 1);
+      const alpha = p.a * t;
+      if (alpha <= 0.003) continue;
+      const buf = p.glow ? GB : SB;
+      const idx = p.glow ? gi : si;
+      buf[idx]     = p.x;
+      buf[idx + 1] = p.y;
+      buf[idx + 2] = p.r;
+      buf[idx + 3] = p.g;
+      buf[idx + 4] = p.b;
+      buf[idx + 5] = alpha;
+      buf[idx + 6] = p.size;
+      buf[idx + 7] = p.shape;
+      if (p.glow) gi += 8; else si += 8;
+    }
+    this.glowN = gi / 8;
+    this.solidN = si / 8;
+
+    const setup = () => {
+      gl.vertexAttribPointer(this.a_pos, 2, gl.FLOAT, false, 32, 0);
+      gl.vertexAttribPointer(this.a_col, 4, gl.FLOAT, false, 32, 8);
+      gl.vertexAttribPointer(this.a_size, 1, gl.FLOAT, false, 32, 24);
+      gl.vertexAttribPointer(this.a_shape, 1, gl.FLOAT, false, 32, 28);
+    };
+
+    gl.enableVertexAttribArray(this.a_pos);
+    gl.enableVertexAttribArray(this.a_col);
+    gl.enableVertexAttribArray(this.a_size);
+    gl.enableVertexAttribArray(this.a_shape);
+
+    if (this.glowN > 0) {
+      gl.blendFunc(gl.ONE, gl.ONE);
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.vboGlow);
+      gl.bufferSubData(gl.ARRAY_BUFFER, 0, GB.subarray(0, this.glowN * 8));
+      setup();
+      gl.drawArrays(gl.POINTS, 0, this.glowN);
+    }
+
+    if (this.solidN > 0) {
+      gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.vboSolid);
+      gl.bufferSubData(gl.ARRAY_BUFFER, 0, SB.subarray(0, this.solidN * 8));
+      setup();
+      gl.drawArrays(gl.POINTS, 0, this.solidN);
+    }
+  }
+}
+
+let fx = null;
+
+// ---------- particle emitter helpers ----------
+function fxBurst(x, y, count, opts) {
+  if (!fx || !fx.ok) return;
+  opts = opts || {};
+  const colors = opts.colors || [[0.5, 0.85, 1]];
+  for (let i = 0; i < count; i++) {
+    const a = Math.random() * Math.PI * 2;
+    const sp = rnd(opts.spMin || 60, opts.spMax || 260);
+    const c = pick(colors);
+    fx.emit({
+      x: x, y: y,
+      vx: Math.cos(a) * sp,
+      vy: Math.sin(a) * sp - (opts.upBias || 60),
+      life: rnd(opts.lifeMin || 0.3, opts.lifeMax || 0.8),
+      size: rnd(opts.sizeMin || 4, opts.sizeMax || 12),
+      r: c[0], g: c[1], b: c[2],
+      a: opts.alpha === undefined ? 1 : opts.alpha,
+      drag: opts.drag === undefined ? 0.92 : opts.drag,
+      grav: opts.grav === undefined ? 900 : opts.grav,
+      glow: opts.glow !== false,
+      shape: opts.shape === undefined ? 0 : opts.shape,
+      grow: opts.grow || 0
+    });
+  }
+}
+
+function fxPixel(x, y, count, opts) {
+  if (!fx || !fx.ok) return;
+  opts = opts || {};
+  const colors = opts.colors || [[0.5, 0.5, 0.5]];
+  for (let i = 0; i < count; i++) {
+    const a = Math.random() * Math.PI * 2;
+    const sp = rnd(opts.spMin || 40, opts.spMax || 200);
+    const c = pick(colors);
+    fx.emit({
+      x: x, y: y,
+      vx: Math.cos(a) * sp,
+      vy: Math.sin(a) * sp - (opts.upBias || 80),
+      life: rnd(opts.lifeMin || 0.4, opts.lifeMax || 1.0),
+      size: rnd(opts.sizeMin || 3, opts.sizeMax || 8),
+      r: c[0], g: c[1], b: c[2],
+      a: 1,
+      drag: opts.drag === undefined ? 0.95 : opts.drag,
+      grav: opts.grav === undefined ? 1100 : opts.grav,
+      glow: false,
+      shape: 1
+    });
+  }
+}
+
+function fxSpark(x, y, count, opts) {
+  if (!fx || !fx.ok) return;
+  opts = opts || {};
+  const colors = opts.colors || [[1, 0.85, 0.4]];
+  for (let i = 0; i < count; i++) {
+    const a = Math.random() * Math.PI * 2;
+    const sp = rnd(150, 420);
+    const c = pick(colors);
+    fx.emit({
+      x: x, y: y,
+      vx: Math.cos(a) * sp,
+      vy: Math.sin(a) * sp,
+      life: rnd(0.15, 0.4),
+      size: rnd(8, 18),
+      r: c[0], g: c[1], b: c[2],
+      a: 1,
+      drag: 0.88,
+      grav: 200,
+      glow: true,
+      shape: 2
+    });
+  }
+}
+
+// ============================================================
+//  PHYSICS HELPERS (shared with models.js)
+// ============================================================
+
+function solveCon(c, stiff) {
+  const a = c.a, b = c.b;
+  const dx = b.x - a.x, dy = b.y - a.y;
+  let d = Math.sqrt(dx * dx + dy * dy);
+  if (d < 0.0001) d = 0.0001;
+  const k = c.k === undefined ? 1 : c.k;
+  const diff = ((d - c.d) / d) * stiff * k;
+  const kx = dx * diff * 0.5;
+  const ky = dy * diff * 0.5;
+  a.x += kx; a.y += ky;
+  b.x -= kx; b.y -= ky;
+}
+
+function collidePointAABB(p, ax, ay, aw, ah) {
+  const nx = clamp(p.x, ax, ax + aw);
+  const ny = clamp(p.y, ay, ay + ah);
+  const dx = p.x - nx, dy = p.y - ny;
+  const d2 = dx * dx + dy * dy;
+  if (d2 > p.r * p.r) return false;
+  let ux, uy, depth;
+  const d = Math.sqrt(d2);
+  if (d < 0.0001) {
+    const l = p.x - ax, rr = ax + aw - p.x;
+    const t = p.y - ay, b = ay + ah - p.y;
+    const m = Math.min(l, rr, t, b);
+    if (m === l) { ux = -1; uy = 0; depth = l + p.r; }
+    else if (m === rr) { ux = 1; uy = 0; depth = rr + p.r; }
+    else if (m === t) { ux = 0; uy = -1; depth = t + p.r; }
+    else { ux = 0; uy = 1; depth = b + p.r; }
+  } else {
+    ux = dx / d; uy = dy / d; depth = p.r - d;
+  }
+  p.x += ux * depth;
+  p.y += uy * depth;
+  const vx = p.x - p.px, vy = p.y - p.py;
+  const vn = vx * ux + vy * uy;
+  if (vn < 0) {
+    p.px = p.x - (vx - ux * vn);
+    p.py = p.y - (vy - uy * vn);
+  }
+  return true;
+}
+
+function circleVsAABB(cx, cy, r, ax, ay, aw, ah) {
+  const nx = clamp(cx, ax, ax + aw);
+  const ny = clamp(cy, ay, ay + ah);
+  const dx = cx - nx, dy = cy - ny;
+  const d2 = dx * dx + dy * dy;
+  if (d2 > r * r) return null;
+  const d = Math.sqrt(d2);
+  let ux, uy, depth;
+  if (d < 0.0001) {
+    const l = cx - ax, rr = ax + aw - cx;
+    const t = cy - ay, b = ay + ah - cy;
+    const m = Math.min(l, rr, t, b);
+    if (m === l) { ux = -1; uy = 0; depth = l + r; }
+    else if (m === rr) { ux = 1; uy = 0; depth = rr + r; }
+    else if (m === t) { ux = 0; uy = -1; depth = t + r; }
+    else { ux = 0; uy = 1; depth = b + r; }
+  } else {
+    ux = dx / d; uy = dy / d; depth = r - d;
+  }
+  return { nx: ux, ny: uy, depth: depth };
+}
+
+function boxVsAABB(ax, ay, aw, ah, bx, by, bw, bh) {
+  if (ax + aw < bx || bx + bw < ax) return null;
+  if (ay + ah < by || by + bh < ay) return null;
+  const ox = Math.min(ax + aw - bx, bx + bw - ax);
+  const oy = Math.min(ay + ah - by, by + bh - ay);
+  if (ox < oy) {
+    return { nx: (ax + aw * 0.5) < (bx + bw * 0.5) ? -1 : 1, ny: 0, depth: ox };
+  } else {
+    return { nx: 0, ny: (ay + ah * 0.5) < (by + bh * 0.5) ? -1 : 1, depth: oy };
+  }
+}
+
+// ============================================================
+//  PLAYER / STATE / CAMERA
+// ============================================================
+
+const player = {
+  x: 0, y: 0, vx: 0, vy: 0,
+  hw: 12, hh: 12,
+  onGround: false,
+  jumps: 0,
+  alive: true,
+  holding: false,
+  facing: 1,
+  maxSpeed: 320,
+  trail: [],
+  coyote: 0,
+  bounceCd: 0,
+  hasGun: false,
+  ammo: 0,
+  fireCd: 0
+};
+
+const cam = { x: 0, y: 0 };
+
+const state = {
+  mode: 'menu',
+  time: 0,
+  kills: 0,
+  score: 0,
+  best: 0,
+  deadTimer: 0,
+  spawnTimer: 1.5,
+  shake: 0,
+  flash: 0
+};
+
+try {
+  const b = localStorage.getItem('labotomy_best3');
+  if (b) state.best = parseInt(b, 10) || 0;
+} catch (e) {}
+
+const input = { moveX: 0 };
+const popups = [];
+
+const KILL_MSGS = {
+  stomp: ['BONK!', 'SPLAT!', 'SQUISH!', 'GOT \'EM!', 'STOMPED!', 'OOF!'],
+  crush: ['CRUNCH!', 'FLATTENED!', 'PANCAKED!', 'SMUSHED!', 'TIMBER!'],
+  spike: ['POKED!', 'SKEWERED!', 'OUCH!', 'SPIKED!', 'YIKES!'],
+  lava:  ['TOASTY!', 'FRIED!', 'MELTED!', 'SIZZLE!', 'WELL DONE!'],
+  fall:  ['YEET!', 'BYE!', 'DROPPED!', 'SEEYA!', 'WHEEE!', 'GONE!'],
+  spring:['BOING!', 'LAUNCHED!', 'SPROING!', 'YEET!'],
+  push:  ['SHOVED!', 'BUMPED!', 'NUDGED!'],
+  shot:  ['PLINK!', 'HEADSHOT!', 'POPPED!', 'DINKED!', 'PINGED!'],
+  self:  ['OOPS!', 'TRIPPED!', 'FACE PLANT!', 'WHOOPS!'],
+  jelly: ['WRECKED!', 'DEMOLISHED!', 'DESTROYED!']
+};
+
+function addPopup(x, y, text, color) {
+  if (popups.length > 40) popups.shift();
+  popups.push({ x, y, text, color, life: 1.3, maxLife: 1.3, vy: -55 });
+}
+
+function randomKillMsg(cause) {
+  const arr = KILL_MSGS[cause] || KILL_MSGS.stomp;
+  return arr[(Math.random() * arr.length) | 0];
+}
+
+// ============================================================
+//  MODELS BOOTSTRAP
+// ============================================================
+
+M.init({
+  rnd: rnd,
+  rndi: (a, b) => Math.floor(a + Math.random() * (b - a + 1)),
+  clamp: clamp,
+  pick: pick,
+  fx: { burst: fxBurst, pixel: fxPixel, spark: fxSpark },
+  addPopup: addPopup,
+  killMsg: randomKillMsg,
+  player: player,
+  state: state,
+  view: view,
+  shake: a => { if (a > state.shake) state.shake = a; },
+  flash: a => { if (a > state.flash) state.flash = a; },
+  onPlayerCaught: () => die('caught'),
+  solveCon: solveCon,
+  circleVsAABB: circleVsAABB,
+  boxVsAABB: boxVsAABB
+});
+
+const { TT, CELL, WORLD_COLS, WORLD_W, DEATH_Y } = M;
+
+// ============================================================
+//  PLAYER UPDATE
+// ============================================================
+
+function updatePlayer(dt) {
+  if (!player.alive) return;
+
+  player.bounceCd = Math.max(0, player.bounceCd - dt);
+  player.fireCd = Math.max(0, player.fireCd - dt);
+
+  // ---------- movement input ----------
+  const targetVx = input.moveX * player.maxSpeed;
+  const tUnder = M.terrainTypeAt(player.x);
+  let accel = player.onGround ? 3200 : 1800;
+  let friction = 0.0008;
+
+  if (player.onGround && tUnder === TT.ICE) {
+    accel = 400; friction = 0.5;
+  } else if (player.onGround && tUnder === TT.STICKY) {
+    accel = 1200; friction = 0.00005;
+  }
+
+  const dv = targetVx - player.vx;
+  if (Math.abs(dv) < accel * dt) player.vx = targetVx;
+  else player.vx += Math.sign(dv) * accel * dt;
+
+  if (input.moveX === 0 && player.onGround) {
+    player.vx *= Math.pow(friction, dt);
+  }
+  if (input.moveX !== 0) player.facing = Math.sign(input.moveX);
+
+  if (player.onGround && tUnder === TT.CONVEYOR) {
+    player.vx += M.conveyorDirAt(player.x) * 180 * dt;
+  }
+
+  // ---------- vertical ----------
+  if (player.holding && player.vy < 0) player.vy += 2600 * 0.45 * dt;
+  else player.vy += 2600 * dt;
+  if (player.vy > 1800) player.vy = 1800;
+
+  player.x += player.vx * dt;
+  player.y += player.vy * dt;
+  player.x = clamp(player.x, 20, WORLD_W - 20);
+
+  // ---------- terrain collision ----------
+  const g = M.footprintGround(player.x, player.hw);
+  if (g !== Infinity && player.y + player.hh > g) {
+    if (player.vy > 500) {
+      state.shake = Math.max(state.shake, 0.1);
+      fxPixel(player.x, g, 5, {
+        colors: [[0.4, 0.4, 0.55], [0.3, 0.3, 0.45]],
+        spMax: 160, grav: 1400, sizeMax: 5
+      });
+    }
+    player.y = g - player.hh;
+    player.vy = 0;
+    player.onGround = true;
+    player.jumps = 0;
+    player.coyote = 0.1;
+
+    if (tUnder === TT.BOUNCE && player.bounceCd <= 0) {
+      player.vy = -1150;
+      player.bounceCd = 0.25;
+      player.onGround = false;
+      fxBurst(player.x, g, 10, {
+        colors: [[0.4, 1, 0.5], [0.7, 1, 0.6]],
+        spMax: 260, grav: -200, sizeMax: 8
+      });
+      state.shake = Math.max(state.shake, 0.14);
+    } else if (tUnder === TT.SPIKE) {
+      player.vy = -900;
+      player.onGround = false;
+      player.jumps = 0;
+      fxSpark(player.x, g, 12, { colors: [[1, 0.7, 0.3], [1, 0.4, 0.3]] });
+      state.shake = Math.max(state.shake, 0.22);
+      state.flash = Math.max(state.flash, 0.06);
+    } else if (tUnder === TT.CRUMBLE) {
+      M.addCrumble(Math.floor(player.x / CELL), dt);
+    }
+  } else {
+    player.onGround = false;
+    player.coyote -= dt;
+    if (player.coyote < 0 && player.jumps === 0) player.jumps = 1;
+  }
+
+  // ---------- planks (bridges) ----------
+  const pr = M.playerVsPlanks(player);
+  if (pr.x !== player.x || pr.y !== player.y) {
+    player.x = pr.x;
+    player.y = pr.y;
+    if (pr.grounded) {
+      player.onGround = true;
+      player.jumps = 0;
+      if (player.vy > 0) player.vy = 0;
+    }
+  }
+
+  // ---------- islands ----------
+  const islands = M.islands;
+  for (let i = 0; i < islands.length; i++) {
+    const isl = islands[i];
+    if (player.x + player.hw < isl.x || player.x - player.hw > isl.x + isl.w) continue;
+    const n = circleVsAABB(player.x, player.y, player.hh, isl.x, isl.y, isl.w, isl.h);
+    if (n) {
+      player.x += n.nx * n.depth;
+      player.y += n.ny * n.depth;
+      if (n.ny < -0.5) {
+        if (player.vy > 400) {
+          fxPixel(player.x, player.y + player.hh, 4, {
+            colors: [[0.4, 0.4, 0.55]], spMax: 140
+          });
         }
-    </script>
+        player.vy = 0; player.onGround = true; player.jumps = 0;
+      } else if (n.ny > 0.5) player.vy = Math.max(player.vy, 0);
+      else player.vx *= 0.5;
+    }
+  }
 
-    <script>
-        const CARD_DATABASE = [
-            // Common Cards
-            { id: 'c_rusty_sword', name: 'Rusty Sword', rarity: 'common', asset: 'assets/card.png', desc: 'A worn blade from ancient battles. Reliable enough.' },
-            { id: 'c_wooden_shield', name: 'Wooden Shield', rarity: 'common', asset: 'assets/card.png', desc: 'Sturdy oak plank bound with rusted iron bands.' },
-            { id: 'c_slime_jelly', name: 'Slime Jelly', rarity: 'common', asset: 'assets/card.png', desc: 'Squishy green ooze harvested from dungeon floors.' },
-            { id: 'c_leather_cap', name: 'Leather Cap', rarity: 'common', asset: 'assets/card.png', desc: 'Simple headgear offering minimal protection.' },
-            { id: 'c_copper_coin', name: 'Copper Coin', rarity: 'common', asset: 'assets/card.png', desc: 'Small denomination currency found in piles.' },
-            { id: 'c_broken_wand', name: 'Broken Wand', rarity: 'common', asset: 'assets/card.png', desc: 'Sparks occasionally, mostly useless now.' },
-            { id: 'c_apple_core', name: 'Apple Core', rarity: 'common', asset: 'assets/card.png', desc: 'A snack left behind by a previous adventurer.' },
-            { id: 'c_stone_pebble', name: 'Stone Pebble', rarity: 'common', asset: 'assets/card.png', desc: 'A heavy rock. Good for throwing at goblins.' },
+  // ---------- boxes ----------
+  const boxes = M.boxes;
+  for (let i = 0; i < boxes.length; i++) {
+    const box = boxes[i];
+    if (box.dead) continue;
+    const a = box.aabb;
+    const n = boxVsAABB(player.x - player.hw, player.y - player.hh, player.hw * 2, player.hh * 2,
+                        a.x, a.y, a.w, a.h);
+    if (n) {
+      player.x += n.nx * n.depth;
+      player.y += n.ny * n.depth;
+      if (n.ny < -0.5) { player.vy = 0; player.onGround = true; player.jumps = 0; }
+      else if (n.ny > 0.5) player.vy = Math.max(player.vy, 0);
+      box.push(-n.nx * n.depth * 0.75, -n.ny * n.depth * 0.75);
+    }
+  }
 
-            // Gold / Rare Cards
-            { id: 'g_golden_crown', name: 'Golden Crown', rarity: 'gold', asset: 'assets/gold.png', desc: 'Fit for an arcade king. Radiates pure wealth.' },
-            { id: 'g_dragon_scale', name: 'Dragon Scale', rarity: 'gold', asset: 'assets/gold.png', desc: 'Impenetrable scale shimmering with fiery hues.' },
-            { id: 'g_excalibur', name: 'Excalibur', rarity: 'gold', asset: 'assets/gold.png', desc: 'Legendary sacred blade of the pixel realm.' },
-            { id: 'g_philosopher_stone', name: 'Philosophers Stone', rarity: 'gold', asset: 'assets/gold.png', desc: 'Alchemical wonder pulsating with endless energy.' },
-            { id: 'g_royal_chalice', name: 'Royal Chalice', rarity: 'gold', asset: 'assets/gold.png', desc: 'Jewel-encrusted cup used in royal banquets.' },
-            { id: 'g_diamond_ring', name: 'Diamond Ring', rarity: 'gold', asset: 'assets/gold.png', desc: 'Flawless gemstone catching the arcade lights.' }
-        ];
+  // ---------- springs ----------
+  const springs = M.springs;
+  for (let i = 0; i < springs.length; i++) {
+    const sp = springs[i];
+    if (player.x + player.hw < sp.x || player.x - player.hw > sp.x + sp.w) continue;
+    if (player.y + player.hh < sp.y || player.y - player.hh > sp.y + sp.h) continue;
+    if (player.vy > 0) {
+      player.vy = -1550;
+      player.jumps = 0;
+      sp.anim = 1;
+      fxBurst(player.x, player.y + player.hh, 12, {
+        colors: [[0.5, 1, 0.6], [0.8, 1, 0.7]],
+        spMax: 340, grav: -150, sizeMax: 10
+      });
+      state.shake = 0.25;
+    }
+  }
 
-        let gameState = {
-            coins: 500,
-            totalRolls: 0,
-            commonCount: 0,
-            goldCount: 0,
-            inventory: {}
-        };
+  // ---------- enemies ----------
+  const enemies = M.enemies;
+  for (let i = 0; i < enemies.length; i++) {
+    const e = enemies[i];
+    if (!e.alive) continue;
+    const n = boxVsAABB(player.x - player.hw, player.y - player.hh, player.hw * 2, player.hh * 2,
+                        e.x - e.hw, e.y - e.hh, e.hw * 2, e.hh * 2);
+    if (n) {
+      if (player.vy > 120 && (player.y - player.hh) < (e.y - e.hh + 6)) {
+        M.killEnemy(e, 'stomp');
+        player.vy = -760;
+        player.jumps = 1;
+        player.onGround = false;
+        state.shake = 0.4;
+        state.flash = 0.1;
+      } else {
+        die('caught');
+        return;
+      }
+    }
+  }
 
-        function loadGame() {
-            const saved = localStorage.getItem('pixel_vault_save');
-            if (saved) {
-                try {
-                    gameState = JSON.parse(saved);
-                } catch(e) {
-                    console.error("Failed to load save", e);
-                }
-            }
-            updateHeaderStats();
-        }
+  // trail
+  player.trail.push({ x: player.x, y: player.y });
+  if (player.trail.length > 8) player.trail.shift();
 
-        function saveGame() {
-            localStorage.setItem('pixel_vault_save', JSON.stringify(gameState));
-            updateHeaderStats();
-        }
+  if (player.y > DEATH_Y) die('fall');
 
-        function updateHeaderStats() {
-            document.getElementById('header-coins').innerText = gameState.coins;
-            const uniqueCollected = Object.keys(gameState.inventory).filter(id => gameState.inventory[id] > 0).length;
-            document.getElementById('header-unique').innerText = `${uniqueCollected}/${CARD_DATABASE.length}`;
-        }
+  if (player.onGround && Math.abs(player.vx) > 100 && Math.random() < 0.35) {
+    fxPixel(player.x - Math.sign(player.vx) * 8, player.y + player.hh - 2, 1, {
+      colors: [[0.45, 0.45, 0.6], [0.35, 0.35, 0.5]],
+      spMax: 60, grav: -100, sizeMax: 4, lifeMax: 0.5
+    });
+  }
+}
 
-        function earnCoins() {
-            soundSystem.init();
-            gameState.coins += 100;
-            saveGame();
-            showToast("+100 Coins Claimed! 🪙", "emerald");
-        }
-    </script>
+// ============================================================
+//  ACTIONS
+// ============================================================
 
-    <script>
-        function createCardImageElement(card) {
-            const container = document.createElement('div');
-            container.className = "w-full h-full relative flex items-center justify-center pixel-card bg-black";
-            
-            const img = document.createElement('img');
-            img.src = card.asset;
-            img.className = "w-full h-full object-cover pixel-card";
-            
-            // Fallback if card.png or gold.png are missing from assets folder
-            img.onerror = function() {
-                this.style.display = 'none';
-                const fallbackDiv = document.createElement('div');
-                fallbackDiv.className = `w-full h-full flex flex-col items-center justify-center p-2 text-center ${card.rarity === 'gold' ? 'bg-amber-950 text-yellow-300 gold-glow' : 'bg-slate-900 text-slate-300'}`;
-                
-                const icon = document.createElement('span');
-                icon.className = "text-4xl";
-                icon.innerText = card.rarity === 'gold' ? '👑' : '🛡️';
+function doJump() {
+  if (state.mode === 'menu') { startGame(); return; }
+  if (state.mode === 'dead') { if (state.deadTimer > 0.8) startGame(); return; }
+  if (!player.alive) return;
+  if (player.jumps < 2) {
+    player.vy = player.jumps === 0 ? -820 : -720;
+    player.jumps++;
+    player.onGround = false;
+    player.holding = true;
+    fxBurst(player.x, player.y + player.hh, 5, {
+      colors: [[0.5, 0.9, 1], [0.7, 0.95, 1]],
+      spMax: 180, grav: -80, sizeMax: 6
+    });
+  }
+}
 
-                fallbackDiv.appendChild(icon);
-                container.appendChild(fallbackDiv);
-            };
+function doSlam() {
+  if (state.mode !== 'play' || !player.alive) return;
+  if (player.vy < 700) player.vy = 1100;
+  player.holding = false;
+}
 
-            container.appendChild(img);
-            return container;
-        }
+function shoot() {
+  if (!player.alive || !player.hasGun || player.ammo <= 0 || player.fireCd > 0) return;
+  player.fireCd = 0.14;
+  player.ammo--;
+  const dx = player.facing;
+  const mx = player.x + dx * 18;
+  const my = player.y - 1;
+  M.spawnBullet(mx, my, dx, 0, player.vx);
+  fxSpark(mx, my, 4, { colors: [[1, 0.9, 0.5], [1, 0.7, 0.2]] });
+  state.shake = Math.max(state.shake, 0.12);
+  player.vx -= dx * 55;
+  if (player.ammo <= 0) {
+    player.hasGun = false;
+    addPopup(player.x, player.y - 30, 'OUT OF AMMO', '#ff8866');
+  }
+}
 
-        function showToast(message, type = "yellow") {
-            const container = document.getElementById('toast-container');
-            const toast = document.createElement('div');
-            toast.className = `bg-purple-950 text-${type === 'emerald' ? 'emerald-300' : 'yellow-300'} text-[10px] px-4 py-2 pixel-border shadow-lg animate-bounce`;
-            toast.innerText = message;
-            container.appendChild(toast);
-            setTimeout(() => {
-                toast.remove();
-            }, 2500);
-        }
+function die(cause) {
+  if (!player.alive || state.mode !== 'play') return;
+  player.alive = false;
+  state.mode = 'dead';
+  state.deadTimer = 0;
+  state.shake = 0.8;
+  state.flash = 0.24;
+  M.makeRagdoll(player.x, player.y, 26, player.vx, player.vy, true);
+  fxBurst(player.x, player.y, 18, {
+    colors: [[0.4, 0.85, 1], [0.7, 0.95, 1], [1, 1, 1]],
+    spMax: 400, grav: 800, sizeMax: 14
+  });
+  addPopup(player.x, player.y - 26, pick(['AAAAGH!', 'OOF!', 'SPLAT!', 'NOOO!']), '#66ddff');
 
-        function switchView(viewName) {
-            soundSystem.init();
-            document.getElementById('view-home').classList.add('hidden');
-            document.getElementById('view-roll').classList.add('hidden');
-            document.getElementById('view-inventory').classList.add('hidden');
+  const sc = Math.floor(state.score);
+  if (sc > state.best) {
+    state.best = sc;
+    try { localStorage.setItem('labotomy_best3', String(sc)); } catch (e) {}
+  }
+}
 
-            if (viewName === 'home') {
-                document.getElementById('view-home').classList.remove('hidden');
-                updateHeaderStats();
-            } else if (viewName === 'roll') {
-                document.getElementById('view-roll').classList.remove('hidden');
-            } else if (viewName === 'inventory') {
-                document.getElementById('view-inventory').classList.remove('hidden');
-                renderInventory();
-            }
-        }
-    </script>
+// ============================================================
+//  POPUPS
+// ============================================================
 
-    <script>
-        function startRoll() {
-            if (gameState.coins < 50) {
-                showToast("Not enough coins! Earn free coins below.", "yellow");
-                return;
-            }
+function updatePopups(dt) {
+  for (let i = popups.length - 1; i >= 0; i--) {
+    const p = popups[i];
+    p.life -= dt;
+    if (p.life <= 0) { popups.splice(i, 1); continue; }
+    p.y += p.vy * dt;
+    p.vy *= 0.94;
+  }
+}
 
-            gameState.coins -= 50;
-            saveGame();
-            switchView('roll');
+// ============================================================
+//  GAME FLOW
+// ============================================================
 
-            const track = document.getElementById('reel-track');
-            track.innerHTML = '';
-            document.getElementById('roll-result-actions').classList.add('hidden');
-            track.style.transition = 'none';
-            track.style.transform = 'translateX(0px)';
+const stars = [];
 
-            // 80% Common, 20% Gold drop rates
-            const isGold = Math.random() < 0.20;
-            const commonCards = CARD_DATABASE.filter(c => c.rarity === 'common');
-            const goldCards = CARD_DATABASE.filter(c => c.rarity === 'gold');
+function initStars() {
+  stars.length = 0;
+  for (let i = 0; i < 110; i++) {
+    stars.push({
+      x: Math.random() * 3000,
+      y: Math.random(),
+      s: Math.random(),
+      sp: rnd(0.04, 0.30)
+    });
+  }
+}
 
-            const winningCard = isGold 
-                ? goldCards[Math.floor(Math.random() * goldCards.length)]
-                : commonCards[Math.floor(Math.random() * commonCards.length)];
+function resetWorld() {
+  M.generateWorld();
+  M.placeStuff();
 
-            const totalItems = 30;
-            const winningIndex = 25;
-            const reelCards = [];
+  popups.length = 0;
+  if (fx && fx.ok) fx.particles.length = 0;
 
-            for (let i = 0; i < totalItems; i++) {
-                if (i === winningIndex) {
-                    reelCards.push(winningCard);
-                } else {
-                    const pool = Math.random() < 0.8 ? commonCards : goldCards;
-                    reelCards.push(pool[Math.floor(Math.random() * pool.length)]);
-                }
-            }
+  player.x = 30 * CELL;
+  player.y = M.terrain.gy[30] - player.hh - 2;
+  player.vx = 0;
+  player.vy = 0;
+  player.alive = true;
+  player.onGround = false;
+  player.jumps = 0;
+  player.holding = false;
+  player.trail.length = 0;
+  player.facing = 1;
+  player.bounceCd = 0;
+  player.hasGun = false;
+  player.ammo = 0;
+  player.fireCd = 0;
 
-            // Render reel items with generous spacing and distinct outlines
-            reelCards.forEach((card) => {
-                const itemWrapper = document.createElement('div');
-                itemWrapper.className = `w-36 h-52 mx-3 bg-slate-950 p-2.5 flex flex-col items-center justify-between flex-shrink-0 ${card.rarity === 'gold' ? 'pixel-card-border gold-glow bg-amber-950/40' : 'pixel-common-border bg-slate-900'}`;
-                
-                const cardImgContainer = document.createElement('div');
-                cardImgContainer.className = "w-full h-38 bg-black overflow-hidden relative border-2 border-purple-900";
-                cardImgContainer.appendChild(createCardImageElement(card));
-                
-                const label = document.createElement('span');
-                label.className = `text-[9px] font-bold text-center truncate w-full mt-2 ${card.rarity === 'gold' ? 'text-yellow-400' : 'text-slate-300'}`;
-                label.innerText = card.name;
+  cam.x = player.x - W * 0.5;
+  cam.y = player.y - H * 0.55;
 
-                itemWrapper.appendChild(cardImgContainer);
-                itemWrapper.appendChild(label);
-                track.appendChild(itemWrapper);
-            });
+  state.time = 0;
+  state.kills = 0;
+  state.score = 0;
+  state.deadTimer = 0;
+  state.spawnTimer = 2.0;
+  state.shake = 0;
+  state.flash = 0;
 
-            // Card width (144px + 24px total margins = 168px per step)
-            const cardWidthWithMargin = 168;
-            const containerWidth = track.parentElement.clientWidth;
-            const targetTranslateX = -1 * (winningIndex * cardWidthWithMargin - (containerWidth / 2) + (cardWidthWithMargin / 2));
+  input.moveX = 0;
+  joyId = null;
+  jumpId = null;
+  fireId = null;
+}
 
-            let tickCount = 0;
-            const tickInterval = setInterval(() => {
-                soundSystem.playTick();
-                tickCount++;
-                if (tickCount > 25) clearInterval(tickInterval);
-            }, 120);
+function startGame() {
+  resetWorld();
+  state.mode = 'play';
+}
 
-            setTimeout(() => {
-                track.style.transition = 'transform 3.5s cubic-bezier(0.15, 0.85, 0.25, 1)';
-                track.style.transform = `translateX(${targetTranslateX}px)`;
-            }, 50);
+// ============================================================
+//  UPDATE
+// ============================================================
 
-            setTimeout(() => {
-                clearInterval(tickInterval);
-                recordRollResult(winningCard);
-            }, 3600);
-        }
+function update(dt) {
+  if (state.shake > 0) state.shake = Math.max(0, state.shake - dt * 2.6);
+  if (state.flash > 0) state.flash = Math.max(0, state.flash - dt * 2.0);
 
-        function recordRollResult(card) {
-            gameState.totalRolls++;
-            if (card.rarity === 'gold') {
-                gameState.goldCount++;
-                soundSystem.playGoldFanfare();
-                document.body.classList.add('screen-shake');
-                setTimeout(() => document.body.classList.remove('screen-shake'), 500);
-                showToast("✨ LEGENDARY GOLD DROP! ✨", "yellow");
-            } else {
-                gameState.commonCount++;
-                soundSystem.playCommonDrop();
-                showToast("Common Card Acquired", "yellow");
-            }
+  updatePopups(dt);
+  if (fx && fx.ok) fx.update(dt);
 
-            if (!gameState.inventory[card.id]) {
-                gameState.inventory[card.id] = 0;
-            }
-            gameState.inventory[card.id]++;
-            saveGame();
+  if (state.mode === 'play') {
+    state.time += dt;
+    state.score = state.kills * 60 + Math.floor(state.time * 14);
 
-            const resultActions = document.getElementById('roll-result-actions');
-            const resultText = document.getElementById('roll-result-text');
-            const resultSub = document.getElementById('roll-result-sub');
+    updatePlayer(dt);
 
-            resultText.innerText = `YOU WON: ${card.name.toUpperCase()} (${card.rarity.toUpperCase()})`;
-            resultSub.innerText = card.desc;
-            resultActions.classList.remove('hidden');
-        }
-    </script>
+    if (state.mode === 'play') {
+      state.spawnTimer -= dt;
+      if (state.spawnTimer <= 0) {
+        M.spawnEnemy();
+        if (state.time > 18 && Math.random() < 0.3) M.spawnEnemy();
+        state.spawnTimer = rnd(1.6, 2.8);
+      }
+    }
+  } else if (state.mode === 'dead') {
+    state.deadTimer += dt;
+  } else {
+    state.time += dt;
+  }
 
-    <script>
-        function renderInventory() {
-            const grid = document.getElementById('inventory-grid');
-            grid.innerHTML = '';
+  // auto fire while the button is held
+  if (fireId !== null) shoot();
 
-            document.getElementById('stat-total-rolls').innerText = gameState.totalRolls;
-            document.getElementById('stat-common-count').innerText = gameState.commonCount;
-            document.getElementById('stat-gold-count').innerText = gameState.goldCount;
-            
-            const luckRate = gameState.totalRolls > 0 ? ((gameState.goldCount / gameState.totalRolls) * 100).toFixed(1) : 0;
-            document.getElementById('stat-luck-rate').innerText = `${luckRate}%`;
+  M.update(dt);
 
-            CARD_DATABASE.forEach(card => {
-                const count = gameState.inventory[card.id] || 0;
-                const isUnlocked = count > 0;
+  // ---------- camera ----------
+  let tx, ty;
+  if (state.mode === 'menu') {
+    tx = player.x - W * 0.5;
+    ty = player.y - H * 0.55 + Math.sin(state.time * 1.5) * 8;
+  } else {
+    tx = player.x - W * 0.5;
+    ty = player.y - H * 0.55;
+    if (player.alive && player.vy < -200) ty += 40;
+  }
+  const k = 1 - Math.exp(-7 * dt);
+  cam.x += (tx - cam.x) * k;
+  cam.y += (ty - cam.y) * k;
+}
 
-                const cardBoxItem = document.createElement('div');
-                cardBoxItem.className = `p-4 flex flex-col items-center justify-between relative cursor-pointer transition-transform hover:scale-105 ${isUnlocked ? (card.rarity === 'gold' ? 'pixel-card-border bg-amber-950/50 gold-glow' : 'pixel-common-border bg-slate-900') : 'pixel-border bg-black/80 opacity-50'}`;
-                cardBoxItem.onclick = () => openCardModal(card, count);
+// ============================================================
+//  RENDER
+// ============================================================
 
-                const cardImgContainer = document.createElement('div');
-                cardImgContainer.className = "w-24 h-36 bg-black overflow-hidden mb-3 border-2 border-purple-900 relative flex items-center justify-center";
-                
-                if (isUnlocked) {
-                    cardImgContainer.appendChild(createCardImageElement(card));
-                } else {
-                    const lockedSpan = document.createElement('span');
-                    lockedSpan.className = "text-xl text-slate-600";
-                    lockedSpan.innerText = "🔒";
-                    cardImgContainer.appendChild(lockedSpan);
-                }
+function render() {
+  let shx = 0, shy = 0;
+  if (state.shake > 0) {
+    const m = state.shake * 10;
+    shx = rnd(-m, m);
+    shy = rnd(-m, m);
+  }
+  const camX = cam.x + shx;
+  const camY = cam.y + shy;
 
-                const infoDiv = document.createElement('div');
-                infoDiv.className = "w-full text-center";
-                
-                const nameEl = document.createElement('p');
-                nameEl.className = `text-[9px] font-bold truncate w-full ${card.rarity === 'gold' ? 'text-yellow-400' : 'text-slate-200'}`;
-                nameEl.innerText = isUnlocked ? card.name : '???';
+  ctx.fillStyle = bgGrad;
+  ctx.fillRect(0, 0, W, H);
 
-                const countEl = document.createElement('p');
-                countEl.className = "text-[8px] text-purple-300 mt-1";
-                countEl.innerText = `Owned: ${count}`;
+  // stars
+  const wrapW = W + 400;
+  for (let i = 0; i < stars.length; i++) {
+    const st = stars[i];
+    const px = mod(st.x - camX * st.sp * 0.08, wrapW) - 200;
+    const py = st.y * H * 0.6 - camY * st.sp * 0.02;
+    const sz = st.s * 2 + 1;
+    ctx.fillStyle = 'rgba(130,130,210,' + (0.08 + st.s * 0.22).toFixed(2) + ')';
+    ctx.fillRect(px | 0, py | 0, sz, sz);
+  }
 
-                infoDiv.appendChild(nameEl);
-                infoDiv.appendChild(countEl);
+  M.draw.lavas(ctx, camX, camY);
+  M.draw.terrain(ctx, camX, camY);
+  M.draw.islands(ctx, camX, camY);
+  M.draw.planks(ctx, camX, camY);
+  M.draw.springs(ctx, camX, camY);
+  M.draw.boxes(ctx, camX, camY);
+  M.draw.debris(ctx, camX, camY);
+  M.draw.pickups(ctx, camX, camY);
+  M.draw.enemies(ctx, camX, camY);
+  M.draw.ragdolls(ctx, camX, camY);
+  M.draw.bullets(ctx, camX, camY);
+  if (player.alive) drawPlayer(camX, camY);
 
-                cardBoxItem.appendChild(cardImgContainer);
-                cardBoxItem.appendChild(infoDiv);
-                grid.appendChild(cardBoxItem);
-            });
-        }
+  ctx.fillStyle = vigGrad;
+  ctx.fillRect(0, 0, W, H);
 
-        function openCardModal(card, count) {
-            soundSystem.init();
-            const modal = document.getElementById('card-modal');
-            const container = document.getElementById('modal-card-container');
-            container.innerHTML = '';
+  if (state.flash > 0) {
+    ctx.fillStyle = 'rgba(255,255,255,' + (state.flash * 1.1).toFixed(3) + ')';
+    ctx.fillRect(0, 0, W, H);
+  }
 
-            const isUnlocked = count > 0;
-            if (isUnlocked) {
-                container.appendChild(createCardImageElement(card));
-                document.getElementById('modal-card-name').innerText = card.name;
-                document.getElementById('modal-card-rarity').innerText = `Rarity: ${card.rarity.toUpperCase()}`;
-                document.getElementById('modal-card-desc').innerText = card.desc;
-                document.getElementById('modal-card-count').innerText = count;
-            } else {
-                container.innerHTML = `<span class="text-4xl">🔒</span>`;
-                document.getElementById('modal-card-name').innerText = "LOCKED ARTIFACT";
-                document.getElementById('modal-card-rarity').innerText = `Rarity: ${card.rarity.toUpperCase()}`;
-                document.getElementById('modal-card-desc').innerText = "Roll in the Summon Hall to discover this card!";
-                document.getElementById('modal-card-count').innerText = "0";
-            }
+  drawPopups(camX, camY);
+  drawJoystick();
+  drawFireButton();
+  drawHUD();
+}
 
-            modal.classList.remove('hidden');
-        }
+function drawPlayer(camX, camY) {
+  const px = player.x - camX;
+  const py = player.y - camY;
 
-        function closeModal() {
-            document.getElementById('card-modal').classList.add('hidden');
-        }
+  // trail
+  for (let i = 0; i < player.trail.length; i++) {
+    const tp = player.trail[i];
+    const a = (i / player.trail.length) * 0.22;
+    ctx.globalAlpha = a;
+    ctx.fillStyle = '#44ccff';
+    const sz = player.hw * 2 * (0.4 + i / player.trail.length * 0.5);
+    ctx.fillRect(tp.x - camX - sz / 2, tp.y - camY - sz / 2, sz, sz);
+  }
+  ctx.globalAlpha = 1;
 
-        window.onload = function() {
-            loadGame();
-        };
-    </script>
+  // glow
+  ctx.globalAlpha = 0.20;
+  ctx.fillStyle = '#44ddff';
+  ctx.fillRect(px - player.hw - 4, py - player.hh - 4, player.hw * 2 + 8, player.hh * 2 + 8);
+  ctx.globalAlpha = 1;
+
+  const squash = clamp(1 - player.vy / 3200, 0.82, 1.15);
+  const w = (player.hw * 2) / squash;
+  const h = (player.hh * 2) * squash;
+  const bx = px - w / 2;
+  const by = py - h / 2;
+
+  ctx.fillStyle = '#39d5ff';
+  ctx.fillRect(bx, by, w, h);
+  ctx.fillStyle = '#a8f0ff';
+  ctx.fillRect(bx, by, w, 3);
+  ctx.fillRect(bx, by, 3, h);
+  ctx.fillStyle = 'rgba(15,122,168,0.55)';
+  ctx.fillRect(bx, by + h - 3, w, 3);
+  ctx.fillRect(bx + w - 3, by, 3, h);
+
+  ctx.strokeStyle = '#0f7aa8';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(bx + 1, by + 1, w - 2, h - 2);
+
+  const d = player.facing;
+  const eyeS = 4;
+  ctx.fillStyle = '#06121a';
+  const eyeY = by + h * 0.35;
+  ctx.fillRect(bx + w * 0.22 + d * 2, eyeY, eyeS, eyeS + 2);
+  ctx.fillRect(bx + w * 0.58 + d * 2, eyeY, eyeS, eyeS + 2);
+
+  ctx.strokeStyle = '#06121a';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(bx + w * 0.35, by + h * 0.68);
+  ctx.lineTo(bx + w * 0.5, by + h * 0.74);
+  ctx.lineTo(bx + w * 0.65, by + h * 0.68);
+  ctx.stroke();
+
+  // held gun
+  if (player.hasGun && M.TEX.gun) {
+    const gx = px + d * (w * 0.5 + 4) - (d < 0 ? 30 : 0);
+    const gy = py + 2;
+    ctx.save();
+    if (d < 0) {
+      ctx.translate(gx + 30, gy);
+      ctx.scale(-1, 1);
+      ctx.drawImage(M.TEX.gun, 0, 0);
+    } else {
+      ctx.drawImage(M.TEX.gun, Math.round(gx), Math.round(gy));
+    }
+    ctx.restore();
+  }
+}
+
+function drawPopups(camX, camY) {
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  for (let i = 0; i < popups.length; i++) {
+    const p = popups[i];
+    const t = p.life / p.maxLife;
+    const a = t > 0.7 ? 1 : t / 0.7;
+    const scale = 1 + (1 - t) * 0.35;
+    ctx.globalAlpha = a;
+    ctx.font = '900 ' + Math.round(16 * scale) + 'px ui-monospace, "SF Mono", Menlo, monospace';
+    const x = p.x - camX;
+    const y = p.y - camY;
+    ctx.fillStyle = 'rgba(0,0,0,0.65)';
+    ctx.fillText(p.text, x + 1, y + 1);
+    ctx.fillStyle = p.color;
+    ctx.fillText(p.text, x, y);
+  }
+  ctx.globalAlpha = 1;
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'top';
+}
+
+function drawJoystick() {
+  if (joyId === null) return;
+  ctx.globalAlpha = 0.22;
+  ctx.strokeStyle = '#ffffff';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(joyOx, joyOy, 52, 0, 6.2832);
+  ctx.stroke();
+  const dx = clamp(joyX - joyOx, -52, 52);
+  const dy = clamp(joyY - joyOy, -52, 52);
+  ctx.globalAlpha = 0.42;
+  ctx.fillStyle = '#44ddff';
+  ctx.beginPath();
+  ctx.arc(joyOx + dx, joyOy + dy, 22, 0, 6.2832);
+  ctx.fill();
+  ctx.globalAlpha = 1;
+}
+
+function fireButtonPos() {
+  return { x: W - 74, y: H - 96 };
+}
+
+function drawFireButton() {
+  if (state.mode !== 'play' || !player.hasGun) return;
+  const b = fireButtonPos();
+  const pulse = 0.30 + Math.sin(performance.now() * 0.006) * 0.06;
+  ctx.globalAlpha = pulse;
+  ctx.fillStyle = '#ffcc44';
+  ctx.beginPath(); ctx.arc(b.x, b.y, 42, 0, 6.2832); ctx.fill();
+  ctx.globalAlpha = 0.85;
+  ctx.strokeStyle = '#ffcc44';
+  ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.arc(b.x, b.y, 42, 0, 6.2832); ctx.stroke();
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = '#fff';
+  ctx.font = '900 16px ui-monospace, "SF Mono", Menlo, monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('FIRE', b.x, b.y);
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'top';
+}
+
+function drawHUD() {
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'top';
+
+  if (state.mode === 'play' || state.mode === 'dead') {
+    const sc = Math.min(W, H);
+    ctx.font = '800 ' + Math.round(sc * 0.05) + 'px ui-monospace, "SF Mono", Menlo, monospace';
+    ctx.fillStyle = 'rgba(220,230,255,0.92)';
+    ctx.fillText(String(state.score).padStart(5, '0'), 24, 22);
+
+    ctx.font = '600 ' + Math.round(sc * 0.021) + 'px ui-monospace, "SF Mono", Menlo, monospace';
+    ctx.fillStyle = 'rgba(150,170,210,0.65)';
+    ctx.fillText('BEST ' + String(state.best).padStart(5, '0'), 24, 22 + sc * 0.06);
+    ctx.fillStyle = '#ff6b7d';
+    ctx.fillText('KILLS ' + state.kills, 24, 22 + sc * 0.088);
+
+    if (player.hasGun) {
+      ctx.fillStyle = '#ffd24a';
+      ctx.fillText('AMMO ' + player.ammo, 24, 22 + sc * 0.116);
+    }
+  }
+
+  if (state.mode === 'menu') {
+    ctx.textAlign = 'center';
+    const sc = Math.min(W, H);
+    ctx.fillStyle = 'rgba(0,0,0,0.42)';
+    ctx.fillRect(0, 0, W, H);
+
+    ctx.font = '900 ' + Math.round(sc * 0.115) + 'px ui-monospace, "SF Mono", Menlo, monospace';
+    ctx.fillStyle = '#44ddff';
+    ctx.shadowColor = '#44ddff';
+    ctx.shadowBlur = 28;
+    ctx.fillText('LABOTOMY', W / 2, H * 0.22);
+    ctx.shadowBlur = 0;
+
+    ctx.font = '600 ' + Math.round(sc * 0.026) + 'px ui-monospace, "SF Mono", Menlo, monospace';
+    ctx.fillStyle = 'rgba(200,215,255,0.75)';
+    ctx.fillText('RUN  •  JUMP  •  SHOOT  •  BREAK THINGS', W / 2, H * 0.35);
+
+    const pulse = 0.55 + Math.sin(performance.now() * 0.004) * 0.45;
+    ctx.globalAlpha = pulse;
+    ctx.font = '800 ' + Math.round(sc * 0.042) + 'px ui-monospace, "SF Mono", Menlo, monospace';
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText('TAP TO START', W / 2, H * 0.48);
+    ctx.globalAlpha = 1;
+
+    ctx.font = '500 ' + Math.round(sc * 0.022) + 'px ui-monospace, "SF Mono", Menlo, monospace';
+    ctx.fillStyle = 'rgba(150,170,210,0.6)';
+    ctx.fillText('LEFT SIDE = MOVE     RIGHT SIDE = JUMP', W / 2, H * 0.60);
+    ctx.fillText('SWIPE DOWN = SLAM    FIRE BUTTON = SHOOT', W / 2, H * 0.64);
+    ctx.fillText('grab the gun, blow holes in the world', W / 2, H * 0.69);
+    ctx.fillText('A/D move  •  SPACE jump  •  S slam  •  F shoot  •  R restart', W / 2, H * 0.735);
+
+    if (state.best > 0) {
+      ctx.font = '700 ' + Math.round(sc * 0.026) + 'px ui-monospace, "SF Mono", Menlo, monospace';
+      ctx.fillStyle = 'rgba(140,160,200,0.75)';
+      ctx.fillText('BEST  ' + state.best, W / 2, H * 0.85);
+    }
+    ctx.textAlign = 'left';
+  }
+
+  if (state.mode === 'dead') {
+    const t = clamp(state.deadTimer / 0.8, 0, 1);
+    ctx.fillStyle = 'rgba(6,6,14,' + (t * 0.62).toFixed(3) + ')';
+    ctx.fillRect(0, 0, W, H);
+    if (t > 0.5) {
+      ctx.textAlign = 'center';
+      const a = (t - 0.5) / 0.5;
+      const sc = Math.min(W, H);
+      ctx.globalAlpha = a;
+
+      ctx.font = '900 ' + Math.round(sc * 0.082) + 'px ui-monospace, "SF Mono", Menlo, monospace';
+      ctx.fillStyle = '#ff4d66';
+      ctx.shadowColor = '#ff3355';
+      ctx.shadowBlur = 24;
+      ctx.fillText('FLATLINED', W / 2, H * 0.30);
+      ctx.shadowBlur = 0;
+
+      ctx.font = '800 ' + Math.round(sc * 0.055) + 'px ui-monospace, "SF Mono", Menlo, monospace';
+      ctx.fillStyle = '#ffffff';
+      ctx.fillText(String(state.score).padStart(5, '0'), W / 2, H * 0.42);
+
+      ctx.font = '600 ' + Math.round(sc * 0.026) + 'px ui-monospace, "SF Mono", Menlo, monospace';
+      ctx.fillStyle = '#ff8899';
+      ctx.fillText('KILLS  ' + state.kills, W / 2, H * 0.50);
+      ctx.fillStyle = 'rgba(160,180,220,0.7)';
+      ctx.fillText('BEST  ' + state.best, W / 2, H * 0.545);
+
+      if (state.deadTimer > 0.8) {
+        const p = 0.5 + Math.sin(performance.now() * 0.005) * 0.5;
+        ctx.globalAlpha = a * p;
+        ctx.font = '800 ' + Math.round(sc * 0.038) + 'px ui-monospace, "SF Mono", Menlo, monospace';
+        ctx.fillStyle = '#44ddff';
+        ctx.fillText('TAP TO RETRY', W / 2, H * 0.70);
+      }
+      ctx.globalAlpha = 1;
+      ctx.textAlign = 'left';
+    }
+  }
+}
+
+// ============================================================
+//  INPUT
+// ============================================================
+
+let joyId = null;
+let joyOx = 0, joyOy = 0, joyX = 0, joyY = 0;
+
+let jumpId = null;
+let jumpStartY = 0, jumpStartT = 0, jumpMoved = false;
+
+let fireId = null;
+
+function touchStart(id, x, y) {
+  if (state.mode === 'menu') { startGame(); return; }
+  if (state.mode === 'dead') { if (state.deadTimer > 0.8) startGame(); return; }
+
+  // fire button gets priority on the right side
+  if (player.hasGun) {
+    const b = fireButtonPos();
+    const dx = x - b.x, dy = y - b.y;
+    if (dx * dx + dy * dy < 48 * 48) {
+      fireId = id;
+      shoot();
+      return;
+    }
+  }
+
+  if (x < W * 0.5 && joyId === null) {
+    joyId = id;
+    joyOx = x; joyOy = y;
+    joyX = x; joyY = y;
+    input.moveX = 0;
+  } else if (jumpId === null) {
+    jumpId = id;
+    jumpStartY = y;
+    jumpStartT = performance.now();
+    jumpMoved = false;
+    doJump();
+  }
+}
+
+function touchMove(id, x, y) {
+  if (id === joyId) {
+    joyX = x; joyY = y;
+    const dx = x - joyOx;
+    input.moveX = clamp(dx / 48, -1, 1);
+  } else if (id === jumpId) {
+    const dy = y - jumpStartY;
+    if (dy > 55 && !jumpMoved && performance.now() - jumpStartT < 320) {
+      jumpMoved = true;
+      doSlam();
+    }
+  }
+}
+
+function touchEnd(id) {
+  if (id === joyId) { joyId = null; input.moveX = 0; }
+  if (id === fireId) { fireId = null; }
+  if (id === jumpId) {
+    jumpId = null;
+    player.holding = false;
+    if (player.vy < 0) player.vy *= 0.5;
+  }
+}
+
+cvs.addEventListener('touchstart', e => {
+  e.preventDefault();
+  for (let i = 0; i < e.changedTouches.length; i++) {
+    const t = e.changedTouches[i];
+    touchStart(t.identifier, t.clientX, t.clientY);
+  }
+}, { passive: false });
+
+cvs.addEventListener('touchmove', e => {
+  e.preventDefault();
+  for (let i = 0; i < e.changedTouches.length; i++) {
+    const t = e.changedTouches[i];
+    touchMove(t.identifier, t.clientX, t.clientY);
+  }
+}, { passive: false });
+
+function handleTouchEnd(e) {
+  e.preventDefault();
+  for (let i = 0; i < e.changedTouches.length; i++) {
+    touchEnd(e.changedTouches[i].identifier);
+  }
+}
+cvs.addEventListener('touchend', handleTouchEnd, { passive: false });
+cvs.addEventListener('touchcancel', handleTouchEnd, { passive: false });
+
+let mouseDown = false;
+cvs.addEventListener('mousedown', e => { mouseDown = true; touchStart('mouse', e.clientX, e.clientY); });
+window.addEventListener('mousemove', e => { if (mouseDown) touchMove('mouse', e.clientX, e.clientY); });
+window.addEventListener('mouseup', () => { if (mouseDown) { mouseDown = false; touchEnd('mouse'); } });
+
+const keys = {};
+window.addEventListener('keydown', e => {
+  if (e.repeat) return;
+  keys[e.code] = true;
+  if (e.code === 'Space' || e.code === 'KeyW' || e.code === 'ArrowUp') {
+    e.preventDefault(); doJump();
+  }
+  if (e.code === 'KeyS' || e.code === 'ArrowDown') {
+    e.preventDefault(); doSlam();
+  }
+  if (e.code === 'KeyF' || e.code === 'KeyJ') {
+    e.preventDefault(); shoot();
+  }
+  if (e.code === 'KeyR') startGame();
+});
+window.addEventListener('keyup', e => {
+  keys[e.code] = false;
+  if (e.code === 'Space' || e.code === 'KeyW' || e.code === 'ArrowUp') {
+    player.holding = false;
+    if (player.vy < 0) player.vy *= 0.5;
+  }
+});
+
+document.addEventListener('gesturestart', e => e.preventDefault());
+document.addEventListener('dblclick', e => e.preventDefault());
+document.addEventListener('contextmenu', e => e.preventDefault());
+
+// ============================================================
+//  MAIN LOOP
+// ============================================================
+
+let lastTime = performance.now();
+let accumulator = 0;
+
+function loop(now) {
+  requestAnimationFrame(loop);
+
+  let dt = (now - lastTime) / 1000;
+  lastTime = now;
+  if (dt > 0.1) dt = 0.1;
+  if (dt < 0) dt = 0;
+
+  if (joyId === null) {
+    let kx = 0;
+    if (keys['KeyA'] || keys['ArrowLeft']) kx -= 1;
+    if (keys['KeyD'] || keys['ArrowRight']) kx += 1;
+    input.moveX = kx;
+  }
+
+  accumulator += dt;
+  let steps = 0;
+  while (accumulator >= 1 / 60 && steps < 5) {
+    update(1 / 60);
+    accumulator -= 1 / 60;
+    steps++;
+  }
+  if (steps === 5) accumulator = 0;
+
+  render();
+  if (fx) fx.render();
+}
+
+// ============================================================
+//  BOOT
+// ============================================================
+
+resize();
+initStars();
+
+fx = new ParticleFX(fxc);
+if (fx && fx.ok) fx.resize(W, H, DPR);
+
+M.generateWorld();
+M.placeStuff();
+
+player.x = 30 * CELL;
+player.y = M.terrain.gy[30] - player.hh - 2;
+cam.x = player.x - W * 0.5;
+cam.y = player.y - H * 0.55;
+
+requestAnimationFrame(loop);
+
+})();
+</script>
 </body>
-
 </html>
